@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="OmniChat.Api/OmniChat.Api.csproj" />
+  <Project Path="OmniChat.Application/OmniChat.Application.csproj" />
+  <Project Path="OmniChat.Infrastructure/OmniChat.Infrastructure.csproj" />
+</Solution>
