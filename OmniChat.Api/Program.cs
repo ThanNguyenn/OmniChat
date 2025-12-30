@@ -1,25 +1,167 @@
+using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using OmniChat.Infrastructure.Metadatas;
+using System.Text;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+ConfigureServices();
+ConfigureDatabase();
+ConfigureAuthentication();
+ConfigureSwagger();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+ConfigureMiddleware();
+
+app.Run();
+
+void ConfigureServices()
+{
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+     
+    // Register Unit of Work pattern
+
+    // Register utility services
+
+    // Register application services
+    RegisterApplicationServices();
+
+
+}
+
+void RegisterApplicationServices()
+{
+
+}
+
+void ConfigureDatabase()
+{
+
+}
+
+void ConfigureAuthentication()
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>(),
+                ValidAudience = builder.Configuration.GetSection("Jwt:Audience").Get<string>(),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Headers["Authorization"].FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(accessToken) && !accessToken.StartsWith("Bearer "))
+                    {
+                        context.Request.Headers["Authorization"] = "Bearer " + accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                },
+
+                OnChallenge = async context =>
+                {
+                    context.HandleResponse();
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    context.Response.ContentType = "application/json";
+
+                    var response = new ApiResponse<object>
+                    {
+                        StatusCode = StatusCodes.Status401Unauthorized,
+                        Message = "Unauthorized access",
+                        Reason = "Authentication failed. Please provide a valid token.",
+                        IsSuccess = false,
+                        Data = new
+                        {
+                            Path = context.Request.Path,
+                            Method = context.Request.Method,
+                            Timestamp = DateTime.UtcNow
+                        }
+                    };
+
+                    await context.Response.WriteAsJsonAsync(response);
+                }
+            };
+        });
+
+
+    // Add authorization policies
+    builder.Services.AddAuthorization(options =>
+    {
+        //add custom policies here
+    });
+}
+
+void ConfigureSwagger()
+{
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "OmniChat.API",
+            Version = "v1",
+            Description = "OmniChat API document"
+        });
+
+        options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = JwtBearerDefaults.AuthenticationScheme,
+            Description = "JWT Authorization header using the Bearer scheme. Example: "
+        });
+    });
+}
+
+void ConfigureMiddleware()
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+    app.UseHttpsRedirection();
+
+    app.UseCors(options =>
+    {
+        options.SetIsOriginAllowed(origin =>
+           origin.StartsWith("http://localhost:") ||
+           origin.StartsWith("https://localhost:") ||
+           origin.EndsWith(".vercel.app"))
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+
+    app.UseAuthentication();
+
+    app.UseAuthorization();
+
+    app.MapControllers();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
