@@ -18,6 +18,7 @@
     <Folder Include="Dtos\Requests\" />
     <Folder Include="Constants\" />
     <Folder Include="Middlewares\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
   <ItemGroup>
