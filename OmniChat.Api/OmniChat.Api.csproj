@@ -19,6 +19,8 @@
     <Folder Include="Constants\" />
     <Folder Include="Middlewares\" />
     <Folder Include="Extensions\" />
+    <Folder Include="Webhooks\Facebook\" />
+    <Folder Include="Webhooks\Zalo\" />
   </ItemGroup>
 
   <ItemGroup>
