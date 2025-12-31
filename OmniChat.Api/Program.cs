@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using OmniChat.Infrastructure.Metadatas;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -32,7 +32,7 @@ void ConfigureServices()
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-     
+
     // Register Unit of Work pattern
 
     // Register utility services
@@ -106,6 +106,8 @@ void ConfigureAuthentication()
 
                     await context.Response.WriteAsJsonAsync(response);
                 }
+
+
             };
         });
 
@@ -135,6 +137,20 @@ void ConfigureSwagger()
             Type = SecuritySchemeType.ApiKey,
             Scheme = JwtBearerDefaults.AuthenticationScheme,
             Description = "JWT Authorization header using the Bearer scheme. Example: "
+        });
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = JwtBearerDefaults.AuthenticationScheme
+                    }
+                },
+                Array.Empty<string>()
+            }
         });
     });
 }
