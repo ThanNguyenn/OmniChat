@@ -1,10 +1,15 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OmniChat.Infrastructure.Extensions;
 using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Persistence;
+using System;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -17,6 +22,9 @@ ConfigureSwagger();
 
 var app = builder.Build();
 
+
+
+
 ConfigureMiddleware();
 
 app.Run();
@@ -26,7 +34,16 @@ void ConfigureServices()
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            // Enum -> string
+            options.JsonSerializerOptions.Converters.Add(
+                new JsonStringEnumConverter()
+            );
+
+            // DateTime -> UTC ISO format
+            options.JsonSerializerOptions.Converters.Add(
+                new UtcDateTimeJsonConverter()
+            );
+
         });
 
     builder.Services.AddEndpointsApiExplorer();
@@ -50,7 +67,17 @@ void RegisterApplicationServices()
 
 void ConfigureDatabase()
 {
-
+    builder.Services.AddDbContext<OmniChatDbContext>(options =>
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("PostgresConnection"),
+            npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly(
+                    typeof(OmniChatDbContext).Assembly.FullName
+                );
+            }
+        )
+    );
 }
 
 void ConfigureAuthentication()

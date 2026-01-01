@@ -31,14 +31,5 @@ namespace OmniChat.Infrastructure.Extensions
                 value.ToUniversalTime().ToString(Format)
             );
         }
-
-        //set up datetime trong program.cs 
-    //    builder.Services.AddControllers()
-    //.AddJsonOptions(options =>
-    //{
-    //        options.JsonSerializerOptions.Converters.Add(
-    //            new UtcDateTimeJsonConverter()
-    //        );
-    //    });
     }
 }
