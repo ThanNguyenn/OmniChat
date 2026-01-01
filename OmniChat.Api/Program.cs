@@ -6,9 +6,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Extensions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Persistence;
+using OmniChat.Infrastructure.Repositories.Implements;
+using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -51,18 +54,24 @@ void ConfigureServices()
     builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     // Register Unit of Work pattern
-
+    builder.Services.AddScoped<IUnitOfWork<OmniChatDbContext>, UnitOfWork<OmniChatDbContext>>();
     // Register utility services
-
+    builder.Services.AddSingleton<JwtUtil>();
     // Register application services
     RegisterApplicationServices();
+    RegisterBackgroundServices();
 
 
 }
 
 void RegisterApplicationServices()
 {
+    
+}
 
+void RegisterBackgroundServices()
+{
+    // Register background services here
 }
 
 void ConfigureDatabase()
