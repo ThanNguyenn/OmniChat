@@ -47,7 +47,7 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<Provider> Providers { get; set; }
 
-        public DbSet<SupportConversation> supportConversations { get; set; }
+        public DbSet<SupportConversation> SupportConversations { get; set; }
 
         public DbSet<MessageKeyword> MessageKeywords { get; set; }
 
@@ -61,7 +61,7 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<DepartmentStaffMessage> DepartmentStaffMessages { get; set; }
 
-        public DbSet<DepartmentConversationType> departmentConversationTypes { get; set; }
+        public DbSet<DepartmentConversationType> DepartmentConversationTypes { get; set; }
 
         public DbSet<DepartmentConversationFile> DepartmentConversationFiles { get; set; }
 
