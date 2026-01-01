@@ -26,7 +26,9 @@ ConfigureSwagger();
 var app = builder.Build();
 
 
-
+builder.Services.Configure<OmniChatDbContext>(
+    builder.Configuration.GetSection("ZaloWebHook")
+);
 
 ConfigureMiddleware();
 
