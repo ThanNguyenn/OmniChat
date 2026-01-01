@@ -18,10 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Dtos\Responses\" />
-    <Folder Include="Dtos\Requests\" />
-    <Folder Include="Constants\" />
-    <Folder Include="Middlewares\" />
+    <Folder Include="Controllers\" />
     <Folder Include="Extensions\" />
     <Folder Include="Webhooks\Facebook\" />
     <Folder Include="Webhooks\Zalo\" />
