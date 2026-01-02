@@ -75,6 +75,8 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+        public DbSet<ZaloOathToken> ZaloOathTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -717,6 +719,22 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(a => a.EntityType)
                 .IsRequired()
                 .HasMaxLength(100);
+
+            // ==== ZaloOathToken ====
+
+            modelBuilder.Entity<ZaloOathToken>()
+                .HasKey(zot => zot.Id);
+
+            modelBuilder.Entity<ZaloOathToken>()
+                .Property(zot => zot.AccessToken)
+                .IsRequired();
+
+            modelBuilder.Entity<ZaloOathToken>()
+                .Property(zot => zot.RefreshToken)
+                .IsRequired();
+
+            modelBuilder.Entity<ZaloOathToken>()
+                .HasIndex(x => x.IsActive); // scan by isActive
         }
     }
 }
