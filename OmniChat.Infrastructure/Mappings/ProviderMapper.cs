@@ -23,6 +23,7 @@ namespace OmniChat.Infrastructure.Mappings
                  opt => opt.MapFrom(_ => DateTime.UtcNow));
 
             CreateMap<Provider, CreateProviderResponse>();
+
         }
     }
 }

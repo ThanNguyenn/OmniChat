@@ -28,9 +28,9 @@ ConfigureSwagger();
 var app = builder.Build();
 
 
-builder.Services.Configure<OmniChatDbContext>(
-    builder.Configuration.GetSection("ZaloWebHook")
-);
+//builder.Services.Configure<OmniChatDbContext>(
+//    builder.Configuration.GetSection("ZaloWebHook")
+//);
 
 ConfigureMiddleware();
 
@@ -49,6 +49,11 @@ void ConfigureServices()
             // DateTime -> UTC ISO format
             options.JsonSerializerOptions.Converters.Add(
                 new UtcDateTimeJsonConverter()
+            );
+
+            //Nullable UTC ISO fomat
+            options.JsonSerializerOptions.Converters.Add(
+                new NullableUtcDateTimeJsonConverter()
             );
 
         });
@@ -71,6 +76,7 @@ void ConfigureServices()
 void RegisterApplicationServices()
 {
     builder.Services.AddScoped<IProviderService, ProviderService>();
+    builder.Services.AddScoped<ICustomerProfileService, CustomerProfileService>();
 }
 
 void RegisterBackgroundServices()
