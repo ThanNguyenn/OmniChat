@@ -15,8 +15,6 @@ namespace OmniChat.Infrastructure.Mappings
         public ProviderMapper()
         {
             CreateMap<CreateProviderRequest, Provider>()
-             .ForMember(dest => dest.Id,
-                 opt => opt.MapFrom(_ => Guid.NewGuid()))
              .ForMember(dest => dest.ProviderName,
                  opt => opt.MapFrom(src => src.ProviderName))
              .ForMember(dest => dest.CreateDate,

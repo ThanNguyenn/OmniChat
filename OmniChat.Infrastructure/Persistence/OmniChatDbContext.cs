@@ -690,6 +690,14 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<DepartmentStaffMessage>()
                 .HasIndex(dsm => new { dsm.DepartmentConversationId, dsm.Status }); // index scan DepartmentStaffMessage by departmentconversation and status faster
 
+            modelBuilder.Entity<DepartmentConversation>()
+                .HasKey(dc => dc.Id);
+
+            //Auto gen Guid Id DepartmentConversation
+            modelBuilder.Entity<DepartmentConversation>()
+            .Property(dc => dc.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             // ==== Staff - DepartmentStaffMessage ( one to Many ) ====
 

@@ -14,9 +14,7 @@ namespace OmniChat.Infrastructure.Mappings
     {
         public CustomerProfileMapper()
         {
-            CreateMap<CreateCustomerProfileRequest, CustomerProfile>()
-            .ForMember(x => x.Id, opt => opt.MapFrom(_ => Guid.NewGuid()));
-
+            CreateMap<CreateCustomerProfileRequest, CustomerProfile>();
             CreateMap<CustomerProfile, CreateCustomerProfileResponse>();
         }
     }
