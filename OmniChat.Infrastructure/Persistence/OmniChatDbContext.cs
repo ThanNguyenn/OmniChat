@@ -126,6 +126,12 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Role>()
                 .HasKey(r => r.Id);
 
+            //Auto gen Guid Id Role
+            modelBuilder.Entity<Role>()
+            .Property(x => x.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Role>()
                 .HasMany(r => r.Accounts)
                 .WithOne(a => a.Role)
@@ -136,6 +142,12 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<Account>()
                 .HasKey(a => a.Id);
+
+            //Auto gen Guid Id Account
+            modelBuilder.Entity<Account>()
+            .Property(a => a.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             // Index on RoleId in Account
             modelBuilder.Entity<Account>()
@@ -152,10 +164,25 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasForeignKey(rt => rt.AccountId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<RefreshToken>()
+             .HasKey(rf => rf.Id);
+
+            //Auto gen Guid Id RefreshToken
+            modelBuilder.Entity<RefreshToken>()
+            .Property(rf => rf.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             // ==== Department - Staff ( one to Many ) ====
 
             modelBuilder.Entity<Department>()
                 .HasKey(d => d.Id);
+
+            //Auto gen Guid Id Department
+            modelBuilder.Entity<Department>()
+            .Property(d => d.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Department>()
                 .HasMany(d => d.Staffs)
@@ -184,6 +211,12 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Claim>()
                 .HasKey(c => c.Id);
 
+            //Auto gen Guid Id Claim
+            modelBuilder.Entity<Claim>()
+            .Property(c => c.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Department>()
                 .HasMany(d => d.Claims)
                 .WithOne(c => c.Department)
@@ -191,6 +224,15 @@ namespace OmniChat.Infrastructure.Persistence
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ==== Staff - Claim ( one to Many ) ====
+
+            modelBuilder.Entity<Staff>()
+                .HasIndex(s => s.Id);
+
+            //Auto gen Guid Id Staff
+            modelBuilder.Entity<Staff>()
+            .Property(s => s.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Staff>()
                 .HasMany(s => s.Claims)
@@ -202,6 +244,12 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<ClaimType>()
                 .HasKey(ct => ct.Id);
+
+            //Auto gen Guid Id ClaimType
+            modelBuilder.Entity<ClaimType>()
+            .Property(ct => ct.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<ClaimType>()
                .HasMany(ct => ct.Claims)
@@ -226,6 +274,12 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Shift>()
                 .HasKey(s => s.Id);
 
+            //Auto gen Guid Id Shift
+            modelBuilder.Entity<Shift>()
+            .Property(s => s.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Department>()
                 .HasMany(d => d.Shifts)
                 .WithOne(s => s.Department)
@@ -240,6 +294,12 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<StaffShift>()
                 .HasKey(ss => ss.Id);
+
+            //Auto gen Guid Id StaffShift
+            modelBuilder.Entity<StaffShift>()
+            .Property(ss => ss.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Shift>()
                 .HasMany(s => s.StaffShifts)
@@ -274,6 +334,12 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Kpi>()
                 .HasKey(k => k.Id);
 
+            //Auto gen Guid Id Kpi
+            modelBuilder.Entity<Kpi>()
+            .Property(k => k.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Department>()
                 .HasMany(d => d.Kpis)
                 .WithOne(k => k.Department)
@@ -288,6 +354,12 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<StaffKpi>()
                 .HasKey(sk => sk.Id);
+
+            //Auto gen Guid Id StaffKpi
+            modelBuilder.Entity<StaffKpi>()
+            .Property(sk => sk.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Kpi>()
                 .HasMany(k => k.StaffKpis)
@@ -319,6 +391,12 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<DepartmentKeyword>()
                 .HasKey(dk => dk.Id);
 
+            //Auto gen Guid Id DepartmentKeyword
+            modelBuilder.Entity<DepartmentKeyword>()
+            .Property(dk => dk.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Department>()
                 .HasMany(d => d.DepartmentKeywords)
                 .WithOne(dk => dk.Department)
@@ -331,6 +409,12 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== Keyword - DepartmentKeyword ( one to one ) ====
             modelBuilder.Entity<Keyword>()
                 .HasKey(k => k.Id);
+
+            //Auto gen Guid Id Keyword
+            modelBuilder.Entity<Keyword>()
+            .Property(k => k.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Keyword>()
                 .HasOne(k => k.DepartmentKeyword)
@@ -353,6 +437,13 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<MessageKeyword>()
                 .HasKey(mk => mk.Id);
 
+            //Auto gen Guid Id MessageKeyword
+            modelBuilder.Entity<MessageKeyword>()
+            .Property(mk => mk.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
+
             modelBuilder.Entity<Keyword>()
                 .HasMany(k => k.MessageKeywords)
                 .WithOne(mk => mk.Keyword)
@@ -362,6 +453,13 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== CustomerMessage - MessageKeyword ( one to Many ) ====
             modelBuilder.Entity<CustomerMessage>()
                 .HasKey(cm => cm.Id);
+
+            //Auto gen Guid Id CustomerMessage
+            modelBuilder.Entity<CustomerMessage>()
+            .Property(cm => cm.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
 
             modelBuilder.Entity<CustomerMessage>()
                 .HasMany(cm => cm.MessageKeywords)
@@ -385,6 +483,13 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<CustomerProfile>()
                 .HasKey(cp => cp.Id);
 
+            //Auto gen Guid Id CustomerProfile
+            modelBuilder.Entity<CustomerProfile>()
+            .Property(cp => cp.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
+
             modelBuilder.Entity<CustomerProfile>()
                 .HasMany(cp => cp.CustomerMessages)
                 .WithOne(cm => cm.Customer)
@@ -405,6 +510,12 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Provider>()
                 .HasKey(p => p.Id);
 
+            //Auto gen Guid Id Provider
+            modelBuilder.Entity<Provider>()
+            .Property(p => p.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Provider>()
                 .HasMany(p => p.CustomerProfiles)
                 .WithOne(cp => cp.Providers)
@@ -422,6 +533,12 @@ namespace OmniChat.Infrastructure.Persistence
             // == CustomerMessage - SupportConversation ( many to one ) ==
             modelBuilder.Entity<SupportConversation>()
                 .HasKey(sc => sc.Id);
+
+            //Auto gen Guid Id SupportConversation
+            modelBuilder.Entity<SupportConversation>()
+            .Property(sc => sc.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<SupportConversation>()
                 .HasMany(sc => sc.CustomerMessages)
@@ -458,6 +575,12 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== Staff - FeedBack ( one to Many ) ====
             modelBuilder.Entity<FeedBack>()
                 .HasKey(fb => fb.Id);
+            //Auto gen Guid Id FeedBack
+            modelBuilder.Entity<FeedBack>()
+            .Property(fb => fb.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
 
             modelBuilder.Entity<Staff>()
                 .HasMany(s => s.FeedBacks)
@@ -482,6 +605,12 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== Staff - Nofitication ( one to Many ) ====
             modelBuilder.Entity<Notification>()
                 .HasKey(nf => nf.Id);
+            //Auto gen Guid Id Notification
+            modelBuilder.Entity<Notification>()
+            .Property(nf => nf.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
 
             modelBuilder.Entity<Staff>()
                 .HasMany(s => s.Notifications)
@@ -507,11 +636,17 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Notification>()
                 .HasIndex(nf => new { nf.ConversationId, nf.IsRead }); // index scan nofitication by conversation and isread fasters
 
-            
+
             // ==== Staff - SupportStaffMessage ( one to Many ) ====
 
             modelBuilder.Entity<SupportStaffMessage>()
                 .HasKey(sm => sm.Id);
+
+            //Auto gen Guid Id SupportStaffMessage
+            modelBuilder.Entity<SupportStaffMessage>()
+            .Property(sm => sm.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Staff>()
                 .HasMany(s => s.SupportStaffMessages)
@@ -520,7 +655,7 @@ namespace OmniChat.Infrastructure.Persistence
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<SupportStaffMessage>()
-                .HasIndex(sm => new { sm.StaffId, sm.Status}); // index scan SupportStaffMessage by staff and status faster
+                .HasIndex(sm => new { sm.StaffId, sm.Status }); // index scan SupportStaffMessage by staff and status faster
 
 
             modelBuilder.Entity<SupportStaffMessage>()
@@ -539,6 +674,13 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<DepartmentStaffMessage>()
                 .HasKey(dsm => dsm.Id);
 
+
+            //Auto gen Guid Id DepartmentStaffMessage
+            modelBuilder.Entity<DepartmentStaffMessage>()
+            .Property(dsm => dsm.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<DepartmentConversation>()
                 .HasMany(dc => dc.DepartmentStaffMessages)
                 .WithOne(dsm => dsm.DepartmentConversation)
@@ -548,6 +690,14 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<DepartmentStaffMessage>()
                 .HasIndex(dsm => new { dsm.DepartmentConversationId, dsm.Status }); // index scan DepartmentStaffMessage by departmentconversation and status faster
 
+            modelBuilder.Entity<DepartmentConversation>()
+                .HasKey(dc => dc.Id);
+
+            //Auto gen Guid Id DepartmentConversation
+            modelBuilder.Entity<DepartmentConversation>()
+            .Property(dc => dc.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             // ==== Staff - DepartmentStaffMessage ( one to Many ) ====
 
@@ -561,6 +711,12 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<DepartmentConversationType>()
                 .HasKey(dct => dct.Id);
+
+            //Auto gen Guid Id DepartmentConversationType
+            modelBuilder.Entity<DepartmentConversationType>()
+            .Property(dct => dct.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<DepartmentConversationType>()
                 .HasMany(dct => dct.DepartmentConversations)
@@ -587,6 +743,11 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== DepartmentConversation - DepartmentConversationFile ( one to Many ) ====
             modelBuilder.Entity<DepartmentConversationFile>()
                 .HasKey(dcf => dcf.Id);
+            //Auto gen Guid Id DepartmentConversationFile
+            modelBuilder.Entity<DepartmentConversationFile>()
+            .Property(dcf => dcf.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<DepartmentConversation>()
                 .HasMany(dc => dc.DepartmentConversationFiles)
@@ -601,6 +762,11 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<ConversationFile>()
                 .HasKey(cf => cf.Id);
+            //Auto gen Guid Id ConversationFile
+            modelBuilder.Entity<ConversationFile>()
+            .Property(cf => cf.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<ConversationFile>()
                 .HasMany(cf => cf.DepartmentConversationFiles)
@@ -611,10 +777,16 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<DepartmentConversationFile>()
                 .HasIndex(dcf => new { dcf.DepartmentConversationId, dcf.ConversationFileId }).IsUnique();// scan by departmentconversation and conversationfile faster
 
-            
+
             // ==== ConversationFile - SupportConversationFile ( one to Many ) ====
             modelBuilder.Entity<SupportConversationFile>()
                 .HasKey(scf => scf.Id);
+            //Auto gen Guid Id SupportConversationFile
+            modelBuilder.Entity<SupportConversationFile>()
+            .Property(scf => scf.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
 
             modelBuilder.Entity<ConversationFile>()
                 .HasMany(cf => cf.SupportConversationFiles)
@@ -639,10 +811,16 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== ChatTemplate ====
             modelBuilder.Entity<ChatTemplate>()
                 .HasKey(ct => ct.Id);
+            //Auto gen Guid Id ChatTemplate
+            modelBuilder.Entity<ChatTemplate>()
+            .Property(ct => ct.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
 
             modelBuilder.Entity<ChatTemplate>()
                 .HasIndex(ct => ct.Code).IsUnique(); // 1 code only for 1 chat template
-          
+
             modelBuilder.Entity<ChatTemplate>()
                 .Property(ct => ct.Code)
                 .IsRequired()
@@ -655,6 +833,11 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== Staff - TaskAssignments ( one to Many ) ====
             modelBuilder.Entity<TaskAssignments>()
                 .HasKey(ta => ta.Id);
+            //Auto gen Guid Id TaskAssignments
+            modelBuilder.Entity<TaskAssignments>()
+            .Property(ta => ta.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Staff>()
                 .HasMany(s => s.TaskAssignments)
@@ -695,6 +878,12 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== AuditLog ====
             modelBuilder.Entity<AuditLog>()
                 .HasKey(al => al.Id);
+            //Auto gen Guid Id AuditLog
+            modelBuilder.Entity<AuditLog>()
+            .Property(al => al.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
+
 
             modelBuilder.Entity<AuditLog>()
                 .HasIndex(a => a.CreateDate); // index scan auditlog by createdate faster
@@ -724,6 +913,11 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<ZaloOathToken>()
                 .HasKey(zot => zot.Id);
+            //Auto gen Guid Id ZaloOathToken
+            modelBuilder.Entity<ZaloOathToken>()
+            .Property(zot => zot.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<ZaloOathToken>()
                 .Property(zot => zot.AccessToken)
@@ -735,6 +929,25 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<ZaloOathToken>()
                 .HasIndex(x => x.IsActive); // scan by isActive
+
+            var entitiesWithoutGuidDefault = modelBuilder.Model
+    .GetEntityTypes()
+    .Where(e =>
+    {
+        var idProp = e.FindProperty("Id");
+        return idProp != null
+            && idProp.ClrType == typeof(Guid)
+            && idProp.GetDefaultValueSql() == null;
+    })
+    .Select(e => e.Name)
+    .ToList();
+
+            if (entitiesWithoutGuidDefault.Any())
+            {
+                throw new Exception(
+                    "Entities missing gen_random_uuid(): " +
+                    string.Join(", ", entitiesWithoutGuidDefault));
+            }
         }
     }
 }

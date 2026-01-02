@@ -33,7 +33,6 @@ var app = builder.Build();
 //    builder.Configuration.GetSection("ZaloWebHook")
 //);
 
-
 ConfigureMiddleware();
 
 app.Run();
@@ -51,6 +50,11 @@ void ConfigureServices()
             // DateTime -> UTC ISO format
             options.JsonSerializerOptions.Converters.Add(
                 new UtcDateTimeJsonConverter()
+            );
+
+            //Nullable UTC ISO fomat
+            options.JsonSerializerOptions.Converters.Add(
+                new NullableUtcDateTimeJsonConverter()
             );
 
         });
@@ -77,6 +81,8 @@ void ConfigureServices()
 
 void RegisterApplicationServices()
 {
+    builder.Services.AddScoped<IProviderService, ProviderService>();
+    builder.Services.AddScoped<ICustomerProfileService, CustomerProfileService>();
     builder.Services.AddScoped<IZaloOAuthService, ZaloOAuthService>();
 }
 
