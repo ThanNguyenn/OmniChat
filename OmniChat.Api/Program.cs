@@ -1,11 +1,12 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OmniChat.Api.Middlewares;
+using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Utils;
@@ -62,6 +63,11 @@ void ConfigureServices()
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+    builder.Services.AddHttpClient("ZaloOAuth", client =>
+    {
+        client.BaseAddress = new Uri("https://oauth.zaloapp.com/");
+    });
+
     // Register Unit of Work pattern
     builder.Services.AddScoped<IUnitOfWork<OmniChatDbContext>, UnitOfWork<OmniChatDbContext>>();
     // Register utility services
@@ -77,11 +83,13 @@ void RegisterApplicationServices()
 {
     builder.Services.AddScoped<IProviderService, ProviderService>();
     builder.Services.AddScoped<ICustomerProfileService, CustomerProfileService>();
+    builder.Services.AddScoped<IZaloOAuthService, ZaloOAuthService>();
 }
 
 void RegisterBackgroundServices()
 {
     // Register background services here
+    builder.Services.AddHostedService<ZaloTokenRefreshWorker>();
 }
 
 void ConfigureDatabase()
