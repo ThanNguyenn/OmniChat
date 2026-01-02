@@ -1,0 +1,51 @@
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Provider;
+using OmniChat.Infrastructure.Dtos.Responses.Provider;
+using OmniChat.Infrastructure.Models;
+using OmniChat.Infrastructure.Persistence;
+using OmniChat.Infrastructure.Repositories.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace OmniChat.Application.Services.Implements
+{
+    public class ProviderService : BaseService<Provider>, IProviderService
+    {
+        public ProviderService(IUnitOfWork<OmniChatDbContext> unitOfWork,
+            ILogger<Provider> logger,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
+            : base(unitOfWork, logger, mapper, httpContextAccessor)
+        {
+        }
+
+        public async Task<CreateProviderResponse> CreateProviderAsync(CreateProviderRequest CreateProviderRequest)
+        {
+            try
+            {
+                return await _unitOfWork.ProcessInTransactionAsync(async () =>
+                {
+                    // Map request 
+                    var newProvider = _mapper.Map<Provider>(CreateProviderRequest);
+
+                    // Add into repo
+                    await _unitOfWork.GetRepository<Provider>().InsertAsync(newProvider);
+
+                    // return 
+                    return _mapper.Map<CreateProviderResponse>(newProvider);
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating a provider :{Message}.", ex.Message);
+                throw;
+            }
+        }
+    }
+}

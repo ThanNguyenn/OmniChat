@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OmniChat.Application.Dtos.Requests.Auth;
+namespace OmniChat.Infrastructure.Dtos.Requests.Auth;
 
 public class LoginRequest
 {
