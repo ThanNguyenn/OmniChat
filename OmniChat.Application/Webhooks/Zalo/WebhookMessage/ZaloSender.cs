@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace OmniChat.Api.Webhooks.Zalo.WebhookMessage
+namespace OmniChat.Application.Webhooks.Zalo.WebhookMessage
 {
     public class ZaloSender
     {

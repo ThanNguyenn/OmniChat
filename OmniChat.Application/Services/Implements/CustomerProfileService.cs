@@ -17,9 +17,9 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public class CustomerProfileService : BaseService<CustomerProfile>, ICustomerProfileService
+    public class CustomerProfileService : BaseService<CustomerProfileService>, ICustomerProfileService
     {
-        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfile> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
 
@@ -64,7 +64,7 @@ namespace OmniChat.Application.Services.Implements
             }
         }
 
-        public async Task<PagingResponse<GetCustomerProfileResponse>>GetCustomerProfilesPagingAsync(int pageNumber = 1,int pageSize = 20,string? customerName = null)
+        public async Task<PagingResponse<GetCustomerProfileResponse>> GetCustomerProfilesPagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
         {
             try
             {
@@ -101,5 +101,22 @@ namespace OmniChat.Application.Services.Implements
             }
         }
 
+        public async Task<CustomerProfile> GetCustomerProfileBySenderIdAsync(long senderId)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+                return await repo.SingleOrDefaultAsync(predicate: x => x.SenderId == senderId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                   ex,
+                   "Error Get CustomerProfile By SenderId: {Message}",
+                   ex.Message);
+                throw;
+            }
+        }
     }
 }
