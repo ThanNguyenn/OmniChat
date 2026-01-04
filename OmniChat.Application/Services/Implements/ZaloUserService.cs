@@ -8,6 +8,7 @@ using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -16,23 +17,24 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    internal class ZaloUserService : BaseService<ZaloUserService>, IZaloUserService
+    public class ZaloUserService : BaseService<ZaloUserService>, IZaloUserService
     {
-        private readonly IConfiguration _configuration;
+      
         private readonly HttpClient _httpClient;
+        private readonly IZaloOAuthService _zaloOAuthService;
 
-        public ZaloUserService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<ZaloUserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, HttpClient httpClient) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public ZaloUserService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<ZaloUserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
-            _configuration = configuration;
             _httpClient = httpClient;
+            _zaloOAuthService = zaloOAuthService;
         }
 
         public async Task<ZaloUserProfileData?> GetUserProfileAsync(long zaloUserId)
         {
             try
             {
-                // fix call Database
-                var accessToken = _configuration["ZaloOA:AccessToken"];
+                
+                var accessToken = await _zaloOAuthService.GetAccessTokenAsync();
 
                 var request = new HttpRequestMessage(
                     HttpMethod.Get,
@@ -70,6 +72,24 @@ namespace OmniChat.Application.Services.Implements
                     "Error calling Zalo getprofile API");
                 throw;
             }
+        }
+
+        public  DateTime? ParseZaloBirthDate(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            if (DateTime.TryParseExact(
+                value,
+                "dd/MM/yyyy",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out var date))
+            {
+                return DateTime.SpecifyKind(date, DateTimeKind.Utc);
+            }
+
+            return null;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace OmniChat.Application.Services.Implements
         }
 
 
-        public async Task<CreateCustomerProfileResponse> CreateNewCustomerProfileAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
+        public async Task<CustomerProfile> CreateCustomerProfileEntityAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
         {
             try
             {
@@ -32,26 +32,20 @@ namespace OmniChat.Application.Services.Implements
                 {
                     var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                    // check duplicate theo SenderId + Provider
                     var existedProfile = await repo.SingleOrDefaultAsync(
-                         selector: x => x,
-                         predicate: x =>
-                             x.SenderId == createCustomerProfileRequest.SenderId &&
-                             x.ProvidersId == createCustomerProfileRequest.ProvidersId
-                     );
+                        predicate: x =>
+                            x.SenderId == createCustomerProfileRequest.SenderId &&
+                            x.ProvidersId == createCustomerProfileRequest.ProvidersId
+                    );
 
                     if (existedProfile != null)
-                        throw new BusinessException(
-                            "Customer profile already exists for this provider.");
+                        return existedProfile;
 
-                    // Map request -> entity
                     var entity = _mapper.Map<CustomerProfile>(createCustomerProfileRequest);
 
-                    //Add entity
                     await repo.InsertAsync(entity);
 
-                    //Map entity -> response
-                    return _mapper.Map<CreateCustomerProfileResponse>(entity);
+                    return entity;
                 });
             }
             catch (Exception ex)
@@ -101,13 +95,13 @@ namespace OmniChat.Application.Services.Implements
             }
         }
 
-        public async Task<CustomerProfile> GetCustomerProfileBySenderIdAsync(long senderId)
+        public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(long senderId, Guid providersId)
         {
             try
             {
                 var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                return await repo.SingleOrDefaultAsync(predicate: x => x.SenderId == senderId);
+                return await repo.SingleOrDefaultAsync(predicate: x => x.SenderId == senderId && x.ProvidersId == providersId);
             }
             catch (Exception ex)
             {

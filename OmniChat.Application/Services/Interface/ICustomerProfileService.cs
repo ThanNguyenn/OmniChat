@@ -12,10 +12,11 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface ICustomerProfileService
     {
-        public Task<CreateCustomerProfileResponse> CreateNewCustomerProfileAsync(CreateCustomerProfileRequest createCustomerProfileRequest);
 
         public  Task<PagingResponse<GetCustomerProfileResponse>> GetCustomerProfilesPagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null);
 
-        public  Task<CustomerProfile> GetCustomerProfileBySenderIdAsync(long senderId);
+        public  Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(long senderId,Guid providersId);
+
+        public  Task<CustomerProfile> CreateCustomerProfileEntityAsync(CreateCustomerProfileRequest request);
     }
 }

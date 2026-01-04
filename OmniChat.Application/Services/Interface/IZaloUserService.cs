@@ -10,5 +10,7 @@ namespace OmniChat.Application.Services.Interface
     public interface IZaloUserService
     {
         Task<ZaloUserProfileData?> GetUserProfileAsync(long zaloUserId);
+
+        public DateTime? ParseZaloBirthDate(string? value);
     }
 }

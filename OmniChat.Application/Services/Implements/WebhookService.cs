@@ -11,13 +11,14 @@ using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public class WebhookService : BaseService<WebhookService>
+    public class WebhookService : BaseService<WebhookService> , IWebhookService
     {
         private readonly IProviderService _providerService;
 
@@ -25,69 +26,85 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly ICustomerMessageService _customerMessageService;
 
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IZaloUserService _zaloUserService;
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
+            _zaloUserService = zaloUserService;
         }
 
-        //public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
-        //{
-        //    try
-        //    {
-        //        if (zaloEvent == null)
-        //            return false;
+        public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
+        {
+            try
+            {
+                if (zaloEvent == null)
+                    return false;
 
-        //        if (zaloEvent.EventName != "user_send_text")
-        //            return true; // ignore event khác
+                if (zaloEvent.EventName != "user_send_text")
+                    return true;
 
-        //        // 1️⃣ Get Provider Zalo
-        //        var provider = await _providerService.GetProviderAsync("Zalo");
-        //        if (provider == null)
-        //            throw new BusinessException("Provider Zalo not found");
+                //  Provider Zalo
+                var provider = await _providerService.GetProviderAsync("Zalo")
+                    ?? throw new BusinessException("Provider Zalo not found");
 
-        //        // 2️⃣ Get CustomerProfile theo SenderId + Provider
-        //        var customerProfile =
-        //            await _customerProfileService
-        //                .GetCustomerProfileBySenderIdAsync(
-        //                    zaloEvent.Sender.Id
-        //                );
+                //  Get CustomerProfile theo SenderId + ProviderId
+                var customerProfile =
+                    await _customerProfileService
+                        .GetCustomerProfileBySenderAndProviderIdIdAsync(
+                            senderId: zaloEvent.Sender.Id,
+                            providersId: provider.Id
+                        );
 
-               
-        //        if (customerProfile == null)
-        //        {
-        //            customerProfile =
-        //                await _customerProfileService
-        //                    .CreateNewCustomerProfileAsync(
-        //                        new CreateCustomerProfileRequest
-        //                        {
-        //                            SenderId = zaloEvent.Sender.Id,
-                                   
-        //                        }
-        //                    );
-        //        }
+                //  if don't have profile => create new
+                if (customerProfile == null)
+                {
+                  
+                    var zaloProfile =
+                        await _zaloUserService.GetUserProfileAsync(zaloEvent.Sender.Id);
+
+                    customerProfile =
+                        await _customerProfileService.CreateCustomerProfileEntityAsync(
+                            new CreateCustomerProfileRequest
+                            {
+                                SenderId = zaloEvent.Sender.Id,
+                                ProvidersId = provider.Id,
+
+                                CustomerName =
+                                    zaloProfile?.DisplayName
+                                    ?? $"Zalo User {zaloEvent.Sender.Id}",
+
+                                AvatarUrl = zaloProfile?.Avatar,
+                                PhoneNumber = zaloProfile?.SharedInfo?.Phone,
+
+                                Gender = zaloProfile?.Gender == 1,
+                                DateOfBirth = _zaloUserService.ParseZaloBirthDate(
+                                    zaloProfile?.BirthDate
+                                )
+                            }
+                        );
+                }
 
                 
-        //        var messageRequest = new CreateCustomerMessageRequest
-        //        {
-        //            Content = zaloEvent.Message?.Text,
-        //            Timestamp = zaloEvent.Timestamp, 
-        //            KeywordActive = false,
-        //            CustomerId = customerProfile.Id,
-        //            ConversationId = Guid.Empty 
-        //        };
+                var messageRequest = new CreateCustomerMessageRequest
+                {
+                    Content = zaloEvent.Message?.Text,
+                    Timestamp = zaloEvent.Timestamp,
+                    KeywordActive = false,
+                    CustomerId = customerProfile.Id,
+                    ConversationId = Guid.Empty  // just temp -> this will have after done atribute funton
+                };
 
-        //        await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
+                await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
 
-        //        return true;
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error get Webhook :{Message}.", ex.Message);
-        //        throw;
-        //    }
-        //}
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing Zalo webhook: {Message}", ex.Message);
+                throw;
+            }
+        }
     }
 }
