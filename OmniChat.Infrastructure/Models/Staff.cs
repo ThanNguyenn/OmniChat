@@ -9,13 +9,12 @@ namespace OmniChat.Infrastructure.Models
     public class Staff
     {
         public Guid Id { get; set; }
+
         public string Name { get; set; }
 
         public StaffStatus Status { get; set; }
 
         public bool IsActive { get; set; }
-
-        public string imageUrl { get; set; }
 
         public Guid AccountId { get; set; }
 
