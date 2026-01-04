@@ -12,6 +12,10 @@ namespace OmniChat.Infrastructure.Models
 
         public string Name { get; set; }
 
+        public string Email { get; set; }
+
+        public string Phone { get; set; }
+
         public StaffStatus Status { get; set; }
 
         public bool IsActive { get; set; }
