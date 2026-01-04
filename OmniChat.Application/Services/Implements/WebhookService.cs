@@ -86,14 +86,16 @@ namespace OmniChat.Application.Services.Implements
                         );
                 }
 
-                
+                Guid ConversationTempId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+
+
                 var messageRequest = new CreateCustomerMessageRequest
                 {
                     Content = zaloEvent.Message?.Text,
                     Timestamp = zaloEvent.Timestamp,
                     KeywordActive = false,
                     CustomerId = customerProfile.Id,
-                    ConversationId = Guid.Empty  // just temp -> this will have after done atribute funton
+                    ConversationId = ConversationTempId // just temp -> this will have after done atribute funton
                 };
 
                 await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
