@@ -17,14 +17,14 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public class CustomerProfileService : BaseService<CustomerProfile>, ICustomerProfileService
+    public class CustomerProfileService : BaseService<CustomerProfileService>, ICustomerProfileService
     {
-        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfile> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
         }
 
 
-        public async Task<CreateCustomerProfileResponse> CreateNewCustomerProfileAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
+        public async Task<CustomerProfile> CreateCustomerProfileEntityAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
         {
             try
             {
@@ -32,26 +32,20 @@ namespace OmniChat.Application.Services.Implements
                 {
                     var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                    // check duplicate theo SenderId + Provider
                     var existedProfile = await repo.SingleOrDefaultAsync(
-                         selector: x => x,
-                         predicate: x =>
-                             x.SenderId == createCustomerProfileRequest.SenderId &&
-                             x.ProvidersId == createCustomerProfileRequest.ProvidersId
-                     );
+                        predicate: x =>
+                            x.SenderId == createCustomerProfileRequest.SenderId &&
+                            x.ProvidersId == createCustomerProfileRequest.ProvidersId
+                    );
 
                     if (existedProfile != null)
-                        throw new BusinessException(
-                            "Customer profile already exists for this provider.");
+                        return existedProfile;
 
-                    // Map request -> entity
                     var entity = _mapper.Map<CustomerProfile>(createCustomerProfileRequest);
 
-                    //Add entity
                     await repo.InsertAsync(entity);
 
-                    //Map entity -> response
-                    return _mapper.Map<CreateCustomerProfileResponse>(entity);
+                    return entity;
                 });
             }
             catch (Exception ex)
@@ -64,7 +58,7 @@ namespace OmniChat.Application.Services.Implements
             }
         }
 
-        public async Task<PagingResponse<GetCustomerProfileResponse>>GetCustomerProfilesPagingAsync(int pageNumber = 1,int pageSize = 20,string? customerName = null)
+        public async Task<PagingResponse<GetCustomerProfileResponse>> GetCustomerProfilesPagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
         {
             try
             {
@@ -101,5 +95,22 @@ namespace OmniChat.Application.Services.Implements
             }
         }
 
+        public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(long senderId, Guid providersId)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+                return await repo.SingleOrDefaultAsync(predicate: x => x.SenderId == senderId && x.ProvidersId == providersId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                   ex,
+                   "Error Get CustomerProfile By SenderId: {Message}",
+                   ex.Message);
+                throw;
+            }
+        }
     }
 }

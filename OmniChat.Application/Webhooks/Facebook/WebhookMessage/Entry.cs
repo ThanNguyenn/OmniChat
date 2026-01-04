@@ -1,4 +1,4 @@
-﻿namespace OmniChat.Api.Webhooks.Facebook.WebhookMessage
+﻿namespace OmniChat.Application.Webhooks.Facebook.WebhookMessage
 {
     public class Entry
     {

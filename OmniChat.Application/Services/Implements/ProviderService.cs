@@ -16,10 +16,10 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public class ProviderService : BaseService<Provider>, IProviderService
+    public class ProviderService : BaseService<ProviderService>, IProviderService
     {
         public ProviderService(IUnitOfWork<OmniChatDbContext> unitOfWork,
-            ILogger<Provider> logger,
+            ILogger<ProviderService> logger,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
             : base(unitOfWork, logger, mapper, httpContextAccessor)
@@ -75,6 +75,22 @@ namespace OmniChat.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error Get All  provider :{Message}.", ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<Provider> GetProviderAsync(string providerName)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepository<Provider>();
+
+                return  await repo.SingleOrDefaultAsync(predicate: x => x.ProviderName == providerName);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error Get provider  :{Message}.", ex.Message);
                 throw;
             }
         }

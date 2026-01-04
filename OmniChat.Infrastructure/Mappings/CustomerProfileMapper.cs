@@ -15,7 +15,6 @@ namespace OmniChat.Infrastructure.Mappings
         public CustomerProfileMapper()
         {
             CreateMap<CreateCustomerProfileRequest, CustomerProfile>();
-            CreateMap<CustomerProfile, CreateCustomerProfileResponse>();
         }
     }
 }

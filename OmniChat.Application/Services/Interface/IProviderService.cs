@@ -1,6 +1,7 @@
 ﻿using OmniChat.Infrastructure.Dtos.Requests.Provider;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
 using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace OmniChat.Application.Services.Interface
     {
         public  Task<CreateProviderResponse> CreateProviderAsync(CreateProviderRequest CreateProviderRequest);
 
-        public  Task<PagingResponse<GetAllProviderResponse>> GetAllProviderAsync(int pageNumber = 1, int pageSize = 20, string? providerName = null);
+        public Task<PagingResponse<GetAllProviderResponse>> GetAllProviderAsync(int pageNumber = 1, int pageSize = 20, string? providerName = null);
+
+        public  Task<Provider> GetProviderAsync(string providerName);
     }
 }

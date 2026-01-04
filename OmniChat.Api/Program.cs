@@ -84,6 +84,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IProviderService, ProviderService>();
     builder.Services.AddScoped<ICustomerProfileService, CustomerProfileService>();
     builder.Services.AddScoped<IZaloOAuthService, ZaloOAuthService>();
+    builder.Services.AddScoped<ICustomerMessageService, CustomerMessageService>();
 }
 
 void RegisterBackgroundServices()
