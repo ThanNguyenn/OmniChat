@@ -153,11 +153,6 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Account>()
                 .HasIndex(a => a.RoleId); // Index scan account by role faster
 
-            // Unique constraint on Email in Account 
-            modelBuilder.Entity<Account>()
-                .HasIndex(a => a.Email) // 1 email only for 1 account
-                .IsUnique();
-
             modelBuilder.Entity<Account>()
                 .HasMany(a => a.RefreshTokens)
                 .WithOne(rt => rt.Account)
@@ -201,6 +196,16 @@ namespace OmniChat.Infrastructure.Persistence
             // Unique constraint on AccountId in Staff (one Account Id only One staff)
             modelBuilder.Entity<Staff>()
                 .HasIndex(s => s.AccountId)
+                .IsUnique();
+
+            // Unique constraint on Email in staff 
+            modelBuilder.Entity<Staff>()
+                .HasIndex(a => a.Email) // 1 email only for 1 staff
+                .IsUnique();
+
+            // Unique constraint on Phone in staff 
+            modelBuilder.Entity<Staff>()
+                .HasIndex(a => a.Phone) // 1 Phone only for 1 staff
                 .IsUnique();
 
             // Index on DepartmentId in Staff

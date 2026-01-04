@@ -36,7 +36,7 @@ public class JwtUtil
         List<Claim> securityClaims = new List<Claim>()
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Staff.Email.ToString()),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
             };
 
