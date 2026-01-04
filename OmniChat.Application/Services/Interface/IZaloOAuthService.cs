@@ -9,4 +9,6 @@ namespace OmniChat.Application.Services.Interface;
 public interface IZaloOAuthService
 {
     Task RefreshAccessTokenAsync();
+
+    Task<string> GetAccessTokenAsync();
 }

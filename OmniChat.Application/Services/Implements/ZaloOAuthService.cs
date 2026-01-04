@@ -26,6 +26,15 @@ public class ZaloOAuthService : BaseService<ZaloOAuthService>, IZaloOAuthService
         _config = config;
     }
 
+    public async Task<string> GetAccessTokenAsync()
+    {
+        var token = await GetActiveTokenAsync();
+
+        if (!NeedsRefresh(token))
+            return token.AccessToken;
+        return null;
+    }
+
     public async Task RefreshAccessTokenAsync()
     {
         var appId = _config["ZaloWebHook:AppId"];
@@ -33,7 +42,7 @@ public class ZaloOAuthService : BaseService<ZaloOAuthService>, IZaloOAuthService
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var accessToken = await GetOrCreateActiveTokenAsync();
+            var accessToken = await GetActiveTokenAsync();
 
             if (!NeedsRefresh(accessToken))
                 return;
@@ -47,26 +56,10 @@ public class ZaloOAuthService : BaseService<ZaloOAuthService>, IZaloOAuthService
         });
     }
 
-    private async Task<ZaloOathToken> GetOrCreateActiveTokenAsync()
+    private async Task<ZaloOathToken> GetActiveTokenAsync()
     {
         var repo = _unitOfWork.GetRepository<ZaloOathToken>();
-        var token = await repo.SingleOrDefaultAsync(predicate: t => t.IsActive);
-
-        if (token != null)
-            return token;
-
-        token = new ZaloOathToken
-        {
-            Id = Guid.NewGuid(),
-            AccessToken = string.Empty,
-            RefreshToken = string.Empty,
-            AccessTokenExpiredDate = DateTime.UtcNow,
-            RefreshTokenExpiredDate = DateTime.UtcNow,
-            LastRefreshTokenAt = DateTime.UtcNow,
-            IsActive = true
-        };
-
-        await repo.InsertAsync(token);
+        var token = await repo.SingleOrDefaultAsync(predicate: t => t.IsActive) ?? throw new BusinessException("There is no active token");
         return token;
     }
 
