@@ -14,9 +14,9 @@ namespace OmniChat.Infrastructure.Models
 
         public string UserName { get; set; }
 
-        public string AvatarUrl { get; set; }
+        public string? AvatarUrl { get; set; } // nullAble
 
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
         public Guid RoleId { get; set; }
 

@@ -14,7 +14,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string Description { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
         public DateTime CreateDate { get; set; }
 

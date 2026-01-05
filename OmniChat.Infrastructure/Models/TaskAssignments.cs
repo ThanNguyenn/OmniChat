@@ -26,7 +26,7 @@ namespace OmniChat.Infrastructure.Models
 
         public AssignedType AssignedType { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
         public Guid StaffId { get; set; }
 

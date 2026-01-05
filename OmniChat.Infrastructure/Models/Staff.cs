@@ -18,9 +18,9 @@ namespace OmniChat.Infrastructure.Models
 
         public StaffStatus Status { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
-        public Guid AccountId { get; set; }
+        public Guid? AccountId { get; set; }
 
         public virtual Account Account { get; set; }
 
