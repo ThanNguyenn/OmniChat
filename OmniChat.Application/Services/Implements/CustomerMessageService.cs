@@ -57,7 +57,7 @@ namespace OmniChat.Application.Services.Implements
             }
         }
 
-        public async Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageAsync(int pageNumber = 1, int pageSize = 20, string? content = null)
+        public async Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageByCustomerIdAsync(int pageNumber = 1, int pageSize = 20, Guid? customerId = null)
         {
             try
             {
@@ -73,12 +73,12 @@ namespace OmniChat.Application.Services.Implements
                  CustomerId = x.CustomerId,
                  ConversationId = x.ConversationId
                 },
-                predicate: string.IsNullOrWhiteSpace(content)
+                  predicate: customerId == null
                 ? null
-                : x => x.Content != null && x.Content.Contains(content),
-                   orderBy: q => q.OrderByDescending(x => x.Timestamp),
-                   page: pageNumber,
-                   size: pageSize
+                : x => x.CustomerId == customerId.Value,
+            orderBy: q => q.OrderByDescending(x => x.Timestamp),
+            page: pageNumber,
+            size: pageSize
                 );
 
             }

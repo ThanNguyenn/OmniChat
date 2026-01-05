@@ -6,6 +6,6 @@
 
         public long Time { get; set; }
 
-        ICollection<FacebookMessage> facebookMessages = new List<FacebookMessage>();
+       public List<FacebookMessage> facebookMessages = new List<FacebookMessage>();
     }
 }

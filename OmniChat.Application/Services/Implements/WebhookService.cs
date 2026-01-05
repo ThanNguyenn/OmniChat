@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
@@ -18,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public class WebhookService : BaseService<WebhookService> , IWebhookService
+    public class WebhookService : BaseService<WebhookService>, IWebhookService
     {
         private readonly IProviderService _providerService;
 
@@ -27,12 +28,15 @@ namespace OmniChat.Application.Services.Implements
         private readonly ICustomerMessageService _customerMessageService;
 
         private readonly IZaloUserService _zaloUserService;
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly IFacebookUserService _facebookUserService;
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
             _zaloUserService = zaloUserService;
+            _facebookUserService = facebookUserService;
         }
 
         public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
@@ -60,7 +64,7 @@ namespace OmniChat.Application.Services.Implements
                 //  if don't have profile => create new
                 if (customerProfile == null)
                 {
-                  
+
                     var zaloProfile =
                         await _zaloUserService.GetUserProfileAsync(zaloEvent.Sender.Id);
 
@@ -105,6 +109,90 @@ namespace OmniChat.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing Zalo webhook: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
+        {
+            try
+            {
+                if(faceBookWebhookPayload?.FacebookEntry == null || !faceBookWebhookPayload.FacebookEntry.Any())
+                {
+                    return false;
+                }
+
+                // get provider 
+
+                var provider = await _providerService.GetProviderAsync("Facebook") ?? throw new BusinessException("Provider Facebook Not found");
+
+
+                //  Get CustomerProfile theo SenderId + ProviderId
+
+                foreach (var entry in faceBookWebhookPayload.FacebookEntry)
+                {
+
+                    if(entry.facebookMessages == null)
+                        continue;
+
+                    foreach (var messaging in entry.facebookMessages)
+                    {
+                        // now just message text 
+                        if(messaging.Message?.Text == null)
+                            continue;
+
+                        // Get or Create CustomerProfile
+                        var customerProfile = await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
+                            senderId: messaging.Sender.Id,
+                            providersId: provider.Id
+                            );
+
+                        if (customerProfile == null)
+                        {
+                            // create if don't exit
+                            
+                            var fbUser = await _facebookUserService.GetUserProfileAsync(messaging.Sender.Id);
+
+                            var CustomerName = $"{fbUser?.FirstName} {fbUser?.LastName}".Trim();
+
+                            bool customerGender = fbUser?.Gender == "male";
+
+
+                            customerProfile = await _customerProfileService.CreateCustomerProfileEntityAsync(new CreateCustomerProfileRequest
+                            {
+                                SenderId = messaging.Sender.Id,
+                                CustomerName = CustomerName,
+                                ProvidersId = provider.Id,
+                                AvatarUrl = fbUser?.ProfilePic,
+                                Gender = customerGender,
+                                Email = null,
+                                PhoneNumber = null,
+                                DateOfBirth = null,
+                            });
+                        }
+
+                        // create Message 
+
+                        // conversation temp
+                        Guid ConversationTempId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+
+                        await _customerMessageService.CreateCustomerMessageAsync(
+                            new CreateCustomerMessageRequest
+                            {
+                                Content = messaging.Message.Text,
+                                Timestamp = messaging.Timestamp,
+                                KeywordActive = false,
+                                CustomerId = customerProfile.Id,
+                                ConversationId = ConversationTempId
+                            });
+                        }
+                }
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing Facebook webhook: {Message}", ex.Message);
                 throw;
             }
         }
