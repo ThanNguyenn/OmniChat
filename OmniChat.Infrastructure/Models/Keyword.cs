@@ -16,7 +16,7 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime CreateDate { get; set; }
 
-        public bool IsDeleted { get; set; }
+        public bool? IsDeleted { get; set; }
 
         public string Code { get; set; }
 

@@ -20,7 +20,7 @@ namespace OmniChat.Infrastructure.Models
 
         public int AchivedValue { get; set; }
 
-        public bool IsDeleted { get; set; }
+        public bool? IsDeleted { get; set; }
 
         public Guid DepartmentId { get; set; }
 

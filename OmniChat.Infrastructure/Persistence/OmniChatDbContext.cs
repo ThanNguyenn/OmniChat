@@ -121,6 +121,91 @@ namespace OmniChat.Infrastructure.Persistence
                   .Property(ta => ta.AssignedType)
                 .HasConversion<string>();
 
+            // default value IsActive = true
+       
+            modelBuilder.Entity<Account>()
+            .Property(x => x.IsActive)
+            .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<Role>()
+           .Property(x => x.IsActive)
+           .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<Staff>()
+            .Property(x => x.IsActive)
+            .HasDefaultValueSql("true");
+
+       
+            modelBuilder.Entity<ClaimType>()
+            .Property(x => x.IsActive)
+            .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<Department>()
+           .Property(x => x.IsActive)
+           .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<TaskAssignments>()
+           .Property(x => x.IsActive)
+           .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<DepartmentConversation>()
+           .Property(x => x.IsActive)
+           .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<DepartmentConversationType>()
+          .Property(x => x.IsActive)
+          .HasDefaultValueSql("true");
+            // default vaule isDelete = false
+            modelBuilder.Entity<Kpi>()
+            .Property(x => x.IsDeleted)
+            .HasDefaultValueSql("false");
+
+            modelBuilder.Entity<Keyword>()
+            .Property(x => x.IsDeleted)
+            .HasDefaultValueSql("false");
+
+            //default createDate utc now 
+            modelBuilder.Entity<RefreshToken>()
+            .Property(x => x.CreateDate)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<Shift>()
+             .Property(x => x.CreateDate)
+             .HasColumnType("timestamp with time zone")
+             .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<Kpi>()
+            .Property(x => x.CreateDate)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<Keyword>()
+            .Property(x => x.CreateDate)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<TaskAssignments>()
+            .Property(x => x.CreateDate)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<DepartmentConversation>()
+            .Property(x => x.CreateDate)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<Notification>()
+            .Property(x => x.CreatedDate)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<Provider>()
+            .Property(x => x.CreateDate)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
+
+
             // ==== Role - Account ( one to Many ) ====
 
             modelBuilder.Entity<Role>()

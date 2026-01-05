@@ -12,7 +12,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string TypeName { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
         public virtual ICollection<Claim>? Claims { get; set; }
     }
