@@ -2,6 +2,6 @@
 {
     public class FaceBookWebhookPayload
     {
-        public Entry FacebookEntry { get; set; }
+        public List<Entry> FacebookEntry { get; set; }
     }
 }

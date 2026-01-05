@@ -13,8 +13,8 @@ namespace OmniChat.Application.Services.Interface
     {
 
         public Task<CreateCustomerMessageResponse> CreateCustomerMessageAsync(CreateCustomerMessageRequest createCustomerMessageRequest);
-        
-        public  Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageAsync(int pageNumber = 1, int pageSize = 20, string? content = null);
+
+        public  Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageByCustomerIdAsync(int pageNumber = 1, int pageSize = 20, Guid? customerId = null);
 
 
     }

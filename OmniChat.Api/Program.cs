@@ -85,6 +85,9 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<ICustomerProfileService, CustomerProfileService>();
     builder.Services.AddScoped<IZaloOAuthService, ZaloOAuthService>();
     builder.Services.AddScoped<ICustomerMessageService, CustomerMessageService>();
+    builder.Services.AddScoped<IWebhookService, WebhookService>();
+    builder.Services.AddScoped<IZaloUserService, ZaloUserService>();
+    builder.Services.AddScoped<IFacebookUserService, FacebookUserService>();
 }
 
 void RegisterBackgroundServices()
