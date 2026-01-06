@@ -184,6 +184,7 @@ void ConfigureSwagger()
 {
     builder.Services.AddSwaggerGen(options =>
     {
+        options.EnableAnnotations();
         options.SwaggerDoc("v1", new OpenApiInfo
         {
             Title = "OmniChat.API",
@@ -219,7 +220,11 @@ void ConfigureSwagger()
 void ConfigureMiddleware()
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "OmniChat API v1");
+    });
 
     app.UseMiddleware<ExceptionHandlerMiddleware>();
 
