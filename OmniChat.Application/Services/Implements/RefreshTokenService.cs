@@ -89,12 +89,6 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
         await repo.DeleteAsync(predicate: t => t.ExpireDate <= DateTime.UtcNow);
     }
 
-
-    public async Task DeleteExpiredRefreshTokensAsync()
-    {
-        var repo = _unitOfWork.GetRepository<RefreshToken>();
-        await repo.DeleteAsync(predicate: t => t.ExpireDate <= DateTime.UtcNow);
-    }
 }
 
 
