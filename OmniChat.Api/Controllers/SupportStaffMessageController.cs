@@ -1,0 +1,64 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using OmniChat.Api.Constants;
+using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
+using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
+using OmniChat.Infrastructure.Metadatas;
+
+namespace OmniChat.Api.Controllers
+{
+    [ApiController]
+    public class SupportStaffMessageController : Controller
+    {
+        private readonly ISupportStaffMessageService _supportStaffMessageService;
+        public SupportStaffMessageController(ISupportStaffMessageService supportStaffMessageService)
+        {
+            _supportStaffMessageService = supportStaffMessageService;
+        }
+       
+        /// Get all support staff messages with pagination
+        [HttpGet(ApiEndPointConstant.SupportStaffMessageEndPoint.GetAllPagingByStaffId)]
+        [ProducesResponseType(typeof(PagingResponse<GetAllSupportStaffMessageResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllSupportStaffMessagesPaging([FromQuery] int pageNumber = 1,[FromQuery] int pageSize = 20,[FromQuery] Guid? staffId = null)
+        {
+            var result = await _supportStaffMessageService.GetAllSupportStaffMessageByStaffIdAsync(
+                pageNumber,
+                pageSize,
+                staffId);
+
+            return Ok(result);
+        }
+
+        /// Send message to Zalo
+        [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendZaloMessage)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SendZaloMessage(
+            [FromBody] CreateSupportStaffMessageRequest request)
+        {
+            await _supportStaffMessageService.SendZaloMessageAsync(request);
+            return Ok(new { message = "Message sent to Zalo successfully" });
+        }
+
+        /// Send message to Facebook
+        [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendFacebookMessage)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SendFacebookMessage(
+            [FromBody] CreateSupportStaffMessageRequest request)
+        {
+            await _supportStaffMessageService.SendFacebookMesageAsync(request);
+            return Ok(new { message = "Message sent to Facebook successfully" });
+        }
+
+        /// Update support staff message status to Sent
+        [HttpPut(ApiEndPointConstant.SupportStaffMessageEndPoint.UpdateStatusToSent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateStatusToSent([FromRoute] Guid id)
+        {
+            await _supportStaffMessageService.UpdateSupportStaffMessageStatusSentAsync(id);
+            return Ok(new { message = "Status updated successfully" });
+        }
+    }
+}

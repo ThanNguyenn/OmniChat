@@ -88,6 +88,8 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IWebhookService, WebhookService>();
     builder.Services.AddScoped<IZaloUserService, ZaloUserService>();
     builder.Services.AddScoped<IFacebookUserService, FacebookUserService>();
+    builder.Services.AddScoped<ISupportStaffMessageService, SupportStaffMessageService>();
+    builder.Services.AddScoped<ISupportConversationService, SupportConversationService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
     builder.Services.AddScoped<IAccountService, AccountService>();

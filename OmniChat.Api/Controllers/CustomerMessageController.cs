@@ -19,10 +19,7 @@ namespace OmniChat.Api.Controllers
         [HttpGet(ApiEndPointConstant.CustomerMessageEndPoint.GetAllPagingByCustomerId)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult>GetAllCustomerMessageByCustomerIdPagingAsync(
-            [FromQuery] Guid customerId,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 20)
+        public async Task<IActionResult>GetAllCustomerMessageByCustomerIdPagingAsync([FromQuery] Guid customerId,[FromQuery] int pageNumber = 1,[FromQuery] int pageSize = 20)
         {
             var result =
                 await _customerMessageService
