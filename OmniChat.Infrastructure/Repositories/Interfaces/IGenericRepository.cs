@@ -68,4 +68,5 @@ public interface IGenericRepository<T> : IDisposable where T : class
 
     void Delete(T entity);
     void DeleteRange(IEnumerable<T> entities);
+    Task DeleteAsync(Expression<Func<T, bool>> predicate);
 }
