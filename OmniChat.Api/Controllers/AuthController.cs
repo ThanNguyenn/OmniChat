@@ -1,0 +1,34 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using OmniChat.Api.Constants;
+using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Auth;
+using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
+
+namespace OmniChat.Api.Controllers;
+
+[ApiController]
+[Route(ApiEndPointConstant.Auth.Base)]
+public class AuthController : BaseController<AuthController>
+{
+    private readonly IAuthService _authService;
+
+    public AuthController(ILogger<AuthController> logger, IAuthService authService) : base(logger)
+    {
+        _authService = authService;
+    }
+
+    [HttpPost(ApiEndPointConstant.Auth.Login)]
+    [SwaggerOperation(
+    Summary = "Đăng nhập bằng tài khoản của app",
+    Description = "Đăng nhập bằng tài khoản của app sử dụng email hoặc username và mật khẩu, nhận role, access token và refresh token trả về.")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+    {
+        var result = await _authService.LoginAsync(loginRequest);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Login successful", result);
+        return StatusCode(StatusCodes.Status200OK, result);
+    }
+
+        
+}

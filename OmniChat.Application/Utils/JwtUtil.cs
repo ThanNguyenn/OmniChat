@@ -26,7 +26,7 @@ public class JwtUtil
         _expired = double.Parse(configuration["Jwt:TokenValidityInMinutes"]);
     }
 
-    public string GenerateJwtToken(Account user, Tuple<string, Guid> guidClaimer, bool isResetPasswordOnly)
+    public string GenerateJwtToken(Account user, Tuple<string, Guid> guidClaimer)
     {
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
         SymmetricSecurityKey secrectKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtkey));
@@ -42,12 +42,6 @@ public class JwtUtil
 
         if (guidClaimer != null)
             securityClaims.Add(new Claim(guidClaimer.Item1, guidClaimer.Item2.ToString()));
-
-        // Nếu mật khẩu hết hạn, thêm claim đặc biệt
-        if (isResetPasswordOnly)
-        {
-            securityClaims.Add(new Claim("ResetPasswordOnly", "true"));
-        }
 
         var expires = DateTime.Now.AddMinutes(_expired);
         var token = new JwtSecurityToken(issuer, _audience, securityClaims, DateTime.Now, expires, credentials);

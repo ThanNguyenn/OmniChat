@@ -47,4 +47,20 @@ public class ApiEndPointConstant
 
         public const string GetAllCustomerProfileByCustomerName = CustomerProfile + "/paging";
     }
+
+    public static class Auth
+    {
+        public const string Base = ApiV1 + "/auth";
+
+        public const string Login = "login";
+
+        public const string RefreshToken = "refresh-token";
+    }
+
+    public static class Account 
+    {
+        public const string Base = ApiV1 + "/accounts";
+        public const string Create = "create";
+
+    }
 }
