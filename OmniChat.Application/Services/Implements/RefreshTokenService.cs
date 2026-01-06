@@ -79,6 +79,7 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
                 repo.Delete(token);
             }
         });
+        return true;
     }
 
 
