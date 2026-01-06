@@ -30,5 +30,27 @@ public class AuthController : BaseController<AuthController>
         return StatusCode(StatusCodes.Status200OK, result);
     }
 
-        
+    [HttpPost(ApiEndPointConstant.Auth.ChangePassword)]
+    [SwaggerOperation(
+    Summary = "Thay đổi password",
+    Description = "Dùng cho staff thay đổi password nếu nhớ mật khẩu cũ.")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordResquest changePasswordRequest)
+    {
+        var result = await _authService.ChangePasswordAsync(changePasswordRequest);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Password changed successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpPost(ApiEndPointConstant.Auth.RefreshToken)]
+    [SwaggerOperation(
+        Summary = "Refresh Access Token",
+        Description = "Dùng Refresh Token được cấp để nhận Access Token mới.")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshAccessTokenRequest refreshAccessTokenRequest)
+    {
+        var result = await _authService.RefreshAccessToken(refreshAccessTokenRequest);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Access token refreshed successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+
 }

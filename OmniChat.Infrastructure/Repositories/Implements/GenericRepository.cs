@@ -164,6 +164,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _dbSet.RemoveRange(entities);
     }
 
+    public async Task DeleteAsync(Expression<Func<T, bool>> predicate)
+    {
+        await _dbSet.Where(predicate).ExecuteDeleteAsync();
+    }
+
     public virtual async Task<T> GetByIdAsync(Guid id)
     {
         return await _dbSet.FindAsync(id);

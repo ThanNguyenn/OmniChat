@@ -97,6 +97,7 @@ void RegisterBackgroundServices()
 {
     // Register background services here
     builder.Services.AddHostedService<ZaloTokenRefreshWorker>();
+    builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
 }
 
 void ConfigureDatabase()
