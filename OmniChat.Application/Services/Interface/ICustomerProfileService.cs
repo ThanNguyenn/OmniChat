@@ -15,6 +15,8 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task<PagingResponse<GetCustomerProfileResponse>> GetCustomerProfilesPagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null);
 
+        public Task<CustomerProfile> GetCustomerProfileByIdAsync(Guid customerProfileId);
+
         public  Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(long senderId,Guid providersId);
 
         public  Task<CustomerProfile> CreateCustomerProfileEntityAsync(CreateCustomerProfileRequest request);

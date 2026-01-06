@@ -1,0 +1,24 @@
+﻿using OmniChat.Infrastructure.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage
+{
+    public class GetAllSupportStaffMessageResponse
+    {
+        public Guid Id { get; set; }
+
+        public Guid SupportConversationId { get; set; }
+
+        public Guid StaffId { get; set; }
+
+        public string Content { get; set; }
+
+        public SupportStaffMessageStatus Status { get; set; }
+
+        public long Timestamp { get; set; }
+    }
+}

@@ -48,6 +48,22 @@ public class ApiEndPointConstant
         public const string GetAllCustomerProfileByCustomerName = CustomerProfile + "/paging";
     }
 
+    public static class SupportStaffMessageEndPoint
+    {
+        public const string SupportStaffMessage = ApiV1 + "/support-staff-message";
+        public const string GetAllPagingByStaffId = SupportStaffMessage + "/paging";
+        public const string SendZaloMessage = SupportStaffMessage + "/send-zalo";
+        public const string SendFacebookMessage = SupportStaffMessage + "/send-facebook";
+        public const string UpdateStatusToSent = SupportStaffMessage + "/{id}/status/sent";
+    }
+
+    public static class SupportConversationEndPoint
+    {
+        public const string SupportConversation = ApiV1 + "/support-conversation";
+        public const string GetById = SupportConversation + "/{id}";
+        public const string GetAllPagingByCustomerName = SupportConversation + "/paging";
+    }
+
     public static class Auth
     {
         public const string Base = ApiV1 + "/auth";
