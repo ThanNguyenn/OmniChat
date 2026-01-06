@@ -79,6 +79,14 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
                 repo.Delete(token);
             }
         });
+        return true;
+    }
+
+
+    public async Task DeleteExpiredRefreshTokensAsync()
+    {
+        var repo = _unitOfWork.GetRepository<RefreshToken>();
+        await repo.DeleteAsync(predicate: t => t.ExpireDate <= DateTime.UtcNow);
     }
 
 
