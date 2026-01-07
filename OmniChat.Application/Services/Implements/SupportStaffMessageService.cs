@@ -85,7 +85,7 @@ namespace OmniChat.Application.Services.Implements
             var result = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
                 throw new Exception(result);
-
+                
             // update staff message status pending -> send
 
             await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);

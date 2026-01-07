@@ -29,24 +29,32 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<FacebookUserProfile?> GetUserProfileAsync(long psid)
         {
-            var pageAccessToken = _configuration["Facebook:PageAccessToken"];
+            var pageAccessToken = _configuration["facebookWebHook:AccessToken"];
+
+            // parse long -> string and prepend "act_"
+            var psidString = $"{psid}";
 
             var url =
-                $"https://graph.facebook.com/v18.0/{psid}" +
+                $"https://graph.facebook.com/v18.0/{psidString}" +
                 $"?fields=first_name,last_name,profile_pic,gender" +
                 $"&access_token={pageAccessToken}";
 
             var response = await _httpClient.GetAsync(url);
+            var json = await response.Content.ReadAsStringAsync();
+
+            _logger.LogInformation(
+                "Facebook raw response. StatusCode: {StatusCode}, Body: {Body}",
+                response.StatusCode,
+                json
+            );
+
             if (!response.IsSuccessStatusCode)
                 return null;
-
-            var json = await response.Content.ReadAsStringAsync();
 
             return JsonSerializer.Deserialize<FacebookUserProfile>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
-
         }
     }
 }
