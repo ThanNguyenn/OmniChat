@@ -26,8 +26,7 @@ namespace OmniChat.Application.Services.Implements
         public async Task<CreateCustomerMessageResponse> CreateCustomerMessageAsync(CreateCustomerMessageRequest createCustomerMessageRequest)
         {
            
-            try
-            {
+            
                 return await _unitOfWork.ProcessInTransactionAsync(async () =>
                 {
                     // call repo 
@@ -46,50 +45,30 @@ namespace OmniChat.Application.Services.Implements
                     return _mapper.Map<CreateCustomerMessageResponse>(entity);
 
                 });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                  ex,
-                  "Error creating CustomerMessage: {Message}",
-                  ex.Message);
-                throw;
-            }
         }
 
         public async Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageByCustomerIdAsync(int pageNumber = 1, int pageSize = 20, Guid? customerId = null)
         {
-            try
-            {
+            
                 var repo = _unitOfWork.GetRepository<CustomerMessage>();
 
-                return await repo.GetPagingListAsync(
-                selector: x => new GetAllCustomerMessageResponse
-                {
-                 Id = x.Id,
-                 Content = x.Content,
-                 Timestamp = x.Timestamp,
-                 KeywordActive = x.KeywordActive,
-                 CustomerId = x.CustomerId,
-                 ConversationId = x.ConversationId
-                },
-                  predicate: customerId == null
-                ? null
-                : x => x.CustomerId == customerId.Value,
-            orderBy: q => q.OrderByDescending(x => x.Timestamp),
-            page: pageNumber,
-            size: pageSize
-                );
-
-            }
-            catch (Exception ex) 
+            return await repo.GetPagingListAsync(
+            selector: x => new GetAllCustomerMessageResponse
             {
-                _logger.LogError(
-                     ex,
-                     "Error  paging CustomerMessage: {Message}",
-                     ex.Message);
-                throw;
-            }
+                Id = x.Id,
+                Content = x.Content,
+                Timestamp = x.Timestamp,
+                KeywordActive = x.KeywordActive,
+                CustomerId = x.CustomerId,
+                ConversationId = x.ConversationId
+            },
+              predicate: customerId == null
+            ? null
+            : x => x.CustomerId == customerId.Value,
+        orderBy: q => q.OrderByDescending(x => x.Timestamp),
+        page: pageNumber,
+        size: pageSize
+            );
         }
     }
 }

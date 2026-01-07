@@ -6,6 +6,7 @@ using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
 using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers
 {
@@ -20,6 +21,10 @@ namespace OmniChat.Api.Controllers
 
         [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetAllCustomerProfileByCustomerName)]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Lấy Profile của Customer có Paging",
+            Description = "Lấy Profile của Customer có Paging và research bằng customer Name"
+            )]
         public async Task<IActionResult>GetAllCustomerProfileByCustomerNamePagingAsync(
       [FromQuery] string? customerName = null,
       [FromQuery] int pageNumber = 1,

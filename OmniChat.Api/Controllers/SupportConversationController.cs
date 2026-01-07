@@ -3,6 +3,7 @@ using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers
 {
@@ -16,19 +17,13 @@ namespace OmniChat.Api.Controllers
             _supportConversationService = supportConversationService;
         }
 
-        /// Get support conversation by ID
-        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.GetById)]
-        [ProducesResponseType(typeof(GetAllSupportConversationResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetSupportConversationById([FromRoute] Guid id)
-        {
-            var result = await _supportConversationService.GetSupportConversationByIdAsync(id);
-            return Ok(result);
-        }
-
         /// Get all support conversations with pagination
         [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.GetAllPagingByCustomerName)]
         [ProducesResponseType(typeof(PagingResponse<GetAllSupportConversationResponse>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Lấy toàn bộ SupportConversation Paging",
+            Description = "Lấy toàn bộ thông tin của SupportConversation có Paging và search theo CustomerName"
+            )]
         public async Task<IActionResult> GetAllSupportConversationsPaging([FromQuery] int pageNumber = 1,[FromQuery] int pageSize = 20,[FromQuery] string? customerName = null)
         {
             var result = await _supportConversationService.SupportConversationByCustomerNamePagingAsync(
