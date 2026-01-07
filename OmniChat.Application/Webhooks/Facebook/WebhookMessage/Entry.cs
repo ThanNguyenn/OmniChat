@@ -2,10 +2,8 @@
 {
     public class Entry
     {
-        public string id { get; set; }
-
+        public string id { get; set; }                
         public long time { get; set; }
-
-       public List<FacebookMessage> messaging = new List<FacebookMessage>();
+        public List<FacebookMessage> messaging { get; set; }
     }
 }
