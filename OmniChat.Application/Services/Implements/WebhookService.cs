@@ -41,8 +41,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
         {
-            try
-            {
+           
                 if (zaloEvent == null)
                     return false;
 
@@ -102,21 +101,20 @@ namespace OmniChat.Application.Services.Implements
                     ConversationId = ConversationTempId // just temp -> this will have after done atribute funton
                 };
 
-                await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
+               var newCustomerMess = await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing Zalo webhook: {Message}", ex.Message);
-                throw;
-            }
+                if(newCustomerMess == null)
+                {
+                    return false;
+                }
+
+                return true;      
         }
 
         public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
         {
-            try
-            {
+           bool result = false;
+
                 if(faceBookWebhookPayload?.FacebookEntry == null || !faceBookWebhookPayload.FacebookEntry.Any())
                 {
                     return false;
@@ -176,7 +174,7 @@ namespace OmniChat.Application.Services.Implements
                         // conversation temp
                         Guid ConversationTempId = Guid.Parse("55555555-5555-5555-5555-555555555555");
 
-                        await _customerMessageService.CreateCustomerMessageAsync(
+                      var newMessage =  await _customerMessageService.CreateCustomerMessageAsync(
                             new CreateCustomerMessageRequest
                             {
                                 Content = messaging.Message.Text,
@@ -184,17 +182,16 @@ namespace OmniChat.Application.Services.Implements
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
                                 ConversationId = ConversationTempId
-                            });
-                        }
-                }
-                return true;
+                            }
+                      );
 
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing Facebook webhook: {Message}", ex.Message);
-                throw;
-            }
+                        if(newMessage != null)
+                        {
+                        result = true;
+                        }
+                    }
+                }
+            return result;
         }
     }
 }

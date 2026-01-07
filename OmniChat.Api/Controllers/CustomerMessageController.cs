@@ -3,6 +3,7 @@ using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers
 {
@@ -19,6 +20,10 @@ namespace OmniChat.Api.Controllers
         [HttpGet(ApiEndPointConstant.CustomerMessageEndPoint.GetAllPagingByCustomerId)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(
+            Summary = "Lấy hết tin nhắn của Customer có Paging",
+            Description = "Lấy tin nhắn của Customer có Paging và research bằng CustomerId"
+            )]
         public async Task<IActionResult>GetAllCustomerMessageByCustomerIdPagingAsync([FromQuery] Guid customerId,[FromQuery] int pageNumber = 1,[FromQuery] int pageSize = 20)
         {
             var result =

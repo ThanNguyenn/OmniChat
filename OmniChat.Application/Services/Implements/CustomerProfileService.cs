@@ -26,8 +26,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<CustomerProfile> CreateCustomerProfileEntityAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
         {
-            try
-            {
+           
                 return await _unitOfWork.ProcessInTransactionAsync(async () =>
                 {
                     var repo = _unitOfWork.GetRepository<CustomerProfile>();
@@ -47,21 +46,12 @@ namespace OmniChat.Application.Services.Implements
 
                     return entity;
                 });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error creating customer profile: {Message}",
-                    ex.Message);
-                throw;
-            }
+           
         }
 
         public async Task<PagingResponse<GetCustomerProfileResponse>> GetCustomerProfilesPagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
         {
-            try
-            {
+           
                 var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
                 return await repo.GetPagingListAsync(
@@ -83,34 +73,15 @@ namespace OmniChat.Application.Services.Implements
                     orderBy: q => q.OrderByDescending(x => x.CustomerName),
                     page: pageNumber,
                     size: pageSize
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error paging CustomerProfile: {Message}",
-                    ex.Message);
-                throw;
-            }
+                ); 
         }
 
         public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(long senderId, Guid providersId)
         {
-            try
-            {
+            
                 var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
                 return await repo.SingleOrDefaultAsync(predicate: x => x.SenderId == senderId && x.ProvidersId == providersId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                   ex,
-                   "Error Get CustomerProfile By SenderId: {Message}",
-                   ex.Message);
-                throw;
-            }
         }
 
         public async Task<CustomerProfile> GetCustomerProfileByIdAsync(Guid customerProfileId)
