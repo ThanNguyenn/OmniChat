@@ -73,7 +73,7 @@ namespace OmniChat.Application.Services.Implements
 
             var payload = new
             {
-                recipient = new { senderId = existCustomerProfile.SenderId },
+                recipient = new { senderId = existCustomerProfile.SenderId},
                 message = new { text = newSupportMess.Content}
             };
 
@@ -149,23 +149,25 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<CreateSupportStaffMessageResponse> CreateSupportStaffMessageAsync(CreateSupportStaffMessageRequest createSupportMessageRequest)
         {
+            var newSupporttMessage = new SupportStaffMessage();
 
             var repo = _unitOfWork.GetRepository<SupportStaffMessage>();
 
-            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+             await _unitOfWork.ProcessInTransactionAsync(async () =>
             {
                 // map request -> entity
-                var newSupportStaffMessage = _mapper.Map<SupportStaffMessage>(createSupportMessageRequest);
+                newSupporttMessage = _mapper.Map<SupportStaffMessage>(createSupportMessageRequest);
 
                 // call repo save database
 
-                await repo.InsertAsync(newSupportStaffMessage);
+                await repo.InsertAsync(newSupporttMessage);
 
                 // map entity -> response
 
-                return _mapper.Map<CreateSupportStaffMessageResponse>(newSupportStaffMessage);
+          
 
             });
+            return _mapper.Map<CreateSupportStaffMessageResponse>(newSupporttMessage);
         }
 
 
