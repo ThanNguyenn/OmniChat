@@ -30,7 +30,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> ZaloWebhookAsync(
             [FromBody] ZaloWebhookEvent zaloEvent)
         {
-            _ = _webhookService.ZaloWebhookAsync(zaloEvent);
+           await _webhookService.ZaloWebhookAsync(zaloEvent);
 
             return Ok(new ApiResponse<object>
             {
@@ -53,7 +53,7 @@ namespace OmniChat.Api.Controllers
             [FromBody] FaceBookWebhookPayload payload)
         {
 
-            _ = _webhookService.FacebookWebhookAsync(payload);
+            await _webhookService.FacebookWebhookAsync(payload);
 
             return Ok(new ApiResponse<object>
             {
