@@ -75,7 +75,7 @@ namespace OmniChat.Application.Services.Implements
             var payload = new
             {
                 recipient  = new ZaloRecipient { UserId = existCustomerProfile.SenderId },
-                message = new { newSupportMess.Content }
+                message = new { text = newSupportMess.Content }
             };
 
             var response = await client.PostAsJsonAsync(
