@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
@@ -30,13 +31,16 @@ namespace OmniChat.Application.Services.Implements
         private readonly IZaloUserService _zaloUserService;
 
         private readonly IFacebookUserService _facebookUserService;
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly IConfiguration _configuration;
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService,IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
             _zaloUserService = zaloUserService;
             _facebookUserService = facebookUserService;
+            _configuration = configuration;
         }
 
         public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
@@ -193,5 +197,12 @@ namespace OmniChat.Application.Services.Implements
                 }
             return result;
         }
+
+        public async Task<bool> VerifyWebhook(string mode, string token)
+        {
+            var verifyToken = _configuration["facebookWebHook:VerifyToken"];
+            return mode == "subscribe" && token == verifyToken;
+        }
+
     }
 }

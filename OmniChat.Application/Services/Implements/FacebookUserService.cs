@@ -47,7 +47,6 @@ namespace OmniChat.Application.Services.Implements
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
-
         }
     }
 }

@@ -63,5 +63,25 @@ namespace OmniChat.Api.Controllers
                 Data = null
             });
         }
+
+        [HttpGet(ApiEndPointConstant.Webhooks.FacebookWebhook)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+        Summary = "Webhook set up verify của Facebook",
+        Description = "Webhook verify hứng event từ phía Facebook "
+        )]
+        public async Task<IActionResult> Verify(
+        [FromQuery(Name = "hub.mode")] string mode,
+        [FromQuery(Name = "hub.verify_token")] string token,
+        [FromQuery(Name = "hub.challenge")] string challenge)
+        {
+            var isValid = await _webhookService.VerifyWebhook(mode, token);
+
+            if (!isValid)
+                return Forbid();
+
+            return Content(challenge, "text/plain");
+        }
     }
 }

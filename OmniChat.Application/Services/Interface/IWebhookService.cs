@@ -13,5 +13,7 @@ namespace OmniChat.Application.Services.Interface
         public  Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent);
 
         public  Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload);
+
+        public Task<bool> VerifyWebhook(string mode, string token);
     }
 }
