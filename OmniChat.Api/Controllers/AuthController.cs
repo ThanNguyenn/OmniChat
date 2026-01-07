@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Auth;
+using OmniChat.Infrastructure.Dtos.Responses.Auth;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -20,6 +21,10 @@ public class AuthController : BaseController<AuthController>
     }
 
     [HttpPost(ApiEndPointConstant.Auth.Login)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
     Summary = "Đăng nhập bằng tài khoản của app",
     Description = "Đăng nhập bằng tài khoản của app sử dụng email hoặc username và mật khẩu, nhận role, access token và refresh token trả về.")]
@@ -31,6 +36,10 @@ public class AuthController : BaseController<AuthController>
     }
 
     [HttpPost(ApiEndPointConstant.Auth.ChangePassword)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
     Summary = "Thay đổi password",
     Description = "Dùng cho staff thay đổi password nếu nhớ mật khẩu cũ.")]
@@ -42,6 +51,10 @@ public class AuthController : BaseController<AuthController>
     }
 
     [HttpPost(ApiEndPointConstant.Auth.RefreshToken)]
+    [ProducesResponseType(typeof(ApiResponse<RefreshAccessTokenResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
         Summary = "Refresh Access Token",
         Description = "Dùng Refresh Token được cấp để nhận Access Token mới.")]
