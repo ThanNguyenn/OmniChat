@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
@@ -73,8 +74,8 @@ namespace OmniChat.Application.Services.Implements
 
             var payload = new
             {
-                recipient = new { senderId = existCustomerProfile.SenderId},
-                message = new { text = newSupportMess.Content}
+                recipient  = new ZaloRecipient { UserId = existCustomerProfile.SenderId },
+                message = new { newSupportMess.Content }
             };
 
             var response = await client.PostAsJsonAsync(
