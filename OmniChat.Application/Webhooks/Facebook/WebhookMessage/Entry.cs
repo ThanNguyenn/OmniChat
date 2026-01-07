@@ -6,6 +6,6 @@
 
         public long time { get; set; }
 
-       public List<FacebookMessage> facebookMessages = new List<FacebookMessage>();
+       public List<FacebookMessage> messaging = new List<FacebookMessage>();
     }
 }
