@@ -344,13 +344,13 @@ namespace OmniChat.Application.Services.Implements
 
             foreach (var entry in faceBookWebhookPayload.entry)
             {
-                if (entry.facebookMessages == null)
+                if (entry.messaging == null)
                 {
                     _logger.LogWarning("[FACEBOOK] Entry has no messages");
                     continue;
                 }
 
-                foreach (var messaging in entry.facebookMessages)
+                foreach (var messaging in entry.messaging)
                 {
                     if (messaging.message?.text == null)
                     {
