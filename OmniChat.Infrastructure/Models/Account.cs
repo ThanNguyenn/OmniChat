@@ -16,6 +16,8 @@ namespace OmniChat.Infrastructure.Models
 
         public string? AvatarUrl { get; set; } // nullAble
 
+        public bool IsFirstLogined { get; set; } // NewStaff need to change password 
+
         public bool? IsActive { get; set; }
 
         public Guid RoleId { get; set; }
