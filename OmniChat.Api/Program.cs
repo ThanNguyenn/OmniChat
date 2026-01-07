@@ -106,7 +106,7 @@ void ConfigureDatabase()
 {
     builder.Services.AddDbContext<OmniChatDbContext>(options =>
         options.UseNpgsql(
-            builder.Configuration.GetConnectionString("PostgresConnection"),
+            builder.Configuration.GetConnectionString("SupabaseConnection"),
             npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsAssembly(
