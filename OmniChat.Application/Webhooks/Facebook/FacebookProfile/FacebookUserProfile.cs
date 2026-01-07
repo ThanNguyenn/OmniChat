@@ -10,7 +10,7 @@ namespace OmniChat.Application.Webhooks.Facebook.FacebookProfile
     public class FacebookUserProfile
     {
         [JsonPropertyName("id")]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonPropertyName("first_name")]
         public string FirstName { get; set; }
