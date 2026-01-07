@@ -19,9 +19,14 @@ public class AccountController : BaseController<AccountController>
     }
 
     [HttpPost(ApiEndPointConstant.Account.Create)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
         Summary = "Tạo tài khoản cho staff",
-        Description = "Dùng cho admin tạo tài khoản cho staff đã tồn tại.")]
+        Description = "Dùng cho admin tạo tài khoản cho staff đã tồn tại. Username và Password được gen tự động")]
     public async Task<IActionResult> CreateAccountAsync([FromBody]CreateAccountRequest createAccountRequest)
     {
         var result = await _accountService.CreateAccountAsync(createAccountRequest);
@@ -29,6 +34,8 @@ public class AccountController : BaseController<AccountController>
 
     return StatusCode(StatusCodes.Status201Created, response);
     }
+
+
 
 
 }

@@ -71,6 +71,8 @@ public class ApiEndPointConstant
         public const string Login = "login";
 
         public const string RefreshToken = "refresh-token";
+
+        public const string ChangePassword = "change-password";
     }
 
     public static class Account 

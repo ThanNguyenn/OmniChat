@@ -29,7 +29,7 @@ public class AccountService : BaseService<AccountService>, IAccountService
         var staffRepo = _unitOfWork.GetRepository<Staff>();
 
         var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == request.StaffId)
-            ?? throw new KeyNotFoundException("Staff not found");
+            ?? throw new NotFoundException("Staff not found");
 
         if (staff.AccountId != null)
             throw new BusinessException("Account for this staff already exists");

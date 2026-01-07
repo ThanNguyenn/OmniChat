@@ -67,7 +67,7 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
         return token;
     }
 
-    public async Task InvalidateRefreshTokenAsync(string refreshToken)
+    public async Task<bool> InvalidateRefreshTokenAsync(string refreshToken)
     {
         var repo = _unitOfWork.GetRepository<RefreshToken>();
         await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -79,7 +79,16 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
                 repo.Delete(token);
             }
         });
+        return true;
     }
+
+
+    public async Task DeleteExpiredRefreshTokensAsync()
+    {
+        var repo = _unitOfWork.GetRepository<RefreshToken>();
+        await repo.DeleteAsync(predicate: t => t.ExpireDate <= DateTime.UtcNow);
+    }
+
 }
 
 

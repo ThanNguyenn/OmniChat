@@ -157,7 +157,6 @@ public class ExceptionHandlerMiddleware
                 Path = context.Request.Path,
                 ExceptionType = exception.GetType().Name,
                 ExceptionMessage = exception.Message,
-                StackTrace = _env.IsDevelopment() ? exception.StackTrace : null,
                 InnerException = exception.InnerException?.Message,
                 ErrorId = errorId,
                 Timestamp = DateTime.UtcNow
