@@ -324,8 +324,8 @@ namespace OmniChat.Application.Services.Implements
         {
             _logger.LogInformation("[FACEBOOK] Webhook received");
 
-            if (faceBookWebhookPayload?.FacebookEntry == null ||
-                !faceBookWebhookPayload.FacebookEntry.Any())
+            if (faceBookWebhookPayload?.entry == null ||
+                !faceBookWebhookPayload.entry.Any())
             {
                 _logger.LogWarning("[FACEBOOK] Payload invalid or empty entry");
                 return false;
@@ -342,7 +342,7 @@ namespace OmniChat.Application.Services.Implements
 
             bool result = false;
 
-            foreach (var entry in faceBookWebhookPayload.FacebookEntry)
+            foreach (var entry in faceBookWebhookPayload.entry)
             {
                 if (entry.facebookMessages == null)
                 {
