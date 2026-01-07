@@ -28,8 +28,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<CreateProviderResponse> CreateProviderAsync(CreateProviderRequest CreateProviderRequest)
         {
-            try
-            {
+           
                 return await _unitOfWork.ProcessInTransactionAsync(async () =>
                 {
                     // Map request 
@@ -41,18 +40,13 @@ namespace OmniChat.Application.Services.Implements
                     // return 
                     return _mapper.Map<CreateProviderResponse>(newProvider);
                 });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating a provider :{Message}.", ex.Message);
-                throw;
-            }
+            
+           
         }
 
         public async Task<PagingResponse<GetAllProviderResponse>> GetAllProviderAsync(int pageNumber = 1, int pageSize = 20, string? providerName = null)
         {
-            try
-            {
+           
                 return await _unitOfWork.ProcessInTransactionAsync(async () =>
                 {
                     // call repo
@@ -71,12 +65,6 @@ namespace OmniChat.Application.Services.Implements
                     size: pageSize
                     );
                 });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error Get All  provider :{Message}.", ex.Message);
-                throw;
-            }
         }
 
         public async Task<Provider> GetProviderAsync(string providerName)

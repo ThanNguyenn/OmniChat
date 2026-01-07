@@ -4,6 +4,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Provider;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
 using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers
 {
@@ -19,6 +20,10 @@ namespace OmniChat.Api.Controllers
         [HttpPost(ApiEndPointConstant.ProviderEndPoint.CreateProvider)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Tạo mới Provier",
+            Description = "Tạo mới Provider "
+            )]
         public async Task<IActionResult> CreateProviderAsync([FromBody] CreateProviderRequest createProviderRequest)
         {
             if (!ModelState.IsValid)
@@ -46,10 +51,11 @@ namespace OmniChat.Api.Controllers
 
         [HttpGet(ApiEndPointConstant.ProviderEndPoint.GetAllPagingByproviderName)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllPagingByProviderNameAsync(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        [FromQuery] string? providerName = null)
+        [SwaggerOperation(
+            Summary = "Lấy tất cả Provider Paging",
+            Description = "Lấy tất cả thông tin Provider có Paging và search theo ProviderName "
+            )]
+        public async Task<IActionResult> GetAllPagingByProviderNameAsync([FromQuery] int pageNumber = 1,[FromQuery] int pageSize = 20,[FromQuery] string? providerName = null)
         {
             var result =
                 await _providerService.GetAllProviderAsync(

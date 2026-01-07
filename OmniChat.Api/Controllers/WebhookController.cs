@@ -4,6 +4,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers
 {
@@ -21,22 +22,15 @@ namespace OmniChat.Api.Controllers
         [HttpPost(ApiEndPointConstant.Webhooks.ZaloWebhook)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+
+        [SwaggerOperation(
+        Summary = "Webhook set up của zalo",
+        Description = "Webhook hứng evernt từ phía zalo "
+        )]
         public async Task<IActionResult> ZaloWebhookAsync(
             [FromBody] ZaloWebhookEvent zaloEvent)
         {
-            if (zaloEvent == null)
-            {
-                return BadRequest(new ApiResponse<object>
-                {
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    Message = "Invalid Zalo webhook payload",
-                    Reason = "Payload is null",
-                    IsSuccess = false,
-                    Data = null
-                });
-            }
-
-            await _webhookService.ZaloWebhookAsync(zaloEvent);
+            _ = _webhookService.ZaloWebhookAsync(zaloEvent);
 
             return Ok(new ApiResponse<object>
             {
@@ -51,22 +45,15 @@ namespace OmniChat.Api.Controllers
         [HttpPost(ApiEndPointConstant.Webhooks.FacebookWebhook)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+        Summary = "Webhook set up của Facebook",
+        Description = "Webhook hứng evernt từ phía Facebook "
+        )]
         public async Task<IActionResult> FacebookWebhookAsync(
             [FromBody] FaceBookWebhookPayload payload)
         {
-            if (payload == null)
-            {
-                return BadRequest(new ApiResponse<object>
-                {
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    Message = "Invalid Facebook webhook payload",
-                    Reason = "Payload is null",
-                    IsSuccess = false,
-                    Data = null
-                });
-            }
 
-            await _webhookService.FacebookWebhookAsync(payload);
+            _ = _webhookService.FacebookWebhookAsync(payload);
 
             return Ok(new ApiResponse<object>
             {

@@ -4,6 +4,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
 using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers
 {
@@ -19,6 +20,10 @@ namespace OmniChat.Api.Controllers
         /// Get all support staff messages with pagination
         [HttpGet(ApiEndPointConstant.SupportStaffMessageEndPoint.GetAllPagingByStaffId)]
         [ProducesResponseType(typeof(PagingResponse<GetAllSupportStaffMessageResponse>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Lấy hết tin nhắn của staff gửi đến khách hàng có Paging",
+            Description = "lấy tin nhắn của staff đã gửi đến khách hàng có Paging và research bằng staff Id"
+            )]
         public async Task<IActionResult> GetAllSupportStaffMessagesPaging([FromQuery] int pageNumber = 1,[FromQuery] int pageSize = 20,[FromQuery] Guid? staffId = null)
         {
             var result = await _supportStaffMessageService.GetAllSupportStaffMessageByStaffIdAsync(
@@ -33,6 +38,10 @@ namespace OmniChat.Api.Controllers
         [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendZaloMessage)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Gửi tin nhắn Zalo",
+            Description = "Gửi tin nhắn của staff đến Zalo"
+            )]
         public async Task<IActionResult> SendZaloMessage(
             [FromBody] CreateSupportStaffMessageRequest request)
         {
@@ -44,6 +53,10 @@ namespace OmniChat.Api.Controllers
         [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendFacebookMessage)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Gửi tin nhắn Facebook",
+            Description = "Gửi tin nhắn của staff đến Facebook"
+            )]
         public async Task<IActionResult> SendFacebookMessage(
             [FromBody] CreateSupportStaffMessageRequest request)
         {
@@ -55,6 +68,10 @@ namespace OmniChat.Api.Controllers
         [HttpPut(ApiEndPointConstant.SupportStaffMessageEndPoint.UpdateStatusToSent)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [SwaggerOperation(
+            Summary = "cập nhật tin nhắn của staff",
+            Description ="cập nhật trạng thái tin nhắn của staff"
+            )]
         public async Task<IActionResult> UpdateStatusToSent([FromRoute] Guid id)
         {
             await _supportStaffMessageService.UpdateSupportStaffMessageStatusSentAsync(id);
