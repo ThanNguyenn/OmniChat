@@ -222,6 +222,8 @@ void ConfigureSwagger()
 
 void ConfigureMiddleware()
 {
+
+
     app.UseSwagger();
 
     app.UseSwaggerUI(c =>
@@ -247,6 +249,7 @@ void ConfigureMiddleware()
     app.UseAuthentication();
 
     app.UseAuthorization();
+    app.UseStaticFiles();
 
     app.MapControllers();
 }
