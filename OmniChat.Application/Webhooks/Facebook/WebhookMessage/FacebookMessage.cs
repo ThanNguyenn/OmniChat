@@ -2,12 +2,12 @@
 {
     public class FacebookMessage
     {
-        public FacebookSender Sender { get; set; }
+        public FacebookSender sender { get; set; }
 
-        public FacebookRecipient Recipient { get; set; }
+        public FacebookRecipient recipient { get; set; }
 
-        public long Timestamp { get; set; }
+        public long timestamp { get; set; }
 
-        public FacebookWebhookMessage Message { get; set; }
+        public FacebookWebhookMessage message { get; set; }
     }
 }

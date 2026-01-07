@@ -2,9 +2,9 @@
 {
     public class Entry
     {
-        public string Id { get; set; }
+        public string id { get; set; }
 
-        public long Time { get; set; }
+        public long time { get; set; }
 
        public List<FacebookMessage> facebookMessages = new List<FacebookMessage>();
     }

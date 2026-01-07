@@ -2,10 +2,10 @@
 {
     public class FacebookWebhookMessage
     {
-        public string Mid { get; set; }
+        public string mid { get; set; }
 
-        public string Text { get; set; }
+        public string text { get; set; }
 
-        public bool? IsEcho { get; set; }
+        public bool? is_echo { get; set; }
     }
 }
