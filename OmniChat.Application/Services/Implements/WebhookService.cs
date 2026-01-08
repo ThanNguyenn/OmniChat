@@ -199,7 +199,7 @@ namespace OmniChat.Application.Services.Implements
                 );
             }
 
-            Guid ConversationTempId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+            Guid ConversationTempId = Guid.Parse("ad07c5a4-55aa-4708-aeaf-cc9de6fb089e");
 
             var messageRequest = new CreateCustomerMessageRequest
             {
