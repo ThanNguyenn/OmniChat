@@ -8,9 +8,9 @@ namespace OmniChat.Application.Webhooks.Instagram.InstagramMessage
 {
     public class InstagramChangeValue
     {
-        public InstagramSender Sender { get; set; }
-        public InstagramRecipient Recipient { get; set; }
-        public string Timestamp { get; set; }
-        public InstagramWebhookMessage Message { get; set; }
+        public InstagramSender sender { get; set; }
+        public InstagramRecipient recipient { get; set; }
+        public string timestamp { get; set; }
+        public InstagramWebhookMessage message { get; set; }
     }
 }

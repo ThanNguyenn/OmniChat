@@ -8,6 +8,6 @@ namespace OmniChat.Application.Webhooks.Instagram.InstagramMessage
 {
     public class InstagramSender
     {
-        public string Id { get; set; }
+        public string id { get; set; }
     }
 }

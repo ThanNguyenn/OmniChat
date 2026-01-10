@@ -515,7 +515,7 @@ namespace OmniChat.Application.Services.Implements
                 JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true })
             );
 
-            if (payload?.Entry == null || !payload.Entry.Any())
+            if (payload?.entry == null || !payload.entry.Any())
             {
                 _logger.LogWarning("[INSTAGRAM] Payload invalid or empty entry");
                 return false;
@@ -527,38 +527,38 @@ namespace OmniChat.Application.Services.Implements
 
             bool result = false;
 
-            foreach (var entry in payload.Entry)
+            foreach (var entry in payload.entry)
             {
-                if (entry.Changes == null || !entry.Changes.Any())
+                if (entry.changes == null || !entry.changes.Any())
                 {
                     _logger.LogWarning(
                         "[INSTAGRAM] Entry has no changes | BusinessId={BusinessId}",
-                        entry.Id
+                        entry.id
                     );
                     continue;
                 }
 
-                foreach (var change in entry.Changes)
+                foreach (var change in entry.changes)
                 {
                     // Instagram Login API chỉ quan tâm messages
-                    if (change.Field != "messages")
+                    if (change.field != "messages")
                         continue;
 
-                    var value = change.Value;
+                    var value = change.value;
 
-                    if (value?.Message?.Text == null)
+                    if (value?.message?.text == null)
                     {
                         _logger.LogInformation(
                             "[INSTAGRAM] Ignored non-text message | BusinessId={BusinessId} | SenderId={SenderId}",
-                            entry.Id,
-                            value?.Sender?.Id
+                            entry.id,
+                            value?.sender?.id
                         );
                         continue;
                     }
 
-                    var businessId = entry.Id;          // Instagram account của bạn
-                    var senderId = value.Sender.Id;     // Customer
-                    var text = value.Message.Text;
+                    var businessId = entry.id;          // Instagram account của bạn
+                    var senderId = value.sender.id;     // Customer
+                    var text = value.message.text;
 
                     _logger.LogInformation(
                         "[INSTAGRAM] Message received | BusinessId={BusinessId} | SenderId={SenderId} | Text={Text}",
@@ -605,7 +605,7 @@ namespace OmniChat.Application.Services.Implements
                             new CreateCustomerMessageRequest
                             {
                                 Content = text,
-                                Timestamp = long.Parse(value.Timestamp),
+                                Timestamp = long.Parse(value.timestamp),
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
                                 ConversationId = conversationTempId
