@@ -9,7 +9,7 @@ namespace OmniChat.Application.Webhooks.Instagram.InstagramProfile
     public class InstagramUserProfile
     {
         public string Id { get; set; }
-        public string Username { get; set; }
+        public string Name { get; set; }
         public string AccountType { get; set; }
 
         // optional – không luôn có

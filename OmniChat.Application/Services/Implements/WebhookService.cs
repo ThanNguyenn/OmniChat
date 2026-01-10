@@ -506,6 +506,126 @@ namespace OmniChat.Application.Services.Implements
         //========== Instagram //==========
 
 
+        //public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
+        //{
+        //    _logger.LogInformation("[INSTAGRAM] Webhook received");
+
+        //    _logger.LogInformation(
+        //        "[INSTAGRAM] RAW PAYLOAD:\n{Payload}",
+        //        JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true })
+        //    );
+
+        //    if (payload?.entry == null || !payload.entry.Any())
+        //    {
+        //        _logger.LogWarning("[INSTAGRAM] Payload invalid or empty entry");
+        //        return false;
+        //    }
+
+        //    var provider =
+        //        await _providerService.GetProviderAsync("Instagram")
+        //        ?? throw new BusinessException("Provider Instagram Not found");
+
+        //    bool result = false;
+
+        //    foreach (var entry in payload.entry)
+        //    {
+        //        if (entry.messaging == null || !entry.messaging.Any())
+        //        {
+        //            _logger.LogWarning(
+        //                "[INSTAGRAM] Entry has no changes | BusinessId={BusinessId}",
+        //                entry.id
+        //            );
+        //            continue;
+        //        }
+
+        //        foreach (var message in entry.messaging)
+        //        {
+        //            // Instagram Login API chỉ quan tâm messages
+        //            if (change.field != "messages")
+        //                continue;
+
+        //            var value = change.value;
+
+        //            if (value?.message?.text == null)
+        //            {
+        //                _logger.LogInformation(
+        //                    "[INSTAGRAM] Ignored non-text message | BusinessId={BusinessId} | SenderId={SenderId}",
+        //                    entry.id,
+        //                    value?.sender?.id
+        //                );
+        //                continue;
+        //            }
+
+        //            var businessId = entry.id;          // Instagram account của bạn
+        //            var senderId = value.sender.id;     // Customer
+        //            var text = value.message.text;
+
+        //            _logger.LogInformation(
+        //                "[INSTAGRAM] Message received | BusinessId={BusinessId} | SenderId={SenderId} | Text={Text}",
+        //                businessId,
+        //                senderId,
+        //                text
+        //            );
+
+        //            // ==== BUSINESS LOGIC ====
+
+        //            var customerProfile =
+        //                await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
+        //                    senderId: senderId,
+        //                    providersId: provider.Id
+        //                );
+
+        //            if (customerProfile == null)
+        //            {
+        //                _logger.LogInformation(
+        //                    "[INSTAGRAM] CustomerProfile not found | SenderId={SenderId} → Creating new",
+        //                    senderId
+        //                );
+
+        //                var igUser = await _instagramUserService.GetUserProfileAsync(senderId);
+
+        //                customerProfile =
+        //                    await _customerProfileService.CreateCustomerProfileEntityAsync(
+        //                        new CreateCustomerProfileRequest
+        //                        {
+        //                            SenderId = senderId,
+        //                            CustomerName = igUser?.Username ?? "Instagram User",
+        //                            ProvidersId = provider.Id,
+        //                            AvatarUrl = igUser?.ProfilePictureUrl,
+        //                            Gender = false
+        //                        }
+        //                    );
+        //            }
+
+        //            Guid conversationTempId =
+        //                Guid.Parse("55555555-5555-5555-5555-555555555555");
+
+        //            var newMessage =
+        //                await _customerMessageService.CreateCustomerMessageAsync(
+        //                    new CreateCustomerMessageRequest
+        //                    {
+        //                        Content = text,
+        //                        Timestamp = long.Parse(value.timestamp),
+        //                        KeywordActive = false,
+        //                        CustomerId = customerProfile.Id,
+        //                        ConversationId = conversationTempId
+        //                    }
+        //                );
+
+        //            if (newMessage != null)
+        //            {
+        //                _logger.LogInformation(
+        //                    "[INSTAGRAM] Message created | MessageId={MessageId}",
+        //                    newMessage.Id
+        //                );
+        //                result = true;
+        //            }
+        //        }
+        //    }
+
+        //    return result;
+        //}
+
         public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
         {
             _logger.LogInformation("[INSTAGRAM] Webhook received");
@@ -529,36 +649,31 @@ namespace OmniChat.Application.Services.Implements
 
             foreach (var entry in payload.entry)
             {
-                if (entry.changes == null || !entry.changes.Any())
+                if (entry.messaging == null || !entry.messaging.Any())
                 {
                     _logger.LogWarning(
-                        "[INSTAGRAM] Entry has no changes | BusinessId={BusinessId}",
+                        "[INSTAGRAM] Entry has no messaging | BusinessId={BusinessId}",
                         entry.id
                     );
                     continue;
                 }
 
-                foreach (var change in entry.changes)
+                foreach (var msg in entry.messaging)
                 {
-                    // Instagram Login API chỉ quan tâm messages
-                    if (change.field != "messages")
-                        continue;
-
-                    var value = change.value;
-
-                    if (value?.message?.text == null)
+                    
+                    if (msg.Message?.text == null)
                     {
                         _logger.LogInformation(
                             "[INSTAGRAM] Ignored non-text message | BusinessId={BusinessId} | SenderId={SenderId}",
                             entry.id,
-                            value?.sender?.id
+                            msg.Sender?.id
                         );
                         continue;
                     }
 
-                    var businessId = entry.id;          // Instagram account của bạn
-                    var senderId = value.sender.id;     // Customer
-                    var text = value.message.text;
+                    var businessId = entry.id;      // Instagram Business
+                    var senderId = msg.Sender.id;  // Customer
+                    var text = msg.Message.text;
 
                     _logger.LogInformation(
                         "[INSTAGRAM] Message received | BusinessId={BusinessId} | SenderId={SenderId} | Text={Text}",
@@ -589,7 +704,7 @@ namespace OmniChat.Application.Services.Implements
                                 new CreateCustomerProfileRequest
                                 {
                                     SenderId = senderId,
-                                    CustomerName = igUser?.Username ?? "Instagram User",
+                                    CustomerName = igUser?.Name ?? "Instagram User",
                                     ProvidersId = provider.Id,
                                     AvatarUrl = igUser?.ProfilePictureUrl,
                                     Gender = false
@@ -605,7 +720,7 @@ namespace OmniChat.Application.Services.Implements
                             new CreateCustomerMessageRequest
                             {
                                 Content = text,
-                                Timestamp = long.Parse(value.timestamp),
+                                Timestamp = msg.Timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
                                 ConversationId = conversationTempId
@@ -625,6 +740,7 @@ namespace OmniChat.Application.Services.Implements
 
             return result;
         }
+
 
         public async Task<bool> VerifyInstagramWebhook(string mode, string token)
         {
