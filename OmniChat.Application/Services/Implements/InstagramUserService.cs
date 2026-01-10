@@ -36,7 +36,7 @@ namespace OmniChat.Application.Services.Implements
                 return null;
             }
             var url =
-                $"https://graph.facebook.com/v19.0/{instagramUserId}" +
+                $"https://graph.instagram.com/v24.0/{instagramUserId}" +
                 $"?fields=id,username,account_type,profile_picture_url"+
                  $"&access_token={accessToken}";
 
