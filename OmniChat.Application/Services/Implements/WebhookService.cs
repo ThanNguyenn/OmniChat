@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
@@ -507,6 +508,14 @@ namespace OmniChat.Application.Services.Implements
         public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
         {
             _logger.LogInformation("[INSTAGRAM] Webhook received");
+
+            _logger.LogInformation(
+                "[INSTAGRAM] RAW PAYLOAD:\n{Payload}",
+                JsonSerializer.Serialize(
+                    payload,
+                    new JsonSerializerOptions { WriteIndented = true }
+                )
+            );
 
             if (payload?.Entry == null ||
                 !payload.Entry.Any())
