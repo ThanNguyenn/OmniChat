@@ -76,7 +76,7 @@ namespace OmniChat.Application.Services.Implements
                 ); 
         }
 
-        public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(long senderId, Guid providersId)
+        public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(string senderId, Guid providersId)
         {
             
                 var repo = _unitOfWork.GetRepository<CustomerProfile>();

@@ -31,6 +31,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.CustomerProfile
         public string? AvatarUrl { get; set; }
 
         [Required]
-        public long SenderId { get; set; }
+        public string SenderId { get; set; }
     }
 }

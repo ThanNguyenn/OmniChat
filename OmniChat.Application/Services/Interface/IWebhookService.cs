@@ -1,4 +1,5 @@
 ﻿using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
+using OmniChat.Application.Webhooks.Instagram.InstagramMessage;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,14 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface IWebhookService
     {
-        public  Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent);
+        //public  Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent);
 
         public  Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload);
 
-        public Task<bool> VerifyWebhook(string mode, string token);
+        public Task<bool> VerifyFacebookWebhook(string mode, string token);
+
+        public  Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload);
+
+        public  Task<bool> VerifyInstagramWebhook(string mode, string token);
     }
 }

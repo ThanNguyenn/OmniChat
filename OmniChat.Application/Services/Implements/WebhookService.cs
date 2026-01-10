@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
+using OmniChat.Application.Webhooks.Instagram.InstagramMessage;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
@@ -32,8 +33,10 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly IFacebookUserService _facebookUserService;
 
+        private readonly IInstagramUserService _instagramUserService;
+
         private readonly IConfiguration _configuration;
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService,IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService,IConfiguration configuration, IInstagramUserService instagramUserService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
@@ -41,7 +44,10 @@ namespace OmniChat.Application.Services.Implements
             _zaloUserService = zaloUserService;
             _facebookUserService = facebookUserService;
             _configuration = configuration;
+            _instagramUserService = instagramUserService;
         }
+
+                        //========== Zalo //==========
 
         //public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
         //{
@@ -114,128 +120,129 @@ namespace OmniChat.Application.Services.Implements
 
         //        return true;      
         //}
-        public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
-        {
-            _logger.LogInformation(
-                "[ZALO] Webhook received | EventName={EventName} | SenderId={SenderId} | Timestamp={Timestamp}",
-                zaloEvent?.EventName,
-                zaloEvent?.Sender?.Id,
-                zaloEvent?.Timestamp
-            );
+        //public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
+        //{
+        //    _logger.LogInformation(
+        //        "[ZALO] Webhook received | EventName={EventName} | SenderId={SenderId} | Timestamp={Timestamp}",
+        //        zaloEvent?.EventName,
+        //        zaloEvent?.Sender?.Id,
+        //        zaloEvent?.Timestamp
+        //    );
 
-            if (zaloEvent == null)
-            {
-                _logger.LogWarning("[ZALO] Payload is NULL");
-                return false;
-            }
+        //    if (zaloEvent == null)
+        //    {
+        //        _logger.LogWarning("[ZALO] Payload is NULL");
+        //        return false;
+        //    }
 
-            if (zaloEvent.EventName != "user_send_text")
-            {
-                _logger.LogInformation(
-                    "[ZALO] Ignored event | EventName={EventName}",
-                    zaloEvent.EventName
-                );
-                return true;
-            }
+        //    if (zaloEvent.EventName != "user_send_text")
+        //    {
+        //        _logger.LogInformation(
+        //            "[ZALO] Ignored event | EventName={EventName}",
+        //            zaloEvent.EventName
+        //        );
+        //        return true;
+        //    }
 
-            // Get Provider
-            var provider = await _providerService.GetProviderAsync("Zalo");
-            if (provider == null)
-            {
-                _logger.LogError("[ZALO] Provider Zalo not found");
-                throw new BusinessException("Provider Zalo not found");
-            }
+        //    // Get Provider
+        //    var provider = await _providerService.GetProviderAsync("Zalo");
+        //    if (provider == null)
+        //    {
+        //        _logger.LogError("[ZALO] Provider Zalo not found");
+        //        throw new BusinessException("Provider Zalo not found");
+        //    }
 
-            _logger.LogInformation(
-                "[ZALO] Provider loaded | ProviderId={ProviderId}",
-                provider.Id
-            );
+        //    _logger.LogInformation(
+        //        "[ZALO] Provider loaded | ProviderId={ProviderId}",
+        //        provider.Id
+        //    );
 
-            // Get CustomerProfile
-            var customerProfile =
-                await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
-                    senderId: zaloEvent.Sender.Id,
-                    providersId: provider.Id
-                );
+        //    // Get CustomerProfile
+        //    var customerProfile =
+        //        await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
+        //            senderId: zaloEvent.Sender.Id,
+        //            providersId: provider.Id
+        //        );
 
-            if (customerProfile == null)
-            {
-                _logger.LogInformation(
-                    "[ZALO] CustomerProfile not found | SenderId={SenderId} → Creating new",
-                    zaloEvent.Sender.Id
-                );
+        //    if (customerProfile == null)
+        //    {
+        //        _logger.LogInformation(
+        //            "[ZALO] CustomerProfile not found | SenderId={SenderId} → Creating new",
+        //            zaloEvent.Sender.Id
+        //        );
 
-                var zaloProfile =
-                    await _zaloUserService.GetUserProfileAsync(zaloEvent.Sender.Id);
+        //        var zaloProfile =
+        //            await _zaloUserService.GetUserProfileAsync(zaloEvent.Sender.Id);
 
-                customerProfile =
-                    await _customerProfileService.CreateCustomerProfileEntityAsync(
-                        new CreateCustomerProfileRequest
-                        {
-                            SenderId = zaloEvent.Sender.Id,
-                            ProvidersId = provider.Id,
-                            CustomerName =
-                                zaloProfile?.DisplayName
-                                ?? $"Zalo User {zaloEvent.Sender.Id}",
-                            AvatarUrl = zaloProfile?.Avatar,
-                            PhoneNumber = zaloProfile?.SharedInfo?.Phone,
-                            Gender = zaloProfile?.Gender == 1,
-                            DateOfBirth = _zaloUserService.ParseZaloBirthDate(
-                                zaloProfile?.BirthDate
-                            )
-                        }
-                    );
+        //        customerProfile =
+        //            await _customerProfileService.CreateCustomerProfileEntityAsync(
+        //                new CreateCustomerProfileRequest
+        //                {
+        //                    SenderId = zaloEvent.Sender.Id,
+        //                    ProvidersId = provider.Id,
+        //                    CustomerName =
+        //                        zaloProfile?.DisplayName
+        //                        ?? $"Zalo User {zaloEvent.Sender.Id}",
+        //                    AvatarUrl = zaloProfile?.Avatar,
+        //                    PhoneNumber = zaloProfile?.SharedInfo?.Phone,
+        //                    Gender = zaloProfile?.Gender == 1,
+        //                    DateOfBirth = _zaloUserService.ParseZaloBirthDate(
+        //                        zaloProfile?.BirthDate
+        //                    )
+        //                }
+        //            );
 
-                _logger.LogInformation(
-                    "[ZALO] CustomerProfile created | CustomerId={CustomerId}",
-                    customerProfile.Id
-                );
-            }
-            else
-            {
-                _logger.LogInformation(
-                    "[ZALO] CustomerProfile found | CustomerId={CustomerId}",
-                    customerProfile.Id
-                );
-            }
+        //        _logger.LogInformation(
+        //            "[ZALO] CustomerProfile created | CustomerId={CustomerId}",
+        //            customerProfile.Id
+        //        );
+        //    }
+        //    else
+        //    {
+        //        _logger.LogInformation(
+        //            "[ZALO] CustomerProfile found | CustomerId={CustomerId}",
+        //            customerProfile.Id
+        //        );
+        //    }
 
-            Guid ConversationTempId = Guid.Parse("ad07c5a4-55aa-4708-aeaf-cc9de6fb089e");
+        //    Guid ConversationTempId = Guid.Parse("ad07c5a4-55aa-4708-aeaf-cc9de6fb089e");
 
-            var messageRequest = new CreateCustomerMessageRequest
-            {
-                Content = zaloEvent.Message?.Text,
-                Timestamp = zaloEvent.Timestamp,
-                KeywordActive = false,
-                CustomerId = customerProfile.Id,
-                ConversationId = ConversationTempId
-            };
+        //    var messageRequest = new CreateCustomerMessageRequest
+        //    {
+        //        Content = zaloEvent.Message?.Text,
+        //        Timestamp = zaloEvent.Timestamp,
+        //        KeywordActive = false,
+        //        CustomerId = customerProfile.Id,
+        //        ConversationId = ConversationTempId
+        //    };
 
-            _logger.LogInformation(
-                "[ZALO] Creating message | CustomerId={CustomerId} | Content={Content}",
-                customerProfile.Id,
-                messageRequest.Content
-            );
+        //    _logger.LogInformation(
+        //        "[ZALO] Creating message | CustomerId={CustomerId} | Content={Content}",
+        //        customerProfile.Id,
+        //        messageRequest.Content
+        //    );
 
-            var newCustomerMess =
-                await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
+        //    var newCustomerMess =
+        //        await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
 
-            if (newCustomerMess == null)
-            {
-                _logger.LogError(
-                    "[ZALO] Failed to create message | CustomerId={CustomerId}",
-                    customerProfile.Id
-                );
-                return false;
-            }
+        //    if (newCustomerMess == null)
+        //    {
+        //        _logger.LogError(
+        //            "[ZALO] Failed to create message | CustomerId={CustomerId}",
+        //            customerProfile.Id
+        //        );
+        //        return false;
+        //    }
 
-            _logger.LogInformation(
-                "[ZALO] Message created successfully | MessageId={MessageId}",
-                newCustomerMess.Id
-            );
+        //    _logger.LogInformation(
+        //        "[ZALO] Message created successfully | MessageId={MessageId}",
+        //        newCustomerMess.Id
+        //    );
 
-            return true;
-        }
+        //    return true;
+        //}
 
+                                 //========== Facebook //==========
 
         //public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
         //{
@@ -450,7 +457,7 @@ namespace OmniChat.Application.Services.Implements
         //    return mode == "subscribe" && token == verifyToken;
         //}
 
-        public async Task<bool> VerifyWebhook(string mode, string token)
+        public async Task<bool> VerifyFacebookWebhook(string mode, string token)
         {
             _logger.LogInformation(
                 "[FACEBOOK][VERIFY] Verify webhook called | Mode={Mode} | Token={Token}",
@@ -489,6 +496,177 @@ namespace OmniChat.Application.Services.Implements
 
             _logger.LogInformation(
                 "[FACEBOOK][VERIFY] Webhook verification SUCCESS"
+            );
+
+            return true;
+        }
+
+
+                  //========== Instagram //==========
+        
+        public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
+        {
+            _logger.LogInformation("[INSTAGRAM] Webhook received");
+
+            if (payload?.Entry == null ||
+                !payload.Entry.Any())
+            {
+                _logger.LogWarning("[INSTAGRAM] Payload invalid or empty entry");
+                return false;
+            }
+
+            var provider =
+                await _providerService.GetProviderAsync("Instagram")
+                ?? throw new BusinessException("Provider Instagram Not found");
+
+            _logger.LogInformation(
+                "[INSTAGRAM] Provider loaded | ProviderId={ProviderId}",
+                provider.Id
+            );
+
+            bool result = false;
+
+            foreach (var entry in payload.Entry)
+            {
+                if (entry.Messaging == null)
+                {
+                    _logger.LogWarning("[INSTAGRAM] Entry has no messages");
+                    continue;
+                }
+
+                foreach (var messaging in entry.Messaging)
+                {
+
+                    if (messaging.Message?.Text == null)
+                    {
+                        _logger.LogInformation(
+                            "[INSTAGRAM] Ignored non-text message | SenderId={SenderId}",
+                            messaging.Sender.Id
+                        );
+                        continue;
+                    }
+
+                    _logger.LogInformation(
+                            "[INSTAGRAM] Message received | BusinessId={BusinessId} | SenderId={SenderId} | Text={Text}",
+                            entry.Id,
+                            messaging.Sender.Id,
+                            messaging.Message.Text
+                        );
+
+                    var customerProfile =
+                        await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
+                            senderId: messaging.Sender.Id,
+                            providersId: provider.Id
+                        );
+
+                    if (customerProfile == null)
+                    {
+                        _logger.LogInformation(
+                            "[INSTAGRAM] CustomerProfile not found | SenderId={SenderId} → Creating new",
+                            messaging.Sender.Id
+                        );
+
+                        var igUser =
+                            await _instagramUserService.GetUserProfileAsync(
+                                messaging.Sender.Id
+                            );
+
+                        customerProfile =
+                            await _customerProfileService.CreateCustomerProfileEntityAsync(
+                                new CreateCustomerProfileRequest
+                                {
+                                    SenderId = messaging.Sender.Id,
+                                    CustomerName = igUser?.Username ?? "Instagram User",
+                                    ProvidersId = provider.Id,
+                                    AvatarUrl = igUser?.ProfilePictureUrl,
+                                    Gender = false,
+                                    Email = null,
+                                    PhoneNumber = null,
+                                    DateOfBirth = null
+                                }
+                            );
+
+                        _logger.LogInformation(
+                            "[INSTAGRAM] CustomerProfile created | CustomerId={CustomerId}",
+                            customerProfile.Id
+                        );
+                    }
+
+                    Guid ConversationTempId =
+                        Guid.Parse("55555555-5555-5555-5555-555555555555");
+
+                    var newMessage =
+                        await _customerMessageService.CreateCustomerMessageAsync(
+                            new CreateCustomerMessageRequest
+                            {
+                                Content = messaging.Message.Text,
+                                Timestamp = messaging.Timestamp,
+                                KeywordActive = false,
+                                CustomerId = customerProfile.Id,
+                                ConversationId = ConversationTempId
+                            }
+                        );
+
+                    if (newMessage != null)
+                    {
+                        _logger.LogInformation(
+                            "[INSTAGRAM] Message created | MessageId={MessageId}",
+                            newMessage.Id
+                        );
+                        result = true;
+                    }
+                    else
+                    {
+                        _logger.LogError(
+                            "[INSTAGRAM] Failed to create message | SenderId={SenderId}",
+                            messaging.Sender.Id
+                        );
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<bool> VerifyInstagramWebhook(string mode, string token)
+        {
+            _logger.LogInformation(
+                "[INSTAGRAM][VERIFY] Verify webhook called | Mode={Mode} | Token={Token}",
+                mode,
+                string.IsNullOrEmpty(token) ? "NULL" : "REDACTED"
+            );
+
+            var verifyToken = _configuration["InstagramWebhook:verifyToken"];
+
+            if (string.IsNullOrEmpty(verifyToken))
+            {
+                _logger.LogError(
+                    "[INSTAGRAM][VERIFY] VerifyToken not found in configuration (InstagramWebhook:verifyToken)"
+                );
+                return false;
+            }
+
+            if (mode != "subscribe")
+            {
+                _logger.LogWarning(
+                    "[INSTAGRAM][VERIFY] Invalid mode | Expected=subscribe | Actual={Mode}",
+                    mode
+                );
+                return false;
+            }
+
+            if (token != verifyToken)
+            {
+                _logger.LogWarning(
+                    "[INSTAGRAM][VERIFY] Token mismatch | Provided={Provided} | Expected={Expected}",
+                    "REDACTED",
+                    "REDACTED"
+                );
+                return false;
+            }
+
+            _logger.LogInformation(
+                "[INSTAGRAM][VERIFY] Webhook verification SUCCESS"
             );
 
             return true;

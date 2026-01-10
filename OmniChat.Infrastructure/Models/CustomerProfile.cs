@@ -26,7 +26,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string? AvatarUrl { get; set; }
 
-        public long SenderId { get; set; }
+        public string SenderId { get; set; }
 
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
 

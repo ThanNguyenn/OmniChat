@@ -17,9 +17,11 @@ public class ApiEndPointConstant
         public const string Base = ApiV1 + "/webhooks";
 
        //  ZaloWebhook
-        public const string ZaloWebhook = Base + "/zalo";
+        //public const string ZaloWebhook = Base + "/zalo";
        // FacebookWebhook
         public const string FacebookWebhook = Base + "/facebook";
+
+        public const string InstagramWebhook = Base + "/instagram";
     }
 
     public static class CustomerMessageEndPoint
@@ -54,6 +56,7 @@ public class ApiEndPointConstant
         public const string GetAllPagingByStaffId = SupportStaffMessage + "/paging";
         public const string SendZaloMessage = SupportStaffMessage + "/send-zalo";
         public const string SendFacebookMessage = SupportStaffMessage + "/send-facebook";
+        public const string SendInstagramMessage = SupportStaffMessage + "/send-instagram";
         public const string UpdateStatusToSent = SupportStaffMessage + "/{id}/status/sent";
     }
 

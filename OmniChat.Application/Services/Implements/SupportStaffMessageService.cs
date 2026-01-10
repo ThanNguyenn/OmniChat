@@ -40,56 +40,56 @@ namespace OmniChat.Application.Services.Implements
             _configuration = configuration;
         }
 
-        public async Task SendZaloMessageAsync( CreateSupportStaffMessageRequest newSupportMess)
-        {
-            // create new support Staff mess
-            var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
+        //public async Task SendZaloMessageAsync( CreateSupportStaffMessageRequest newSupportMess)
+        //{
+        //    // create new support Staff mess
+        //    var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
 
-            if(newStaffSupportMes == null)
-            {
-                throw new Exception("Create fail");
-            }
+        //    if(newStaffSupportMes == null)
+        //    {
+        //        throw new Exception("Create fail");
+        //    }
 
-            // get exist conversation
+        //    // get exist conversation
 
-            var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
+        //    var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
 
-            if (existConversation == null)
-            {
-                throw new NotFoundException("No SupportConversation Found");
-            }
+        //    if (existConversation == null)
+        //    {
+        //        throw new NotFoundException("No SupportConversation Found");
+        //    }
 
-            // get customer profile 
+        //    // get customer profile 
 
-            var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
+        //    var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
 
-            if (existCustomerProfile == null) {
-                throw new NotFoundException("No existCustomerProfile Found");
-            }
+        //    if (existCustomerProfile == null) {
+        //        throw new NotFoundException("No existCustomerProfile Found");
+        //    }
 
-            var accessToken = await _zaloOAuthService.GetAccessTokenAsync();
+        //    var accessToken = await _zaloOAuthService.GetAccessTokenAsync();
 
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("access_token", accessToken);
+        //    using var client = new HttpClient();
+        //    client.DefaultRequestHeaders.Add("access_token", accessToken);
 
-            var payload = new
-            {
-                recipient  = new ZaloRecipient { UserId = existCustomerProfile.SenderId },
-                message = new { text = newSupportMess.Content }
-            };
+        //    var payload = new
+        //    {
+        //        recipient  = new ZaloRecipient { UserId = existCustomerProfile.SenderId },
+        //        message = new { text = newSupportMess.Content }
+        //    };
 
-            var response = await client.PostAsJsonAsync(
-                "https://openapi.zalo.me/v3.0/oa/message/cs",
-                payload
-            );
-            var result = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
-                throw new Exception(result);
+        //    var response = await client.PostAsJsonAsync(
+        //        "https://openapi.zalo.me/v3.0/oa/message/cs",
+        //        payload
+        //    );
+        //    var result = await response.Content.ReadAsStringAsync();
+        //    if (!response.IsSuccessStatusCode)
+        //        throw new Exception(result);
                 
-            // update staff message status pending -> send
+        //    // update staff message status pending -> send
 
-            await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
-        }
+        //    await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+        //}
 
 
         public async Task SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
@@ -125,6 +125,8 @@ namespace OmniChat.Application.Services.Implements
             if (string.IsNullOrEmpty(pageAccessToken))
                 throw new Exception("Facebook Page Access Token is missing");
 
+          
+
             using var httpClient = new HttpClient();
 
             var url =
@@ -147,6 +149,67 @@ namespace OmniChat.Application.Services.Implements
             // update staff message status pending -> send
             await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
         }
+
+        public async Task SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
+        {
+            // create new support Staff mess
+            var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
+
+            if (newStaffSupportMes == null)
+            {
+                throw new Exception("Create fail");
+            }
+
+            // get exist conversation
+
+            var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
+
+            if (existConversation == null)
+            {
+                throw new NotFoundException("No SupportConversation Found");
+            }
+
+            // get customer profile 
+
+            var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
+
+            if (existCustomerProfile == null)
+            {
+                throw new NotFoundException("No existCustomerProfile Found");
+            }
+
+            var pageAccessToken = _configuration["InstagramWebhook:AccessToken"];
+
+            if (string.IsNullOrEmpty(pageAccessToken))
+                throw new Exception("Instagram Page Access Token is missing");
+
+            var BussinessId = _configuration["InstagramWebhook:BusinessId"];
+            if (string.IsNullOrEmpty(BussinessId))
+                throw new Exception("Instagram Page Bussiness Id is missing");
+
+            using var httpClient = new HttpClient();
+
+            var url =
+                $"https://graph.facebook.com/v19.0/me/messages?access_token={pageAccessToken}";
+
+
+            var body = new
+            {
+                recipient = new { id = existCustomerProfile.SenderId},
+                message = new { text = newSupportMess.Content }
+            };
+
+            var response = await httpClient.PostAsJsonAsync(url, body);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Facebook Send API error: {error}");
+            }
+            // update staff message status pending -> send
+            await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+        }
+
 
         public async Task<CreateSupportStaffMessageResponse> CreateSupportStaffMessageAsync(CreateSupportStaffMessageRequest createSupportMessageRequest)
         {
