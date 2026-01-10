@@ -503,22 +503,19 @@ namespace OmniChat.Application.Services.Implements
         }
 
 
-                  //========== Instagram //==========
-        
+        //========== Instagram //==========
+
+
         public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
         {
             _logger.LogInformation("[INSTAGRAM] Webhook received");
 
             _logger.LogInformation(
                 "[INSTAGRAM] RAW PAYLOAD:\n{Payload}",
-                JsonSerializer.Serialize(
-                    payload,
-                    new JsonSerializerOptions { WriteIndented = true }
-                )
+                JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true })
             );
 
-            if (payload?.Entry == null ||
-                !payload.Entry.Any())
+            if (payload?.Entry == null || !payload.Entry.Any())
             {
                 _logger.LogWarning("[INSTAGRAM] Payload invalid or empty entry");
                 return false;
@@ -528,43 +525,53 @@ namespace OmniChat.Application.Services.Implements
                 await _providerService.GetProviderAsync("Instagram")
                 ?? throw new BusinessException("Provider Instagram Not found");
 
-            _logger.LogInformation(
-                "[INSTAGRAM] Provider loaded | ProviderId={ProviderId}",
-                provider.Id
-            );
-
             bool result = false;
 
             foreach (var entry in payload.Entry)
             {
-                if (entry.Messaging == null)
+                if (entry.Changes == null || !entry.Changes.Any())
                 {
-                    _logger.LogWarning("[INSTAGRAM] Entry has no messages");
+                    _logger.LogWarning(
+                        "[INSTAGRAM] Entry has no changes | BusinessId={BusinessId}",
+                        entry.Id
+                    );
                     continue;
                 }
 
-                foreach (var messaging in entry.Messaging)
+                foreach (var change in entry.Changes)
                 {
+                    // Instagram Login API chỉ quan tâm messages
+                    if (change.Field != "messages")
+                        continue;
 
-                    if (messaging.Message?.Text == null)
+                    var value = change.Value;
+
+                    if (value?.Message?.Text == null)
                     {
                         _logger.LogInformation(
-                            "[INSTAGRAM] Ignored non-text message | SenderId={SenderId}",
-                            messaging.Sender.Id
+                            "[INSTAGRAM] Ignored non-text message | BusinessId={BusinessId} | SenderId={SenderId}",
+                            entry.Id,
+                            value?.Sender?.Id
                         );
                         continue;
                     }
 
+                    var businessId = entry.Id;          // Instagram account của bạn
+                    var senderId = value.Sender.Id;     // Customer
+                    var text = value.Message.Text;
+
                     _logger.LogInformation(
-                            "[INSTAGRAM] Message received | BusinessId={BusinessId} | SenderId={SenderId} | Text={Text}",
-                            entry.Id,
-                            messaging.Sender.Id,
-                            messaging.Message.Text
-                        );
+                        "[INSTAGRAM] Message received | BusinessId={BusinessId} | SenderId={SenderId} | Text={Text}",
+                        businessId,
+                        senderId,
+                        text
+                    );
+
+                    // ==== BUSINESS LOGIC ====
 
                     var customerProfile =
                         await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
-                            senderId: messaging.Sender.Id,
+                            senderId: senderId,
                             providersId: provider.Id
                         );
 
@@ -572,47 +579,36 @@ namespace OmniChat.Application.Services.Implements
                     {
                         _logger.LogInformation(
                             "[INSTAGRAM] CustomerProfile not found | SenderId={SenderId} → Creating new",
-                            messaging.Sender.Id
+                            senderId
                         );
 
-                        var igUser =
-                            await _instagramUserService.GetUserProfileAsync(
-                                messaging.Sender.Id
-                            );
+                        var igUser = await _instagramUserService.GetUserProfileAsync(senderId);
 
                         customerProfile =
                             await _customerProfileService.CreateCustomerProfileEntityAsync(
                                 new CreateCustomerProfileRequest
                                 {
-                                    SenderId = messaging.Sender.Id,
+                                    SenderId = senderId,
                                     CustomerName = igUser?.Username ?? "Instagram User",
                                     ProvidersId = provider.Id,
                                     AvatarUrl = igUser?.ProfilePictureUrl,
-                                    Gender = false,
-                                    Email = null,
-                                    PhoneNumber = null,
-                                    DateOfBirth = null
+                                    Gender = false
                                 }
                             );
-
-                        _logger.LogInformation(
-                            "[INSTAGRAM] CustomerProfile created | CustomerId={CustomerId}",
-                            customerProfile.Id
-                        );
                     }
 
-                    Guid ConversationTempId =
+                    Guid conversationTempId =
                         Guid.Parse("55555555-5555-5555-5555-555555555555");
 
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
                             new CreateCustomerMessageRequest
                             {
-                                Content = messaging.Message.Text,
-                                Timestamp = messaging.Timestamp,
+                                Content = text,
+                                Timestamp = long.Parse(value.Timestamp),
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = ConversationTempId
+                                ConversationId = conversationTempId
                             }
                         );
 
@@ -623,13 +619,6 @@ namespace OmniChat.Application.Services.Implements
                             newMessage.Id
                         );
                         result = true;
-                    }
-                    else
-                    {
-                        _logger.LogError(
-                            "[INSTAGRAM] Failed to create message | SenderId={SenderId}",
-                            messaging.Sender.Id
-                        );
                     }
                 }
             }

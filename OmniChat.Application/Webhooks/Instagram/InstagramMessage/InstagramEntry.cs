@@ -9,7 +9,8 @@ namespace OmniChat.Application.Webhooks.Instagram.InstagramMessage
 {
     public class InstagramEntry
     {
-        public string Id { get; set; } 
-        public List<InstagramMessage> Messaging { get; set; }
+        public string Id { get; set; }          // Instagram Business ID
+        public long Time { get; set; }
+        public List<InstagramChange> Changes { get; set; }
     }
 }
