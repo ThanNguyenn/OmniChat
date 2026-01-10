@@ -10,7 +10,7 @@ namespace OmniChat.Application.Webhooks.Instagram.InstagramMessage
 {
     public class InstagramWebhookPayload
     {
-        public string Object { get; set; }
+        public string @object { get; set; }
         public List<InstagramEntry> entry { get; set; }
     }
 }

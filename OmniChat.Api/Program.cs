@@ -1,8 +1,10 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OmniChat.Api.Middlewares;
@@ -58,6 +60,25 @@ void ConfigureServices()
             );
 
         });
+    builder.Services.Configure<ApiBehaviorOptions>(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value.Errors.Count > 0)
+                .Select(e => new
+                {
+                    Field = e.Key,
+                    Errors = e.Value.Errors.Select(x => x.ErrorMessage)
+                });
+
+            return new BadRequestObjectResult(new
+            {
+                Message = "Model binding failed",
+                Errors = errors
+            });
+        };
+    });
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddHttpContextAccessor();
@@ -231,7 +252,28 @@ void ConfigureMiddleware()
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "OmniChat API v1");
     });
+    var logger = app.Services
+    .GetRequiredService<ILoggerFactory>()
+    .CreateLogger("RawBodyLogger");
 
+    app.Use(async (context, next) =>
+    {
+        context.Request.EnableBuffering();
+
+        using var reader = new StreamReader(
+            context.Request.Body,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: false,
+            leaveOpen: true);
+
+        var rawBody = await reader.ReadToEndAsync();
+
+        context.Request.Body.Position = 0;
+
+        logger.LogError("RAW REQUEST BODY:\n{Body}", rawBody);
+
+        await next();
+    });
     app.UseMiddleware<ExceptionHandlerMiddleware>();
 
     app.UseHttpsRedirection();

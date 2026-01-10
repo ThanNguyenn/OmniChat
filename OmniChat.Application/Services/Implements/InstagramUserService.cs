@@ -70,7 +70,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<InstagramUserProfile?> GetUserProfileAsync(string instagramUserId)
         {
-            var accessToken = _configuration["InstagramWebhook:AccessToken"]?.Trim();
+            var accessToken = _configuration["InstagramWebhook:InstagramPageAccessToken"]?.Trim();
             if (string.IsNullOrEmpty(accessToken))
             {
                 _logger.LogError("Instagram access token is missing");
@@ -79,7 +79,7 @@ namespace OmniChat.Application.Services.Implements
 
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"https://graph.facebook.com/v19.0/{instagramUserId}?fields=id,username,account_type,profile_picture_url"
+                $"https://graph.instagram.com/v24.0/{instagramUserId}?fields=id,username,account_type,profile_picture_url"
             );
 
             request.Headers.Authorization =
