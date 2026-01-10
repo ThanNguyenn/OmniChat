@@ -178,7 +178,7 @@ namespace OmniChat.Application.Services.Implements
                 throw new NotFoundException("No existCustomerProfile Found");
             }
 
-            var pageAccessToken = _configuration["InstagramWebhook:AccessToken"];
+            var pageAccessToken = _configuration["InstagramWebhook:InstagramPageAccessToken"];
 
             if (string.IsNullOrEmpty(pageAccessToken))
                 throw new Exception("Instagram Page Access Token is missing");

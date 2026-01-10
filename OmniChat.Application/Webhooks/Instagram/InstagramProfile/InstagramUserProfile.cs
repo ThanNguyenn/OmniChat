@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace OmniChat.Application.Webhooks.Instagram.InstagramProfile
@@ -13,6 +14,8 @@ namespace OmniChat.Application.Webhooks.Instagram.InstagramProfile
         public string AccountType { get; set; }
 
         // optional – không luôn có
+
+        [JsonPropertyName("profile_pic")]
         public string? ProfilePictureUrl { get; set; }
         public bool? IsVerified { get; set; }
     }
