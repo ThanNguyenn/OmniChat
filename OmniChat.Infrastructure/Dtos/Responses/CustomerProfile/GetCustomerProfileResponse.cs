@@ -16,6 +16,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.CustomerProfile
         public bool Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public string? AvatarUrl { get; set; }
-        public long SenderId { get; set; }
+        public string SenderId { get; set; }
     }
 }

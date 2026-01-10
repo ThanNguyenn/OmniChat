@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Webhooks.Facebook.FacebookProfile;
+using OmniChat.Application.Webhooks.Instagram.InstagramProfile;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
@@ -15,35 +16,35 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public class FacebookUserService : BaseService<FacebookUserService>,IFacebookUserService
+    public class InstagramUserService : BaseService<InstagramUserService>, IInstagramUserService
     {
         private readonly HttpClient _httpClient;
 
         private readonly IConfiguration _configuration;
-
-        public FacebookUserService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookUserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor,HttpClient httpClient, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public InstagramUserService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<InstagramUserService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
-            _httpClient = httpClient;
             _configuration = configuration;
+            _httpClient = httpClient;
         }
 
-        public async Task<FacebookUserProfile?> GetUserProfileAsync(string psid)
+        public async Task<InstagramUserProfile?> GetUserProfileAsync(string instagramUserId)
         {
-            var pageAccessToken = _configuration["facebookWebHook:AccessToken"];
-
-            // parse long -> string and prepend "act_"
-            var psidString = $"{psid}";
-
+            var accessToken = _configuration["InstagramWebhook:AccessToken"];
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                _logger.LogError("Instagram access token is missing");
+                return null;
+            }
             var url =
-                $"https://graph.facebook.com/v18.0/{psidString}" +
-                $"?fields=first_name,last_name,profile_pic,gender" +
-                $"&access_token={pageAccessToken}";
+                $"https://graph.facebook.com/v19.0/{instagramUserId}" +
+                $"?fields=id,username,account_type,profile_picture_url"+
+                 $"&access_token={accessToken}";
 
             var response = await _httpClient.GetAsync(url);
             var json = await response.Content.ReadAsStringAsync();
 
             _logger.LogInformation(
-                "Facebook raw response. StatusCode: {StatusCode}, Body: {Body}",
+                "Instagram raw response. StatusCode: {StatusCode}, Body: {Body}",
                 response.StatusCode,
                 json
             );
@@ -51,10 +52,12 @@ namespace OmniChat.Application.Services.Implements
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            return JsonSerializer.Deserialize<FacebookUserProfile>(
+            return JsonSerializer.Deserialize<InstagramUserProfile>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
+
         }
+
     }
 }

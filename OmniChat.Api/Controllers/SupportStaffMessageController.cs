@@ -34,20 +34,20 @@ namespace OmniChat.Api.Controllers
             return Ok(result);
         }
 
-        /// Send message to Zalo
-        [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendZaloMessage)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [SwaggerOperation(
-            Summary = "Gửi tin nhắn Zalo",
-            Description = "Gửi tin nhắn của staff đến Zalo"
-            )]
-        public async Task<IActionResult> SendZaloMessage(
-            [FromBody] CreateSupportStaffMessageRequest request)
-        {
-            await _supportStaffMessageService.SendZaloMessageAsync(request);
-            return Ok(new { message = "Message sent to Zalo successfully" });
-        }
+        ///// Send message to Zalo
+        //[HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendZaloMessage)]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //[SwaggerOperation(
+        //    Summary = "Gửi tin nhắn Zalo",
+        //    Description = "Gửi tin nhắn của staff đến Zalo"
+        //    )]
+        //public async Task<IActionResult> SendZaloMessage(
+        //    [FromBody] CreateSupportStaffMessageRequest request)
+        //{
+        //    await _supportStaffMessageService.SendZaloMessageAsync(request);
+        //    return Ok(new { message = "Message sent to Zalo successfully" });
+        //}
 
         /// Send message to Facebook
         [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendFacebookMessage)]
@@ -63,6 +63,22 @@ namespace OmniChat.Api.Controllers
             await _supportStaffMessageService.SendFacebookMesageAsync(request);
             return Ok(new { message = "Message sent to Facebook successfully" });
         }
+
+        // send message to Instagram
+        [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendInstagramMessage)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+           Summary = "Gửi tin nhắn Instagram",
+           Description = "Gửi tin nhắn của staff đến Instagram"
+           )]
+        public async Task<IActionResult> SendInstagramMessage(
+           [FromBody] CreateSupportStaffMessageRequest request)
+        {
+            await _supportStaffMessageService.SendInstagramMesageAsync(request);
+            return Ok(new { message = "Message sent to Instagram successfully" });
+        }
+
 
         /// Update support staff message status to Sent
         [HttpPut(ApiEndPointConstant.SupportStaffMessageEndPoint.UpdateStatusToSent)]

@@ -9,7 +9,7 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface IFacebookUserService
     {
-     public Task<FacebookUserProfile?> GetUserProfileAsync(long psid);
+     public Task<FacebookUserProfile?> GetUserProfileAsync(string psid);
 
     }
 }

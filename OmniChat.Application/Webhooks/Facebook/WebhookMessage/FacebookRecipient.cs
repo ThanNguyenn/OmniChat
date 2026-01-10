@@ -2,6 +2,6 @@
 {
     public class FacebookRecipient
     {
-        public long id { get; set; }
+        public string id { get; set; }
     }
 }

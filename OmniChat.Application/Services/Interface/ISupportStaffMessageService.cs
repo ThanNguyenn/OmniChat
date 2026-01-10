@@ -17,8 +17,10 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task<PagingResponse<GetAllSupportStaffMessageResponse>> GetAllSupportStaffMessageByStaffIdAsync(int pageNumber = 1, int pageSize = 20, Guid? staffId = null);
 
-        public  Task SendZaloMessageAsync(CreateSupportStaffMessageRequest newSupportMess);
+        //public  Task SendZaloMessageAsync(CreateSupportStaffMessageRequest newSupportMess);
 
         public  Task SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
+
+        public  Task SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
     }
 }
