@@ -94,196 +94,148 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
         {
-            bool result = false;
-            // create new support Staff mess
-            var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
-
-            if (newStaffSupportMes == null)
-            {
-                throw new ValidationException("Create fail");
-            }
-
-            // get exist conversation
-
-            var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
-
-            if (existConversation == null)
-            {
-                throw new NotFoundException("No SupportConversation Found");
-            }
-
-            // get customer profile 
-
-            var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
-
-            if (existCustomerProfile == null)
-            {
-                throw new NotFoundException("No existCustomerProfile Found");
-            }
-
-            var pageAccessToken = _configuration["facebookWebHook:AccessToken"];
-
-            if (string.IsNullOrEmpty(pageAccessToken))
-                throw new BusinessException("Facebook Page Access Token is missing");
-
-
-
-            using var httpClient = new HttpClient();
-
-            var url =
-                $"https://graph.facebook.com/v18.0/me/messages?access_token={pageAccessToken}";
-
-
-            var body = new
-            {
-                recipient = new { id = existCustomerProfile.SenderId },
-                message = new { text = newSupportMess.Content }
-            };
-
-            var response = await httpClient.PostAsJsonAsync(url, body);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new BusinessException($"Facebook Send API error: {error}");
-            }
-            else
-            {
-                // update staff message status pending -> sended
-                var  updateSuccess = await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
-                if (updateSuccess != true)
-                {
-                    result = false;
-                }
-                else
-                {
-                    result = true;
-                }
-            }
-            return result;
-        }
-
-        public async Task<bool> SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
-        {
-            bool result = false;
-            // create new support Staff mess
-            var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
-
-            if (newStaffSupportMes == null)
-            {
-                throw new ValidationException("Create fail");
-            }
-
-            // get exist conversation
-
-            var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
-
-            if (existConversation == null)
-            {
-                throw new NotFoundException("No SupportConversation Found");
-            }
-
-            // get customer profile 
-
-            var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
-
-            if (existCustomerProfile == null)
-            {
-                throw new NotFoundException("No existCustomerProfile Found");
-            }
-
-            var pageAccessToken = _configuration["InstagramWebhook:InstagramPageAccessToken"];
-
-            if (string.IsNullOrEmpty(pageAccessToken))
-                throw new BusinessException("Instagram Page Access Token is missing");
-
-            var BussinessId = _configuration["InstagramWebhook:BusinessId"];
-            if (string.IsNullOrEmpty(BussinessId))
-                throw new BusinessException("Instagram Page Bussiness Id is missing");
-
-            using var httpClient = new HttpClient();
-
-            var url =
-                $"https://graph.facebook.com/v19.0/me/messages?access_token={pageAccessToken}";
-
-
-            var body = new
-            {
-                recipient = new { id = existCustomerProfile.SenderId },
-                message = new { text = newSupportMess.Content }
-            };
-
-            var response = await httpClient.PostAsJsonAsync(url, body);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new BusinessException($"Instagram Send API error: {error}");
-
-            }
-            else
-            {
-                // update staff message status pending -> sended
-                var updateSucess =  await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
-                if (updateSucess != true)
-                {
-                    result = false;
-                }
-                else
-                {
-                    result = true;
-                }
-            }
-          
-            return result;
-        }
-
-
-        public async Task<CreateSupportStaffMessageResponse> CreateSupportStaffMessageAsync(CreateSupportStaffMessageRequest createSupportMessageRequest)
-        {
-            var newSupporttMessage = new SupportStaffMessage();
-
-            var repo = _unitOfWork.GetRepository<SupportStaffMessage>();
-
-            await _unitOfWork.ProcessInTransactionAsync(async () =>
-           {
-               // map request -> entity
-               newSupporttMessage = _mapper.Map<SupportStaffMessage>(createSupportMessageRequest);
-
-               // call repo save database
-
-               await repo.InsertAsync(newSupporttMessage);
-
-               // map entity -> response
-
-
-
-           });
-            return _mapper.Map<CreateSupportStaffMessageResponse>(newSupporttMessage);
-        }
-
-
-        public async Task<bool> UpdateSupportStaffMessageStatusSentAsync(Guid supportStaffMessageId)
-        {
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
             {
-                // call repo
-                var _repo = _unitOfWork.GetRepository<SupportStaffMessage>();
+                // create new support Staff mess
+                var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
 
-                // find exit supportStaffMessage
-                var existingMessage = await _repo.SingleOrDefaultAsync(predicate: ssm => ssm.Id == supportStaffMessageId);
-                if (existingMessage == null)
+                if (newStaffSupportMes == null)
                 {
-                    throw new NotFoundException("Support Staff Message does not exist");
+                    throw new ValidationException("Create fail");
                 }
-                existingMessage.Status = SupportStaffMessageStatus.Sended;
 
-                // update
-                _repo.Update(existingMessage);
+                // get exist conversation
+
+                var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
+
+                if (existConversation == null)
+                {
+                    throw new NotFoundException("No SupportConversation Found");
+                }
+
+                // get customer profile 
+
+                var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
+
+                if (existCustomerProfile == null)
+                {
+                    throw new NotFoundException("No existCustomerProfile Found");
+                }
+
+                var pageAccessToken = _configuration["facebookWebHook:AccessToken"];
+
+                if (string.IsNullOrEmpty(pageAccessToken))
+                    throw new BusinessException("Facebook Page Access Token is missing");
+
+
+
+                using var httpClient = new HttpClient();
+
+                var url =
+                    $"https://graph.facebook.com/v18.0/me/messages?access_token={pageAccessToken}";
+
+
+                var body = new
+                {
+                    recipient = new { id = existCustomerProfile.SenderId },
+                    message = new { text = newSupportMess.Content }
+                };
+
+                var response = await httpClient.PostAsJsonAsync(url, body);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    throw new BusinessException($"Facebook Send API error: {error}");
+                }
+
+                newStaffSupportMes.Status = SupportStaffMessageStatus.Sended;
+
 
                 return true;
             });
         }
+
+        public async Task<bool> SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
+        {
+
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                // create new support Staff mess
+                var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
+
+                if (newStaffSupportMes == null)
+                {
+                    throw new ValidationException("Create fail");
+                }
+
+                // get exist conversation
+
+                var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
+
+                if (existConversation == null)
+                {
+                    throw new NotFoundException("No SupportConversation Found");
+                }
+
+                // get customer profile 
+
+                var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
+
+                if (existCustomerProfile == null)
+                {
+                    throw new NotFoundException("No existCustomerProfile Found");
+                }
+
+                var pageAccessToken = _configuration["InstagramWebhook:InstagramPageAccessToken"];
+
+                if (string.IsNullOrEmpty(pageAccessToken))
+                    throw new BusinessException("Instagram Page Access Token is missing");
+
+                var BussinessId = _configuration["InstagramWebhook:BusinessId"];
+                if (string.IsNullOrEmpty(BussinessId))
+                    throw new BusinessException("Instagram Page Bussiness Id is missing");
+
+                using var httpClient = new HttpClient();
+
+                var url =
+                    $"https://graph.facebook.com/v19.0/me/messages?access_token={pageAccessToken}";
+
+
+                var body = new
+                {
+                    recipient = new { id = existCustomerProfile.SenderId },
+                    message = new { text = newSupportMess.Content }
+                };
+
+                var response = await httpClient.PostAsJsonAsync(url, body);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    throw new BusinessException($"Instagram Send API error: {error}");
+
+                }
+
+                newStaffSupportMes.Status = SupportStaffMessageStatus.Sended;
+
+
+                return true;
+            });
+        }
+
+
+        public async Task<SupportStaffMessage> CreateSupportStaffMessageAsync(CreateSupportStaffMessageRequest createSupportMessageRequest)
+        {
+            var repo = _unitOfWork.GetRepository<SupportStaffMessage>();
+
+            var entity = _mapper.Map<SupportStaffMessage>(createSupportMessageRequest);
+
+            await repo.InsertAsync(entity);
+
+            return entity;
+        }
+
 
 
         public async Task<PagingResponse<GetAllSupportStaffMessageResponse>> GetAllSupportStaffMessageByStaffIdAsync(int pageNumber = 1, int pageSize = 20, Guid? staffId = null)

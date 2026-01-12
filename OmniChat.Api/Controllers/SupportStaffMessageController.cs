@@ -84,27 +84,5 @@ namespace OmniChat.Api.Controllers
             await _supportStaffMessageService.SendInstagramMesageAsync(request);
             return Ok(new { message = "Message sent to Instagram successfully" });
         }
-
-
-        // Update support staff message status to Sent
-        [HttpPut(ApiEndPointConstant.SupportStaffMessageEndPoint.UpdateStatusToSent)]
-        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-        [SwaggerOperation(
-        Summary = "Cập nhật tin nhắn của staff",
-        Description = "Cập nhật trạng thái tin nhắn của staff (Pending = 0, Sended = 1)"
-        )]
-        public async Task<IActionResult> UpdateStatusToSent([FromRoute] Guid id)
-        {
-            await _supportStaffMessageService.UpdateSupportStaffMessageStatusSentAsync(id);
-
-            return Ok(new ApiResponse<bool>
-            {
-                StatusCode = StatusCodes.Status200OK,
-                Message = "Status updated successfully",
-                IsSuccess = true,
-                Data = true
-            });
-        }
     }
 }

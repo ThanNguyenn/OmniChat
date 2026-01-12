@@ -1,6 +1,7 @@
 ﻿using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
 using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,7 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface ISupportStaffMessageService
     {
-        public  Task<CreateSupportStaffMessageResponse> CreateSupportStaffMessageAsync(CreateSupportStaffMessageRequest createSupportMessageRequest);
-
-        public  Task<bool> UpdateSupportStaffMessageStatusSentAsync(Guid supportStaffMessageId);
+        public  Task<SupportStaffMessage> CreateSupportStaffMessageAsync(CreateSupportStaffMessageRequest createSupportMessageRequest);
 
         public  Task<PagingResponse<GetAllSupportStaffMessageResponse>> GetAllSupportStaffMessageByStaffIdAsync(int pageNumber = 1, int pageSize = 20, Guid? staffId = null);
 
