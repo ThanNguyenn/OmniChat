@@ -19,8 +19,8 @@ namespace OmniChat.Application.Services.Interface
 
         //public  Task SendZaloMessageAsync(CreateSupportStaffMessageRequest newSupportMess);
 
-        public  Task SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
+        public  Task<bool> SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
 
-        public  Task SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
+        public  Task<bool> SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
     }
 }

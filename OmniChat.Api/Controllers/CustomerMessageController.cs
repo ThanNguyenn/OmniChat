@@ -18,8 +18,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.CustomerMessageEndPoint.GetAllPagingByCustomerId)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetAllCustomerMessageResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy hết tin nhắn của Customer có Paging",
             Description = "Lấy tin nhắn của Customer có Paging và research bằng CustomerId"

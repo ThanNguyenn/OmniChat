@@ -20,7 +20,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetAllCustomerProfileByCustomerName)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetCustomerProfileResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy Profile của Customer có Paging",
             Description = "Lấy Profile của Customer có Paging và research bằng customer Name"

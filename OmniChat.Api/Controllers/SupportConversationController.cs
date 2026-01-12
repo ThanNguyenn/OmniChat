@@ -19,7 +19,7 @@ namespace OmniChat.Api.Controllers
 
         /// Get all support conversations with pagination
         [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.GetAllPagingByCustomerName)]
-        [ProducesResponseType(typeof(PagingResponse<GetAllSupportConversationResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetAllSupportConversationResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy toàn bộ SupportConversation Paging",
             Description = "Lấy toàn bộ thông tin của SupportConversation có Paging và search theo CustomerName"

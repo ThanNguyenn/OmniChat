@@ -3,6 +3,7 @@ using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Provider;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
+using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -18,8 +19,8 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpPost(ApiEndPointConstant.ProviderEndPoint.CreateProvider)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<CreateProviderResponse>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
             Summary = "Tạo mới Provier",
             Description = "Tạo mới Provider "
@@ -50,7 +51,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.ProviderEndPoint.GetAllPagingByproviderName)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetAllProviderResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy tất cả Provider Paging",
             Description = "Lấy tất cả thông tin Provider có Paging và search theo ProviderName "

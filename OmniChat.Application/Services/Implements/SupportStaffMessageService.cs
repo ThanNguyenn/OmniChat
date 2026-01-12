@@ -92,14 +92,15 @@ namespace OmniChat.Application.Services.Implements
         //}
 
 
-        public async Task SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
+        public async Task<bool> SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
         {
+            bool result = true;
             // create new support Staff mess
             var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
 
             if (newStaffSupportMes == null)
             {
-                throw new Exception("Create fail");
+                throw new ValidationException("Create fail");
             }
 
             // get exist conversation
@@ -123,7 +124,7 @@ namespace OmniChat.Application.Services.Implements
             var pageAccessToken = _configuration["facebookWebHook:AccessToken"];
 
             if (string.IsNullOrEmpty(pageAccessToken))
-                throw new Exception("Facebook Page Access Token is missing");
+                throw new BusinessException("Facebook Page Access Token is missing");
 
           
 
@@ -144,20 +145,23 @@ namespace OmniChat.Application.Services.Implements
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Facebook Send API error: {error}");
+                throw new BusinessException($"Facebook Send API error: {error}");
+                result =  false;
             }
             // update staff message status pending -> send
             await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+            return result;
         }
 
-        public async Task SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
+        public async Task<bool> SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
         {
+            bool result = true;
             // create new support Staff mess
             var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
 
             if (newStaffSupportMes == null)
             {
-                throw new Exception("Create fail");
+                throw new ValidationException("Create fail");
             }
 
             // get exist conversation
@@ -181,11 +185,11 @@ namespace OmniChat.Application.Services.Implements
             var pageAccessToken = _configuration["InstagramWebhook:InstagramPageAccessToken"];
 
             if (string.IsNullOrEmpty(pageAccessToken))
-                throw new Exception("Instagram Page Access Token is missing");
+                throw new BusinessException("Instagram Page Access Token is missing");
 
             var BussinessId = _configuration["InstagramWebhook:BusinessId"];
             if (string.IsNullOrEmpty(BussinessId))
-                throw new Exception("Instagram Page Bussiness Id is missing");
+                throw new BusinessException("Instagram Page Bussiness Id is missing");
 
             using var httpClient = new HttpClient();
 
@@ -204,10 +208,12 @@ namespace OmniChat.Application.Services.Implements
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Facebook Send API error: {error}");
+                throw new BusinessException($"Instagram Send API error: {error}");
+                result = false;
             }
             // update staff message status pending -> send
             await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+            return result;
         }
 
 

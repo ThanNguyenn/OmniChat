@@ -19,7 +19,7 @@ namespace OmniChat.Api.Controllers
        
         /// Get all support staff messages with pagination
         [HttpGet(ApiEndPointConstant.SupportStaffMessageEndPoint.GetAllPagingByStaffId)]
-        [ProducesResponseType(typeof(PagingResponse<GetAllSupportStaffMessageResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetAllSupportStaffMessageResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy hết tin nhắn của staff gửi đến khách hàng có Paging",
             Description = "lấy tin nhắn của staff đã gửi đến khách hàng có Paging và research bằng staff Id"
@@ -51,8 +51,11 @@ namespace OmniChat.Api.Controllers
 
         /// Send message to Facebook
         [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendFacebookMessage)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status422UnprocessableEntity)]
         [SwaggerOperation(
             Summary = "Gửi tin nhắn Facebook",
             Description = "Gửi tin nhắn của staff đến Facebook"
@@ -66,8 +69,11 @@ namespace OmniChat.Api.Controllers
 
         // send message to Instagram
         [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendInstagramMessage)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status422UnprocessableEntity)]
         [SwaggerOperation(
            Summary = "Gửi tin nhắn Instagram",
            Description = "Gửi tin nhắn của staff đến Instagram"
@@ -82,8 +88,8 @@ namespace OmniChat.Api.Controllers
 
         /// Update support staff message status to Sent
         [HttpPut(ApiEndPointConstant.SupportStaffMessageEndPoint.UpdateStatusToSent)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
             Summary = "cập nhật tin nhắn của staff",
             Description ="cập nhật trạng thái tin nhắn của staff"
