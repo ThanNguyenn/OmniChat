@@ -19,9 +19,6 @@ namespace OmniChat.Infrastructure.Mappings
                  opt => opt.MapFrom(src => src.ProviderName))
              .ForMember(dest => dest.CreateDate,
                  opt => opt.MapFrom(_ => DateTime.UtcNow));
-
-            CreateMap<Provider, CreateProviderResponse>();
-
         }
     }
 }

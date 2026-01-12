@@ -19,7 +19,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpPost(ApiEndPointConstant.ProviderEndPoint.CreateProvider)]
-        [ProducesResponseType(typeof(ApiResponse<CreateProviderResponse>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
             Summary = "Tạo mới Provier",
@@ -39,14 +39,14 @@ namespace OmniChat.Api.Controllers
                 });
             }
 
-            var result = await _providerService.CreateProviderAsync(createProviderRequest);
+            await _providerService.CreateProviderAsync(createProviderRequest);
 
-            return Ok(new ApiResponse<CreateProviderResponse>
+            return StatusCode(StatusCodes.Status201Created, new ApiResponse<bool>
             {
-                StatusCode = StatusCodes.Status200OK,
+                StatusCode = StatusCodes.Status201Created,
                 Message = "Create provider successfully",
                 IsSuccess = true,
-                Data = result
+                Data = true
             });
         }
 

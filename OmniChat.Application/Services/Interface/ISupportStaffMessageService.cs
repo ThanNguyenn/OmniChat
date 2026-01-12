@@ -13,7 +13,7 @@ namespace OmniChat.Application.Services.Interface
     {
         public  Task<CreateSupportStaffMessageResponse> CreateSupportStaffMessageAsync(CreateSupportStaffMessageRequest createSupportMessageRequest);
 
-        public  Task UpdateSupportStaffMessageStatusSentAsync(Guid supportStaffMessageId);
+        public  Task<bool> UpdateSupportStaffMessageStatusSentAsync(Guid supportStaffMessageId);
 
         public  Task<PagingResponse<GetAllSupportStaffMessageResponse>> GetAllSupportStaffMessageByStaffIdAsync(int pageNumber = 1, int pageSize = 20, Guid? staffId = null);
 

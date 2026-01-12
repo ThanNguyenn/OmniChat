@@ -30,7 +30,7 @@ namespace OmniChat.Application.Services.Implements
         private readonly IZaloOAuthService _zaloOAuthService;
         private readonly ICustomerProfileService _customerProfileService;
         private readonly ISupportConversationService _supportConversationService;
-        
+
         public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _httpClient = httpClient;
@@ -85,7 +85,7 @@ namespace OmniChat.Application.Services.Implements
         //    var result = await response.Content.ReadAsStringAsync();
         //    if (!response.IsSuccessStatusCode)
         //        throw new Exception(result);
-                
+
         //    // update staff message status pending -> send
 
         //    await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
@@ -94,7 +94,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
         {
-            bool result = true;
+            bool result = false;
             // create new support Staff mess
             var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
 
@@ -126,7 +126,7 @@ namespace OmniChat.Application.Services.Implements
             if (string.IsNullOrEmpty(pageAccessToken))
                 throw new BusinessException("Facebook Page Access Token is missing");
 
-          
+
 
             using var httpClient = new HttpClient();
 
@@ -146,16 +146,26 @@ namespace OmniChat.Application.Services.Implements
             {
                 var error = await response.Content.ReadAsStringAsync();
                 throw new BusinessException($"Facebook Send API error: {error}");
-                result =  false;
             }
-            // update staff message status pending -> send
-            await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+            else
+            {
+                // update staff message status pending -> sended
+                var  updateSuccess = await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+                if (updateSuccess != true)
+                {
+                    result = false;
+                }
+                else
+                {
+                    result = true;
+                }
+            }
             return result;
         }
 
         public async Task<bool> SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess)
         {
-            bool result = true;
+            bool result = false;
             // create new support Staff mess
             var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
 
@@ -199,7 +209,7 @@ namespace OmniChat.Application.Services.Implements
 
             var body = new
             {
-                recipient = new { id = existCustomerProfile.SenderId},
+                recipient = new { id = existCustomerProfile.SenderId },
                 message = new { text = newSupportMess.Content }
             };
 
@@ -209,10 +219,22 @@ namespace OmniChat.Application.Services.Implements
             {
                 var error = await response.Content.ReadAsStringAsync();
                 throw new BusinessException($"Instagram Send API error: {error}");
-                result = false;
+
             }
-            // update staff message status pending -> send
-            await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+            else
+            {
+                // update staff message status pending -> sended
+                var updateSucess =  await UpdateSupportStaffMessageStatusSentAsync(newStaffSupportMes.Id);
+                if (updateSucess != true)
+                {
+                    result = false;
+                }
+                else
+                {
+                    result = true;
+                }
+            }
+          
             return result;
         }
 
@@ -223,39 +245,44 @@ namespace OmniChat.Application.Services.Implements
 
             var repo = _unitOfWork.GetRepository<SupportStaffMessage>();
 
-             await _unitOfWork.ProcessInTransactionAsync(async () =>
-            {
-                // map request -> entity
-                newSupporttMessage = _mapper.Map<SupportStaffMessage>(createSupportMessageRequest);
+            await _unitOfWork.ProcessInTransactionAsync(async () =>
+           {
+               // map request -> entity
+               newSupporttMessage = _mapper.Map<SupportStaffMessage>(createSupportMessageRequest);
 
-                // call repo save database
+               // call repo save database
 
-                await repo.InsertAsync(newSupporttMessage);
+               await repo.InsertAsync(newSupporttMessage);
 
-                // map entity -> response
+               // map entity -> response
 
-          
 
-            });
+
+           });
             return _mapper.Map<CreateSupportStaffMessageResponse>(newSupporttMessage);
         }
 
 
-        public async Task UpdateSupportStaffMessageStatusSentAsync(Guid supportStaffMessageId)
+        public async Task<bool> UpdateSupportStaffMessageStatusSentAsync(Guid supportStaffMessageId)
         {
-            var repo = _unitOfWork.GetRepository<SupportStaffMessage>();
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                // call repo
+                var _repo = _unitOfWork.GetRepository<SupportStaffMessage>();
 
-            await _unitOfWork.ProcessInTransactionAsync(async () =>
-           {
-               // find exit supportStaffMessage
-               var existingMessage = await repo.SingleOrDefaultAsync(predicate: ssm => ssm.Id == supportStaffMessageId);
-               if (existingMessage == null)
-               {
-                   throw new NotFoundException("Support Staff Message does not exist");
-               }
-               existingMessage.Status = SupportStaffMessageStatus.Sended;
+                // find exit supportStaffMessage
+                var existingMessage = await _repo.SingleOrDefaultAsync(predicate: ssm => ssm.Id == supportStaffMessageId);
+                if (existingMessage == null)
+                {
+                    throw new NotFoundException("Support Staff Message does not exist");
+                }
+                existingMessage.Status = SupportStaffMessageStatus.Sended;
 
-           });
+                // update
+                _repo.Update(existingMessage);
+
+                return true;
+            });
         }
 
 
