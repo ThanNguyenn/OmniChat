@@ -12,7 +12,7 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface IProviderService
     {
-        public  Task<CreateProviderResponse> CreateProviderAsync(CreateProviderRequest CreateProviderRequest);
+        public  Task<bool> CreateProviderAsync(CreateProviderRequest CreateProviderRequest);
 
         public Task<PagingResponse<GetAllProviderResponse>> GetAllProviderAsync(int pageNumber = 1, int pageSize = 20, string? providerName = null);
 

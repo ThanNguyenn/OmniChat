@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Provider;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
@@ -26,45 +27,49 @@ namespace OmniChat.Application.Services.Implements
         {
         }
 
-        public async Task<CreateProviderResponse> CreateProviderAsync(CreateProviderRequest CreateProviderRequest)
+        public async Task<bool> CreateProviderAsync(CreateProviderRequest CreateProviderRequest)
         {
-           
-                return await _unitOfWork.ProcessInTransactionAsync(async () =>
+
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                var existProvider = await GetProviderAsync(CreateProviderRequest.ProviderName);
+                if (existProvider != null)
                 {
-                    // Map request 
-                    var newProvider = _mapper.Map<Provider>(CreateProviderRequest);
+                    // provider early exist
+                    throw new BadRequestException("Provider already exist.");
+                }
 
-                    // Add into repo
-                    await _unitOfWork.GetRepository<Provider>().InsertAsync(newProvider);
+                // Map request 
+                var newProvider = _mapper.Map<Provider>(CreateProviderRequest);
 
-                    // return 
-                    return _mapper.Map<CreateProviderResponse>(newProvider);
-                });
-            
-           
+                // Add into repo
+                await _unitOfWork.GetRepository<Provider>().InsertAsync(newProvider);
+
+                return true;
+            });
         }
 
         public async Task<PagingResponse<GetAllProviderResponse>> GetAllProviderAsync(int pageNumber = 1, int pageSize = 20, string? providerName = null)
         {
-           
-                return await _unitOfWork.ProcessInTransactionAsync(async () =>
-                {
-                    // call repo
-                    var repo = _unitOfWork.GetRepository<Provider>();
 
-                    // query
-                    return await repo.GetPagingListAsync(selector: x => new GetAllProviderResponse
-                    {
-                        Id = x.Id,
-                        ProviderName = x.ProviderName,
-                        CreateDate = x.CreateDate,
-                    },
-                    predicate: string.IsNullOrWhiteSpace(providerName) ? null : x => x.ProviderName.Contains(providerName),
-                    orderBy: q => q.OrderByDescending(x => x.CreateDate),
-                    page: pageNumber,
-                    size: pageSize
-                    );
-                });
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                // call repo
+                var repo = _unitOfWork.GetRepository<Provider>();
+
+                // query
+                return await repo.GetPagingListAsync(selector: x => new GetAllProviderResponse
+                {
+                    Id = x.Id,
+                    ProviderName = x.ProviderName,
+                    CreateDate = x.CreateDate,
+                },
+                predicate: string.IsNullOrWhiteSpace(providerName) ? null : x => x.ProviderName.Contains(providerName),
+                orderBy: q => q.OrderByDescending(x => x.CreateDate),
+                page: pageNumber,
+                size: pageSize
+                );
+            });
         }
 
         public async Task<Provider> GetProviderAsync(string providerName)
@@ -73,7 +78,7 @@ namespace OmniChat.Application.Services.Implements
             {
                 var repo = _unitOfWork.GetRepository<Provider>();
 
-                return  await repo.SingleOrDefaultAsync(predicate: x => x.ProviderName == providerName);
+                return await repo.SingleOrDefaultAsync(predicate: x => x.ProviderName == providerName);
 
             }
             catch (Exception ex)

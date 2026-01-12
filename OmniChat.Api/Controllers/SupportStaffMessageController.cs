@@ -86,18 +86,25 @@ namespace OmniChat.Api.Controllers
         }
 
 
-        /// Update support staff message status to Sent
+        // Update support staff message status to Sent
         [HttpPut(ApiEndPointConstant.SupportStaffMessageEndPoint.UpdateStatusToSent)]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
-            Summary = "cập nhật tin nhắn của staff",
-            Description ="cập nhật trạng thái tin nhắn của staff"
-            )]
+        Summary = "Cập nhật tin nhắn của staff",
+        Description = "Cập nhật trạng thái tin nhắn của staff (Pending = 0, Sended = 1)"
+        )]
         public async Task<IActionResult> UpdateStatusToSent([FromRoute] Guid id)
         {
             await _supportStaffMessageService.UpdateSupportStaffMessageStatusSentAsync(id);
-            return Ok(new { message = "Status updated successfully" });
+
+            return Ok(new ApiResponse<bool>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Status updated successfully",
+                IsSuccess = true,
+                Data = true
+            });
         }
     }
 }

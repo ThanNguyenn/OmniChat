@@ -84,4 +84,14 @@ public class ApiEndPointConstant
         public const string Create = "create";
 
     }
+
+    public static class ClaimTypeEndPoint
+    {
+        public const string ClaimType = ApiV1 + "/claim-type";
+
+        public const string Create = ClaimType + "/create";
+        public const string GetAll = ClaimType + "/get-all";
+        public const string Update = ClaimType + "/{id}/update";
+        public const string Delete = ClaimType + "/{id}/delete";
+    }
 }
