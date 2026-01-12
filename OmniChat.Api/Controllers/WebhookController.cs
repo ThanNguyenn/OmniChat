@@ -45,7 +45,6 @@ namespace OmniChat.Api.Controllers
         // POST /api/v1/webhooks/facebook
         [HttpPost(ApiEndPointConstant.Webhooks.FacebookWebhook)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
         Summary = "Webhook set up của Facebook",
         Description = "Webhook hứng evernt từ phía Facebook "
@@ -67,7 +66,6 @@ namespace OmniChat.Api.Controllers
 
         [HttpGet(ApiEndPointConstant.Webhooks.FacebookWebhook)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
         Summary = "Webhook set up verify của Facebook",
         Description = "Webhook verify hứng event từ phía Facebook "
@@ -88,7 +86,6 @@ namespace OmniChat.Api.Controllers
         // POST /api/v1/webhooks/instagram
         [HttpPost(ApiEndPointConstant.Webhooks.InstagramWebhook)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> InstagramWebhookAsync(
             [FromBody] InstagramWebhookPayload payload)
         {
@@ -105,7 +102,6 @@ namespace OmniChat.Api.Controllers
         // GET: verify webhook
         [HttpGet(ApiEndPointConstant.Webhooks.InstagramWebhook)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> VerifyInstagramAsync(
         [FromQuery(Name = "hub.mode")] string mode,
         [FromQuery(Name = "hub.verify_token")] string token,
