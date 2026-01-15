@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Models
 {
-    public class TaskAssignments
+    public class Inquiry
     {
         public Guid Id { get; set; }
 
@@ -20,11 +20,11 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime CreateDate { get; set; }
 
-        public TaskAssignmentStatus Status { get; set; }
+        public InQuiryStatus Status { get; set; }
 
         public Guid? AssignedBy { get; set; }
 
-        public AssignedType AssignedType { get; set; }
+        public InQuiryType Type { get; set; }
 
         public bool? IsActive { get; set; }
 
@@ -33,15 +33,16 @@ namespace OmniChat.Infrastructure.Models
         public virtual Staff Staff { get; set; }
     }
 
-    public enum TaskAssignmentStatus
+    public enum InQuiryStatus
     {
         Pending = 0,
         Complete = 1,
     }
 
-    public enum AssignedType
+    public enum InQuiryType
     {
         Auto = 0,
         Manual = 1,
     }
 }
+

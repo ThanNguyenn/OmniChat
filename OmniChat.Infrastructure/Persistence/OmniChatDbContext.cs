@@ -71,7 +71,7 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<ChatTemplate> ChatTemplates { get; set; }
 
-        public DbSet<TaskAssignments> TaskAssignments { get; set; }
+        public DbSet<Inquiry> Inquirys { get; set; }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
 
@@ -112,13 +112,13 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasConversion<string>();
 
             // convert enum to string
-            modelBuilder.Entity<TaskAssignments>()
+            modelBuilder.Entity<Inquiry>()
                 .Property(ta => ta.Status)
                 .HasConversion<string>();
 
             // convert enum to string
-            modelBuilder.Entity<TaskAssignments>()
-                  .Property(ta => ta.AssignedType)
+            modelBuilder.Entity<Inquiry>()
+                  .Property(ta => ta.Type)
                 .HasConversion<string>();
 
             // default value IsActive = true
@@ -144,7 +144,7 @@ namespace OmniChat.Infrastructure.Persistence
            .Property(x => x.IsActive)
            .HasDefaultValueSql("true");
 
-            modelBuilder.Entity<TaskAssignments>()
+            modelBuilder.Entity<Inquiry>()
            .Property(x => x.IsActive)
            .HasDefaultValueSql("true");
 
@@ -185,7 +185,7 @@ namespace OmniChat.Infrastructure.Persistence
             .HasColumnType("timestamp with time zone")
             .HasDefaultValueSql("now()");
 
-            modelBuilder.Entity<TaskAssignments>()
+            modelBuilder.Entity<Inquiry>()
             .Property(x => x.CreateDate)
             .HasColumnType("timestamp with time zone")
             .HasDefaultValueSql("now()");
@@ -920,49 +920,49 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(ct => ct.Content)
                 .IsRequired(); // Content is required
 
-            // ==== Staff - TaskAssignments ( one to Many ) ====
-            modelBuilder.Entity<TaskAssignments>()
+            // ==== Staff - Inquiry ( one to Many ) ====
+            modelBuilder.Entity<Inquiry>()
                 .HasKey(ta => ta.Id);
-            //Auto gen Guid Id TaskAssignments
-            modelBuilder.Entity<TaskAssignments>()
+            //Auto gen Guid Id Inquiry
+            modelBuilder.Entity<Inquiry>()
             .Property(ta => ta.Id)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Staff>()
-                .HasMany(s => s.TaskAssignments)
+                .HasMany(s => s.Inquirys)
                 .WithOne(ta => ta.Staff)
                 .HasForeignKey(ta => ta.StaffId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<TaskAssignments>()
-                .HasIndex(ta => new { ta.StaffId, ta.Status }); // index scan taskassignments by staff and status faster
+            modelBuilder.Entity<Inquiry>()
+                .HasIndex(ta => new { ta.StaffId, ta.Status }); // index scan Inquiry by staff and status faster
 
-            // ==== Department - TaskAssignments ( one to Many ) ====
+            // ==== Department - Inquiry ( one to Many ) ====
             modelBuilder.Entity<Department>()
-                .HasMany(d => d.TaskAssignments)
+                .HasMany(d => d.Inquirys)
                 .WithOne(ta => ta.Department)
                 .HasForeignKey(ta => ta.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<TaskAssignments>()
-                .HasIndex(ta => new { ta.DepartmentId, ta.Status }); // index scan taskassignments by department and status faster
+            modelBuilder.Entity<Inquiry>()
+                .HasIndex(ta => new { ta.DepartmentId, ta.Status }); // index scan Inquiry by department and status faster
 
 
-            // ==== SupportConversation - TaskAssignments ( one to One ) ====
+            // ==== SupportConversation - Inquiry ( one to One ) ====
 
             modelBuilder.Entity<SupportConversation>()
-                .HasOne(d => d.TaskAssignments)
+                .HasOne(d => d.Inquiry)
                 .WithOne(ta => ta.SupportConversation)
-                .HasForeignKey<TaskAssignments>(ta => ta.SupportConversationId)
+                .HasForeignKey<Inquiry>(ta => ta.SupportConversationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<TaskAssignments>()
-                .HasIndex(ta => ta.SupportConversationId) // index scan taskassignments by supportconversation faster
+            modelBuilder.Entity<Inquiry>()
+                .HasIndex(ta => ta.SupportConversationId) // index scan Inquiry by supportconversation faster
                 .IsUnique();
 
-            modelBuilder.Entity<TaskAssignments>()
-               .HasIndex(ta => new { ta.SupportConversationId, ta.IsActive }) // only 1 active taskassignment in 1 supportconversation
+            modelBuilder.Entity<Inquiry>()
+               .HasIndex(ta => new { ta.SupportConversationId, ta.IsActive }) // only 1 active Inquiry in 1 supportconversation
                .IsUnique();
 
             // ==== AuditLog ====

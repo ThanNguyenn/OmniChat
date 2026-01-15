@@ -23,6 +23,8 @@ namespace OmniChat.Infrastructure.Models
         public Guid KpiId { get; set; }
 
         public virtual Kpi Kpi { get; set; }
+
+        public int CurrentValue { get; set; }
     }
 
     public enum StaffKpiStatus

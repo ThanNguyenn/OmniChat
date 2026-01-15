@@ -42,7 +42,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<SupportConversationFile> SupportConversationFiles { get; set; } = new List<SupportConversationFile>();
     
-       public virtual TaskAssignments TaskAssignments { get; set; }
+       public virtual Inquiry Inquiry { get; set; }
     }
 
     public enum ConversationStatus
