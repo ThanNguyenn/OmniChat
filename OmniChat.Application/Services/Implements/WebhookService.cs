@@ -628,6 +628,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
         {
+            const string ourSenderId = "17841478357005004"; // if message is our past continue next message
             _logger.LogInformation("[INSTAGRAM] Webhook received");
 
             _logger.LogInformation(
@@ -660,7 +661,16 @@ namespace OmniChat.Application.Services.Implements
 
                 foreach (var msg in entry.messaging)
                 {
-                    
+                    if(msg.Sender.id == ourSenderId)
+                    {
+                        _logger.LogInformation(
+                            "[INSTAGRAM] Ignored staff message | BusinessId={BusinessId} | SenderId={SenderId}",
+                            entry.id,
+                            msg.Sender?.id
+                        );
+                        continue;
+                    }
+
                     if (msg.Message?.text == null)
                     {
                         _logger.LogInformation(
