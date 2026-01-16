@@ -32,6 +32,8 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Provider Providers { get; set; }
 
+        public DateTime UpdateDate { get; set; }
+
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
 
         public virtual FeedBack FeedBack { get; set; }

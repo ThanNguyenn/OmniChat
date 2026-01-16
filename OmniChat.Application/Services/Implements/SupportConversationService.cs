@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
@@ -58,5 +59,30 @@ namespace OmniChat.Application.Services.Implements
                 size: pageSize
             );
         }
+
+        //public async Task<GetAllSupportConversationResponse> GetSupportConversationByIdAsync(Guid conversationId)
+        //{
+        //    var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+        //    var conversation = await repo.SingleOrDefaultAsync(
+        //        selector: x => new GetAllSupportConversationResponse
+        //        {
+        //            Id = x.Id,
+        //            CreatedDate = x.CreatedDate,
+        //            Status = x.Status,
+        //            IsDistributed = x.IsDistributed,
+        //            CustomerName = x.CustomerName,
+        //            AvartarUrl = x.AvartarUrl,
+        //            ActiveStaffId = x.ActiveStaffId,
+        //            ActiveCustomerId = x.ActiveCustomerId,
+        //            ProvidersId = x.ProvidersId,
+        //        },
+        //        predicate: sc => sc.Id == conversationId,
+        //        include:query => query.Include(sc => sc.SupportStaffMessages)
+        //                               .Include(sc => sc.CustomerMessages),
+        //        orderBy : sc => sc.OrderBy(sc.)
+        //    );
+
+        //}
     }
 }
