@@ -96,6 +96,7 @@ void ConfigureServices()
     // Register application services
     RegisterApplicationServices();
     RegisterBackgroundServices();
+    SingalRConfigure();
 
 
 }
@@ -123,6 +124,12 @@ void RegisterBackgroundServices()
     // Register background services here
     builder.Services.AddHostedService<ZaloTokenRefreshWorker>();
     builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
+}
+
+// add signalR
+void SingalRConfigure()
+{
+    builder.Services.AddSignalR();
 }
 
 void ConfigureDatabase()
