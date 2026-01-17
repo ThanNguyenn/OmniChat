@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.SignalRHub;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
+using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
@@ -30,14 +33,16 @@ namespace OmniChat.Application.Services.Implements
         private readonly IZaloOAuthService _zaloOAuthService;
         private readonly ICustomerProfileService _customerProfileService;
         private readonly ISupportConversationService _supportConversationService;
+        private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration,IHubContext<SupportConversationHub> hubContext) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _httpClient = httpClient;
             _zaloOAuthService = zaloOAuthService;
             _customerProfileService = customerProfileService;
             _supportConversationService = supportConversationService;
             _configuration = configuration;
+            _hubContext = hubContext;
         }
 
         //public async Task SendZaloMessageAsync( CreateSupportStaffMessageRequest newSupportMess)
@@ -150,7 +155,28 @@ namespace OmniChat.Application.Services.Implements
                 }
 
                 newStaffSupportMes.Status = SupportStaffMessageStatus.Sended;
+                // After create new staff message Update Supportconversation UpdateDate -> now
 
+                var conversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newSupportMess.SupportConversationId);
+
+                // Update Sidebar for Staff via SignalR
+                await _hubContext.Clients.User(conversation.ActiveStaffId.ToString())
+                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                {
+                    ConversationId = conversation.Id,
+                    LastMessage = newStaffSupportMes.Content,
+                    MessageUpdateDate = conversation.UpdateDate
+                });
+
+                // Update conversationDetail for Staff via SignalR
+                await _hubContext.Clients.Group($"conversation:{conversation.Id}")
+                    .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
+                    {
+                        SenderType = "Staff",
+                        SenderId = newStaffSupportMes.StaffId,
+                        Content = newStaffSupportMes.Content,
+                        Timestamp = newStaffSupportMes.Timestamp
+                    });
 
                 return true;
             });
@@ -218,8 +244,28 @@ namespace OmniChat.Application.Services.Implements
                 }
 
                 newStaffSupportMes.Status = SupportStaffMessageStatus.Sended;
+                // After create new staff message Update Supportconversation UpdateDate -> now
+               
+                var conversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newSupportMess.SupportConversationId);
 
+                // Update Sidebar for Staff via SignalR
+                await _hubContext.Clients.User(conversation.ActiveStaffId.ToString())
+                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                {
+                    ConversationId = conversation.Id,
+                    LastMessage = newStaffSupportMes.Content,
+                    MessageUpdateDate = conversation.UpdateDate
+                });
 
+                // Update conversationDetail for Staff via SignalR
+                await _hubContext.Clients.Group($"conversation:{conversation.Id}")
+                    .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
+                    {
+                        SenderType = "Staff",
+                        SenderId = newStaffSupportMes.StaffId,
+                        Content = newStaffSupportMes.Content,
+                        Timestamp = newStaffSupportMes.Timestamp
+                    });
                 return true;
             });
         }

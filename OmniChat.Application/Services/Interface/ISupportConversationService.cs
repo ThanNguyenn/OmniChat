@@ -11,8 +11,14 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface ISupportConversationService
     {
-        public  Task<PagingResponse<GetAllSupportConversationResponse>> SupportConversationByCustomerNamePagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null);
+        public Task<PagingResponse<GetAllSupportConversationResponse>> SupportConversationByCustomerNamePagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null);
 
-        public  Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId);
+        public Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId);
+
+        public  Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(Guid Id);
+
+        public  Task<IEnumerable<StaffConversationSideBarResponse>> GetStaffConversationSideBarAsync(Guid staffId);
+
+        public  Task<SupportConversationDetailResponse> GetConversationDetailByIdAsync(Guid conversationId);
     }
 }

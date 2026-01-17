@@ -11,6 +11,7 @@ using OmniChat.Api.Middlewares;
 using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.SignalRHub;
 using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Extensions;
 using OmniChat.Infrastructure.Metadatas;
@@ -27,14 +28,14 @@ ConfigureServices();
 ConfigureDatabase();
 ConfigureAuthentication();
 ConfigureSwagger();
-
+ConfigureSignalRServices();
 var app = builder.Build();
 
 
 //builder.Services.Configure<OmniChatDbContext>(
 //    builder.Configuration.GetSection("ZaloWebHook")
 //);
-
+ConfigureSignalREndpoints();
 ConfigureMiddleware();
 
 app.Run();
@@ -96,7 +97,6 @@ void ConfigureServices()
     // Register application services
     RegisterApplicationServices();
     RegisterBackgroundServices();
-    SingalRConfigure();
 
 
 }
@@ -127,9 +127,15 @@ void RegisterBackgroundServices()
 }
 
 // add signalR
-void SingalRConfigure()
+void ConfigureSignalRServices()
 {
     builder.Services.AddSignalR();
+}
+
+// SignalR Endpoint
+void ConfigureSignalREndpoints()
+{
+    app.MapHub<SupportConversationHub>("/supportConversationHub");
 }
 
 void ConfigureDatabase()
