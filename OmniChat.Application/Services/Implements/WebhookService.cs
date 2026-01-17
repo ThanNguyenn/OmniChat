@@ -1,14 +1,18 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.SignalRHub;
 using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
 using OmniChat.Application.Webhooks.Instagram.InstagramMessage;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Requests.Provider;
+using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -16,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -36,8 +41,12 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly IInstagramUserService _instagramUserService;
 
+        private readonly ISupportConversationService _supportConversationService;
+
         private readonly IConfiguration _configuration;
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService,IConfiguration configuration, IInstagramUserService instagramUserService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly IHubContext<SupportConversationHub> _hubContext;
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService,IConfiguration configuration, IInstagramUserService instagramUserService,IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
@@ -46,6 +55,8 @@ namespace OmniChat.Application.Services.Implements
             _facebookUserService = facebookUserService;
             _configuration = configuration;
             _instagramUserService = instagramUserService;
+            _hubContext = hubContext;
+            _supportConversationService = supportConversationService;
         }
 
                         //========== Zalo //==========
@@ -437,6 +448,27 @@ namespace OmniChat.Application.Services.Implements
                             newMessage.Id
                         );
                         result = true;
+                        // After get new customer message Update Supportconversation UpdateDate -> now
+                        var existconversation =  await _supportConversationService.UpdateSupportConversationUpdateDateAsync(ConversationTempId);
+
+                        // Add SignalR Realtime for sidebar staff 
+                        await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
+                            .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                            {
+                            ConversationId = existconversation.Id,
+                            LastMessage = newMessage.Content,
+                            MessageUpdateDate = existconversation.UpdateDate
+                        });
+
+                        // Add SignalR realTime for chat detail if staff is viewing
+                        await _hubContext.Clients.Group($"conversation:{existconversation.Id}")
+                            .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
+                            {
+                                SenderType = "Customer",
+                                SenderId = customerProfile.Id,
+                                Content = newMessage.Content,
+                                Timestamp = newMessage.Timestamp
+                            });
                     }
                     else
                     {
@@ -744,6 +776,29 @@ namespace OmniChat.Application.Services.Implements
                             newMessage.Id
                         );
                         result = true;
+
+                        // After get new customer message Update Supportconversation UpdateDate -> now
+                        var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationTempId);
+
+                        // Add SignalR Realtime for sidebar staff 
+                        await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
+                            .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                            {
+                                ConversationId = existconversation.Id,
+                                LastMessage = newMessage.Content,
+                                MessageUpdateDate = existconversation.UpdateDate
+                            });
+
+                        // Add SignalR realTime for chat detail if staff is viewing
+                        await _hubContext.Clients.Group($"conversation:{existconversation.Id}")
+                            .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
+                            {
+                                SenderType = "Customer",
+                                SenderId = customerProfile.Id,
+                                Content = newMessage.Content,
+                                Timestamp = newMessage.Timestamp
+                            });
+
                     }
                 }
             }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
@@ -19,8 +20,11 @@ namespace OmniChat.Application.Services.Implements
 {
     public class SupportConversationService : BaseService<SupportConversationService>, ISupportConversationService
     {
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly ICustomerProfileService _customerProfileService;
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _customerProfileService = customerProfileService;
         }
 
         public async Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId)
@@ -35,7 +39,25 @@ namespace OmniChat.Application.Services.Implements
             return exitSupportConversation;
         }
 
-        public async Task<PagingResponse<GetAllSupportConversationResponse>> SupportConversationByCustomerNamePagingAsync(int pageNumber = 1,int pageSize = 20,string? customerName = null)
+        public async Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(Guid Id)
+        {
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                // call repo
+                var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+                // check exist 
+                var existingSupportConversation = await GetSupportConversationByIdAsync(Id);
+                if (existingSupportConversation == null)
+                    throw new NotFoundException("No SupportConversation Found");
+
+                existingSupportConversation.UpdateDate = DateTime.UtcNow;
+                repo.Update(existingSupportConversation);
+                return existingSupportConversation;
+            });
+        }
+
+        public async Task<PagingResponse<GetAllSupportConversationResponse>> SupportConversationByCustomerNamePagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
             return await repo.GetPagingListAsync(
@@ -53,36 +75,96 @@ namespace OmniChat.Application.Services.Implements
                 },
                 predicate: string.IsNullOrWhiteSpace(customerName)
                     ? null
-                    : x => x.CustomerName.Contains(customerName), 
+                    : x => x.CustomerName.Contains(customerName),
                 orderBy: q => q.OrderByDescending(x => x.CreatedDate),
                 page: pageNumber,
                 size: pageSize
             );
         }
 
-        //public async Task<GetAllSupportConversationResponse> GetSupportConversationByIdAsync(Guid conversationId)
-        //{
-        //    var repo = _unitOfWork.GetRepository<SupportConversation>();
+        // Staff Pending SupportConversation side bar
+        public async Task<IEnumerable<StaffConversationSideBarResponse>>GetStaffConversationSideBarAsync(Guid staffId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
 
-        //    var conversation = await repo.SingleOrDefaultAsync(
-        //        selector: x => new GetAllSupportConversationResponse
-        //        {
-        //            Id = x.Id,
-        //            CreatedDate = x.CreatedDate,
-        //            Status = x.Status,
-        //            IsDistributed = x.IsDistributed,
-        //            CustomerName = x.CustomerName,
-        //            AvartarUrl = x.AvartarUrl,
-        //            ActiveStaffId = x.ActiveStaffId,
-        //            ActiveCustomerId = x.ActiveCustomerId,
-        //            ProvidersId = x.ProvidersId,
-        //        },
-        //        predicate: sc => sc.Id == conversationId,
-        //        include:query => query.Include(sc => sc.SupportStaffMessages)
-        //                               .Include(sc => sc.CustomerMessages),
-        //        orderBy : sc => sc.OrderBy(sc.)
-        //    );
+            var conversations = await repo.GetListAsync(
+                predicate: c =>
+                    c.ActiveStaffId == staffId &&
+                    c.Status == ConversationStatus.Pending,
 
-        //}
+                orderBy: q => q.OrderByDescending(c => c.UpdateDate),
+
+                selector: c => new StaffConversationSideBarResponse
+                {
+                    ConversationId = c.Id,
+                    CustomerName = c.CustomerName,
+                    AvartarUrl = c.AvartarUrl,
+                    ProviderName = c.Providers.ProviderName,
+
+                    LastMessage =
+                        c.CustomerMessages
+                            .Select(m => new { m.Content, m.Timestamp })
+                        .Concat(
+                            c.SupportStaffMessages
+                                .Select(m => new { m.Content, m.Timestamp })
+                        )
+                        .OrderByDescending(m => m.Timestamp)
+                        .Select(m => m.Content)
+                        .FirstOrDefault() ?? string.Empty
+                }
+            );
+            return conversations;
+        }
+
+        // conversattion detail
+        public async Task<SupportConversationDetailResponse> GetConversationDetailByIdAsync(Guid conversationId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
+            var conversation = await repo.SingleOrDefaultAsync(predicate: sc => sc.Id == conversationId,
+                include: source => source
+                    .Include(c => c.CustomerMessages)
+                    .Include(c => c.SupportStaffMessages)
+            );
+
+
+            if (conversation == null)
+                throw new NotFoundException("No support conversation found");
+
+            var customerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
+
+            var messages = conversation.CustomerMessages.Select(cm => new SupportConversationMessagesResponse
+            {
+                SenderType = "Customer",
+                SenderId = customerProfile.Id,
+                Content = cm.Content,
+                Timestamp = cm.Timestamp
+            })
+            .Concat(
+                conversation.SupportStaffMessages.Select(sm => new SupportConversationMessagesResponse
+                {
+                    SenderType = "Staff",
+                    SenderId = sm.StaffId,
+                    Content = sm.Content,
+                    Timestamp = sm.Timestamp
+                })
+                )
+            .OrderBy(m => m.Timestamp)
+            .ToList();
+
+            return new SupportConversationDetailResponse
+            {
+                Id = conversation.Id,
+                CreatedDate = conversation.CreatedDate,
+                Status = conversation.Status,
+                IsDistributed = conversation.IsDistributed,
+                CustomerName = conversation.CustomerName,
+                AvartarUrl = conversation.AvartarUrl,
+                ActiveStaffId = conversation.ActiveStaffId,
+                ActiveCustomerId = conversation.ActiveCustomerId,
+                ProvidersId = conversation.ProvidersId,
+
+                Messages = messages
+            };
+        }
     }
 }
