@@ -41,8 +41,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(Guid Id)
         {
-            return await _unitOfWork.ProcessInTransactionAsync(async () =>
-            {
+            
                 // call repo
                 var repo = _unitOfWork.GetRepository<SupportConversation>();
 
@@ -54,7 +53,7 @@ namespace OmniChat.Application.Services.Implements
                 existingSupportConversation.UpdateDate = DateTime.UtcNow;
                 repo.Update(existingSupportConversation);
                 return existingSupportConversation;
-            });
+           
         }
 
         public async Task<PagingResponse<GetAllSupportConversationResponse>> SupportConversationByCustomerNamePagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
