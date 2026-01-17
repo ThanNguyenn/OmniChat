@@ -246,20 +246,23 @@ namespace OmniChat.Application.Services.Implements
 
                 newStaffSupportMes.Status = SupportStaffMessageStatus.Sended;
                 // After create new staff message Update Supportconversation UpdateDate -> now
-               
-                var conversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newSupportMess.SupportConversationId);
+
+                // var conversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newSupportMess.SupportConversationId);
+
+                existConversation.UpdateDate = DateTime.UtcNow;
+                _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
                 // Update Sidebar for Staff via SignalR
-                await _hubContext.Clients.User(conversation.ActiveStaffId.ToString())
+                await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
                 .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                 {
-                    ConversationId = conversation.Id,
+                    ConversationId = existConversation.Id,
                     LastMessage = newStaffSupportMes.Content,
-                    MessageUpdateDate = conversation.UpdateDate
+                    MessageUpdateDate = existConversation.UpdateDate
                 });
 
                 // Update conversationDetail for Staff via SignalR
-                await _hubContext.Clients.Group($"conversation:{conversation.Id}")
+                await _hubContext.Clients.Group($"conversation:{existConversation.Id}")
                     .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
                     {
                         SenderType = "Staff",
