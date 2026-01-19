@@ -27,7 +27,8 @@ public class AuthController : BaseController<AuthController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
     Summary = "Đăng nhập bằng tài khoản của app",
-    Description = "Đăng nhập bằng tài khoản của app sử dụng email hoặc username và mật khẩu, nhận role, access token và refresh token trả về.")]
+    Description = "Đăng nhập bằng tài khoản của app sử dụng email hoặc username và mật khẩu, nhận role, access token và refresh token trả về.\n" +
+        "Default password: Omnichat@0294")]
     public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
     {
         var result = await _authService.LoginAsync(loginRequest);
