@@ -37,7 +37,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
     {
         var accountRepo = _unitOfWork.GetRepository<Account>();
 
-        var account = await accountRepo.SingleOrDefaultAsync(predicate: a => a.UserName == loginRequest.Username || a.Staff.Email == loginRequest.Username, include: q => q.Include(a => a.Role)) ?? throw new UnauthorizedException("Username or password incorect");
+        var account = await accountRepo.SingleOrDefaultAsync(predicate: a => a.UserName == loginRequest.Username || a.Staff.Email == loginRequest.Username, include: q => q.Include(a => a.Role).Include(a => a.Staff)) ?? throw new UnauthorizedException("Username or password incorect");
 
         if (!await PasswordUtil.VerifyPassword(loginRequest.Password,account.Password))
         {
@@ -56,7 +56,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
             Role = account.Role.Name
         };
         return loginResponse;
-    }
+    }   
 
     public async Task<bool> LogoutAsync()
     {

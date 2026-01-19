@@ -48,6 +48,7 @@ public class AccountService : BaseService<AccountService>, IAccountService
             };
 
             await accountRepo.InsertAsync(account);
+            await _unitOfWork.CommitAsync();
 
             staff.AccountId = account.Id;
             staffRepo.Update(staff);
