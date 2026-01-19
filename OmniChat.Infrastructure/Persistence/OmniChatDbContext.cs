@@ -71,7 +71,7 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<ChatTemplate> ChatTemplates { get; set; }
 
-        public DbSet<Inquiry> Inquirys { get; set; }
+        public DbSet<Inquiry> Inquiries { get; set; }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
 
@@ -936,7 +936,7 @@ namespace OmniChat.Infrastructure.Persistence
             .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Staff>()
-                .HasMany(s => s.Inquirys)
+                .HasMany(s => s.Inquiries)
                 .WithOne(ta => ta.Staff)
                 .HasForeignKey(ta => ta.StaffId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -946,7 +946,7 @@ namespace OmniChat.Infrastructure.Persistence
 
             // ==== Department - Inquiry ( one to Many ) ====
             modelBuilder.Entity<Department>()
-                .HasMany(d => d.Inquirys)
+                .HasMany(d => d.Inquiries)
                 .WithOne(ta => ta.Department)
                 .HasForeignKey(ta => ta.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);

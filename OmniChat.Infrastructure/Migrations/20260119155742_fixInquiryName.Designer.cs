@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OmniChat.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using OmniChat.Infrastructure.Persistence;
 namespace OmniChat.Infrastructure.Migrations
 {
     [DbContext(typeof(OmniChatDbContext))]
-    partial class OmniChatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260119155742_fixInquiryName")]
+    partial class fixInquiryName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1219,13 +1222,13 @@ namespace OmniChat.Infrastructure.Migrations
             modelBuilder.Entity("OmniChat.Infrastructure.Models.Inquiry", b =>
                 {
                     b.HasOne("OmniChat.Infrastructure.Models.Department", "Department")
-                        .WithMany("Inquiries")
+                        .WithMany("Inquirys")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OmniChat.Infrastructure.Models.Staff", "Staff")
-                        .WithMany("Inquiries")
+                        .WithMany("Inquirys")
                         .HasForeignKey("StaffId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1474,7 +1477,7 @@ namespace OmniChat.Infrastructure.Migrations
 
                     b.Navigation("DepartmentKeywords");
 
-                    b.Navigation("Inquiries");
+                    b.Navigation("Inquirys");
 
                     b.Navigation("Kpis");
 
@@ -1533,7 +1536,7 @@ namespace OmniChat.Infrastructure.Migrations
 
                     b.Navigation("FeedBacks");
 
-                    b.Navigation("Inquiries");
+                    b.Navigation("Inquirys");
 
                     b.Navigation("Notifications");
 

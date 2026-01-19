@@ -46,7 +46,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<DepartmentStaffMessage> DepartmentStaffMessages { get; set; } = new List<DepartmentStaffMessage>();
 
-        public virtual ICollection<Inquiry> Inquirys { get; set; } = new List<Inquiry>();
+        public virtual ICollection<Inquiry> Inquiries { get; set; } = new List<Inquiry>();
     }
 
     public enum StaffStatus

@@ -32,6 +32,6 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<DepartmentConversation> DepartmentConversations { get; set; } = new List<DepartmentConversation>();
     
-        public virtual ICollection<Inquiry> Inquirys { get; set; } = new List<Inquiry>();
+        public virtual ICollection<Inquiry> Inquiries { get; set; } = new List<Inquiry>();
     }
 }
