@@ -423,7 +423,7 @@ namespace OmniChat.Application.Services.Implements
                     }
 
                     Guid ConversationTempId =
-                        Guid.Parse("55555555-5555-5555-5555-555555555555");
+                        Guid.Parse("cba10005-e594-47e2-a9e4-4a11d82167ce");
 
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
@@ -750,7 +750,7 @@ namespace OmniChat.Application.Services.Implements
                     }
 
                     Guid conversationTempId =
-                        Guid.Parse("55555555-5555-5555-5555-555555555555");
+                        Guid.Parse("eee885ee-eccd-4423-914b-a0823d325368");
 
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
