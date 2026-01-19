@@ -97,4 +97,14 @@ public class ApiEndPointConstant
         public const string Update = ClaimType + "/{id}/update";
         public const string Delete = ClaimType + "/{id}/delete";
     }
+    public static class Staff
+    {
+        public const string Base = ApiV1 + "/staff";
+        public const string Create = "create";  
+        public const string Update = "update/{id}";
+        public const string Delete = "delete/{id}";
+        public const string GetAll = "get";
+    }
+
+
 }

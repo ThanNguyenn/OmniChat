@@ -59,8 +59,8 @@ void ConfigureServices()
             options.JsonSerializerOptions.Converters.Add(
                 new NullableUtcDateTimeJsonConverter()
             );
-
         });
+
     builder.Services.Configure<ApiBehaviorOptions>(options =>
     {
         options.InvalidModelStateResponseFactory = context =>
@@ -117,6 +117,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
+    builder.Services.AddScoped<IStaffService, StaffService>();
 }
 
 void RegisterBackgroundServices()
