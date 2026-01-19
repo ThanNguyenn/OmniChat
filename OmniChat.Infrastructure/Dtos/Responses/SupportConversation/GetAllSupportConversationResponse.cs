@@ -21,7 +21,7 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
 
         public string AvartarUrl { get; set; }
 
-        public Guid ActiveStaffId { get; set; }
+        public Guid? ActiveStaffId { get; set; }
 
         public Guid ActiveCustomerId { get; set; }
 

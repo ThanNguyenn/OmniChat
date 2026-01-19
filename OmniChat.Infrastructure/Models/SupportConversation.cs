@@ -20,9 +20,9 @@ namespace OmniChat.Infrastructure.Models
 
         public string AvartarUrl { get; set; }
 
-        public Guid ActiveStaffId { get; set; }
+        public Guid? ActiveStaffId { get; set; }
 
-        public virtual Staff Staff { get; set; }
+        public virtual Staff? Staff { get; set; }
 
         public Guid ActiveCustomerId { get; set; }
 
