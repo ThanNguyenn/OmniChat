@@ -60,10 +60,6 @@ namespace OmniChat.Application.Services.Implements
                         Id = x.Id,
                         CustomerName = x.CustomerName,
                         ProvidersId = x.ProvidersId,
-                        Email = x.Email,
-                        PhoneNumber = x.PhoneNumber,
-                        Gender = x.Gender,
-                        DateOfBirth = x.DateOfBirth,
                         AvatarUrl = x.AvatarUrl,
                         SenderId = x.SenderId
                     },

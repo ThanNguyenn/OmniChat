@@ -18,6 +18,8 @@ namespace OmniChat.Infrastructure.Models
 
         public StaffStatus Status { get; set; }
 
+        public StaffLevel Level { get; set; }
+
         public bool? IsActive { get; set; }
 
         public Guid? AccountId { get; set; }
@@ -51,5 +53,12 @@ namespace OmniChat.Infrastructure.Models
     {
         Online = 0,
         Offline = 1,
+    }
+
+    public enum StaffLevel
+    {
+        Low = 0,
+        Medium = 1,
+        High = 2,
     }
 }

@@ -121,8 +121,14 @@ namespace OmniChat.Infrastructure.Persistence
                   .Property(ta => ta.Type)
                 .HasConversion<string>();
 
+            // convert enum to string
+            modelBuilder.Entity<Staff>()
+                .Property(sl => sl.Level)
+                .HasConversion<string>();
+
+
             // default value IsActive = true
-       
+
             modelBuilder.Entity<Account>()
             .Property(x => x.IsActive)
             .HasDefaultValueSql("true");

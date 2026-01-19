@@ -413,10 +413,6 @@ namespace OmniChat.Application.Services.Implements
                                         $"{fbUser?.FirstName} {fbUser?.LastName}".Trim(),
                                     ProvidersId = provider.Id,
                                     AvatarUrl = fbUser?.ProfilePic,
-                                    Gender = fbUser?.Gender == "male",
-                                    Email = null,
-                                    PhoneNumber = null,
-                                    DateOfBirth = null
                                 }
                             );
 
@@ -749,7 +745,6 @@ namespace OmniChat.Application.Services.Implements
                                     CustomerName = igUser?.Name ?? "Instagram User",
                                     ProvidersId = provider.Id,
                                     AvatarUrl = igUser?.ProfilePictureUrl,
-                                    Gender = false
                                 }
                             );
                     }
