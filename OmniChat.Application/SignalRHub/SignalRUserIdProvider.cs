@@ -30,15 +30,15 @@ namespace OmniChat.Application.SignalRHub
             }
 
             // Thử lấy các claim
-            var subClaim = connection.User?.FindFirst("sub")?.Value;
-            var userIdClaim = connection.User?.FindFirst("UserId")?.Value;
+            var subClaim = connection.User?.Claims?.FirstOrDefault(c =>
+            string.Equals(c.Type, "sub", StringComparison.OrdinalIgnoreCase))?.Value;
+
             var nameIdClaim = connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             Console.WriteLine($"[SignalRUserIdProvider] sub: {subClaim ?? "NULL"}");
-            Console.WriteLine($"[SignalRUserIdProvider] UserId: {userIdClaim ?? "NULL"}");
             Console.WriteLine($"[SignalRUserIdProvider] NameIdentifier: {nameIdClaim ?? "NULL"}");
 
-            var userId = subClaim ?? userIdClaim ?? nameIdClaim;
+            var userId = subClaim ?? nameIdClaim;
             Console.WriteLine($"[SignalRUserIdProvider] Final UserId: {userId ?? "NULL"}");
             Console.WriteLine("[SignalRUserIdProvider] === END ===");
 

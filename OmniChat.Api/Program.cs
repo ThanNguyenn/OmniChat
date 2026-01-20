@@ -186,7 +186,7 @@ void ConfigureAuthentication()
                     Console.WriteLine($"[OnMessageReceived] Token from query: {signalRToken}");
 
 
-                    if (!string.IsNullOrEmpty(signalRToken) && path.StartsWithSegments("/supportConversationHub"))
+                    if (!string.IsNullOrEmpty(signalRToken) && path.StartsWithSegments("/api/v1/supportConversationHub"))
                     {
                         context.Token = signalRToken;
                         Console.WriteLine("[OnMessageReceived] Token set for SignalR");
@@ -194,7 +194,7 @@ void ConfigureAuthentication()
                     }
 
                     var accessToken = context.Request.Headers["Authorization"].FirstOrDefault();
-                    Console.WriteLine($"[OnMessageReceived] Token from header: {accessToken}");
+              
                     if (!string.IsNullOrEmpty(accessToken) && !accessToken.StartsWith("Bearer "))
                     {
                         context.Request.Headers["Authorization"] = "Bearer " + accessToken;
