@@ -136,7 +136,7 @@ void ConfigureSignalRServices()
 // SignalR Endpoint
 void ConfigureSignalREndpoints()
 {
-    app.MapHub<SupportConversationHub>("/supportConversationHub");
+    app.MapHub<SupportConversationHub>("/api/v1/supportConversationHub");
 }
 
 void ConfigureDatabase()
