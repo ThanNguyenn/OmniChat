@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using System;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.SignalRHub
 {
+    [Authorize]
     public class SupportConversationHub : Hub
     {
         private readonly ISupportStaffMessageService _supportStaffMessageService;

@@ -181,18 +181,35 @@ void ConfigureAuthentication()
 
                     // signalR token from query string
                     var signalRToken = context.Request.Query["access_token"];
+
+                    Console.WriteLine($"[OnMessageReceived] Path: {path}");
+                    Console.WriteLine($"[OnMessageReceived] Token from query: {signalRToken}");
+
+
                     if (!string.IsNullOrEmpty(signalRToken) && path.StartsWithSegments("/supportConversationHub"))
                     {
                         context.Token = signalRToken;
+                        Console.WriteLine("[OnMessageReceived] Token set for SignalR");
                         return Task.CompletedTask;
                     }
 
                     var accessToken = context.Request.Headers["Authorization"].FirstOrDefault();
+                    Console.WriteLine($"[OnMessageReceived] Token from header: {accessToken}");
                     if (!string.IsNullOrEmpty(accessToken) && !accessToken.StartsWith("Bearer "))
                     {
                         context.Request.Headers["Authorization"] = "Bearer " + accessToken;
                     }
                         return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    var claims = context.Principal?.Claims.Select(c => $"{c.Type}: {c.Value}");
+                    Console.WriteLine("[OnTokenValidated] Claims:");
+                    foreach (var claim in claims ?? Enumerable.Empty<string>())
+                    {
+                        Console.WriteLine($"  {claim}");
+                    }
+                    return Task.CompletedTask;
                 },
 
                 OnChallenge = async context =>
