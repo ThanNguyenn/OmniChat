@@ -448,7 +448,7 @@ namespace OmniChat.Application.Services.Implements
                         var existconversation =  await _supportConversationService.UpdateSupportConversationUpdateDateAsync(ConversationTempId);
 
                         // Add SignalR Realtime for sidebar staff 
-                        await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
+                        await _hubContext.Clients.Group($"staff:{existconversation.ActiveStaffId}")
                             .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                             {
                             ConversationId = existconversation.Id,
@@ -776,7 +776,7 @@ namespace OmniChat.Application.Services.Implements
                         var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationTempId);
 
                         // Add SignalR Realtime for sidebar staff 
-                        await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
+                        await _hubContext.Clients.Group($"staff:{existconversation.ActiveStaffId}")
                             .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                             {
                                 ConversationId = existconversation.Id,

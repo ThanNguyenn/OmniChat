@@ -68,5 +68,20 @@ namespace OmniChat.Application.SignalRHub
                 $"conversation:{conversationId}"
             );
         }
+        public async Task JoinStaffGroup(string staffId)
+        {
+            await Groups.AddToGroupAsync(
+                Context.ConnectionId,
+                $"staff:{staffId}"
+            );
+        }
+
+        public async Task LeaveStaffGroup(string staffId)
+        {
+            await Groups.RemoveFromGroupAsync(
+                Context.ConnectionId,
+                $"staff:{staffId}"
+            );
+        }
     }
 }

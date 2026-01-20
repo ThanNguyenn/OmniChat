@@ -160,14 +160,15 @@ namespace OmniChat.Application.Services.Implements
                 existConversation.UpdateDate = DateTime.UtcNow;
                 _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
-                // Update Sidebar for Staff via SignalR
-                await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
-                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                {
-                    ConversationId = existConversation.Id,
-                    LastMessage = newStaffSupportMes.Content,
-                    MessageUpdateDate = existConversation.UpdateDate
-                });
+                // Update Sidebar for Staff via SignalR (GROUP-BASED)
+                await _hubContext.Clients
+                    .Group($"staff:{existConversation.ActiveStaffId}")
+                    .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                    {
+                        ConversationId = existConversation.Id,
+                        LastMessage = newStaffSupportMes.Content,
+                        MessageUpdateDate = existConversation.UpdateDate
+                    });
 
                 // Update conversationDetail for Staff via SignalR
                 await _hubContext.Clients.Group($"conversation:{existConversation.Id}")
@@ -253,7 +254,7 @@ namespace OmniChat.Application.Services.Implements
                 _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
                 // Update Sidebar for Staff via SignalR
-                await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
+                await _hubContext.Clients.Group($"staff:{existConversation.ActiveStaffId}")
                 .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                 {
                     ConversationId = existConversation.Id,
