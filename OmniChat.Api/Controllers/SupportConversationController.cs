@@ -61,11 +61,11 @@ namespace OmniChat.Api.Controllers
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<StaffConversationSideBarResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy sidebar cuộc trò chuyện đang chờ của nhân viên hỗ trợ",
-            Description = "Lấy sidebar cuộc trò chuyện đang chờ của nhân viên hỗ trợ theo StaffId"
+            Description = "Lấy sidebar cuộc trò chuyện đang chờ của nhân viên hỗ trợ theo StaffId và tên provider"
             )]
-        public async Task<IActionResult> GetStaffConversationSidebarAsync([FromRoute] Guid staffId)
+        public async Task<IActionResult> GetStaffConversationSidebarAsync([FromRoute] Guid staffId, [FromRoute] string providerName)
         {
-            var sidebarConversations = await _supportConversationService.GetStaffConversationSideBarAsync(staffId);
+            var sidebarConversations = await _supportConversationService.GetStaffConversationSideBarAsync(staffId, providerName);
             return Ok(new ApiResponse<IEnumerable<StaffConversationSideBarResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,

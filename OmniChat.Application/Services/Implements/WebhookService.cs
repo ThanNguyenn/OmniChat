@@ -452,6 +452,9 @@ namespace OmniChat.Application.Services.Implements
                             .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                             {
                             ConversationId = existconversation.Id,
+                            CustomerName = existconversation.CustomerName,
+                            avartarUrl = existconversation.AvartarUrl,
+                            providerName = provider.ProviderName,
                             LastMessage = newMessage.Content,
                             MessageUpdateDate = existconversation.UpdateDate
                         });
@@ -780,6 +783,9 @@ namespace OmniChat.Application.Services.Implements
                             .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                             {
                                 ConversationId = existconversation.Id,
+                                CustomerName = existconversation.CustomerName,
+                                avartarUrl = existconversation.AvartarUrl,
+                                providerName = provider.ProviderName,
                                 LastMessage = newMessage.Content,
                                 MessageUpdateDate = existconversation.UpdateDate
                             });

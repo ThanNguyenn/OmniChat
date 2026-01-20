@@ -82,14 +82,14 @@ namespace OmniChat.Application.Services.Implements
         }
 
         // Staff Pending SupportConversation side bar
-        public async Task<IEnumerable<StaffConversationSideBarResponse>>GetStaffConversationSideBarAsync(Guid staffId)
+        public async Task<IEnumerable<StaffConversationSideBarResponse>>GetStaffConversationSideBarAsync(Guid staffId, string providerName)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
             var conversations = await repo.GetListAsync(
                 predicate: c =>
                     c.ActiveStaffId == staffId &&
-                    c.Status == ConversationStatus.Pending,
+                    c.Status == ConversationStatus.Pending && c.Providers.ProviderName.ToLower() == providerName.ToLower(),
 
                 orderBy: q => q.OrderByDescending(c => c.UpdateDate),
 
