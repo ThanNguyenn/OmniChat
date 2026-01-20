@@ -66,7 +66,7 @@ public class ApiEndPointConstant
         public const string SupportConversations = ApiV1 + "/support-conversations";
         public const string GetById = SupportConversation + "/{id}";
         public const string GetAllPagingByCustomerName = SupportConversation + "/paging";
-        public const string StaffPendingSidebar = SupportConversations + "/staff/{staffId}/pending/{providerName}";
+        public const string StaffPendingSidebar = SupportConversations + "/staff/{staffId}/pending";
         public const string GetConversationDetail = SupportConversations + "/{conversationId}";
     }
 

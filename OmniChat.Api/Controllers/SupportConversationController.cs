@@ -63,7 +63,7 @@ namespace OmniChat.Api.Controllers
             Summary = "Lấy sidebar cuộc trò chuyện đang chờ của nhân viên hỗ trợ",
             Description = "Lấy sidebar cuộc trò chuyện đang chờ của nhân viên hỗ trợ theo StaffId và tên provider"
             )]
-        public async Task<IActionResult> GetStaffConversationSidebarAsync([FromRoute] Guid staffId, [FromRoute] string providerName)
+        public async Task<IActionResult> GetStaffConversationSidebarAsync([FromRoute] Guid staffId, [FromQuery] string providerName)
         {
             var sidebarConversations = await _supportConversationService.GetStaffConversationSideBarAsync(staffId, providerName);
             return Ok(new ApiResponse<IEnumerable<StaffConversationSideBarResponse>>
