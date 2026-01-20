@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -118,6 +119,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IStaffService, StaffService>();
+    builder.Services.AddScoped<IUserIdProvider, SignalRUserIdProvider>();
 }
 
 void RegisterBackgroundServices()

@@ -162,7 +162,7 @@ namespace OmniChat.Application.Services.Implements
 
                 // Update Sidebar for Staff via SignalR (GROUP-BASED)
                 await _hubContext.Clients
-                    .Group($"staff:{existConversation.ActiveStaffId}")
+                    .User($"staff:{existConversation.ActiveStaffId}")
                     .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                     {
                         ConversationId = existConversation.Id,
@@ -254,7 +254,7 @@ namespace OmniChat.Application.Services.Implements
                 _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
                 // Update Sidebar for Staff via SignalR
-                await _hubContext.Clients.Group($"staff:{existConversation.ActiveStaffId}")
+                await _hubContext.Clients.User($"staff:{existConversation.ActiveStaffId}")
                 .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
                 {
                     ConversationId = existConversation.Id,
