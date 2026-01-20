@@ -89,7 +89,8 @@ namespace OmniChat.Application.Services.Implements
             var conversations = await repo.GetListAsync(
                 predicate: c =>
                     c.ActiveStaffId == staffId &&
-                    c.Status == ConversationStatus.Pending && c.Providers.ProviderName.ToLower() == providerName.ToLower(),
+                    c.Status == ConversationStatus.Pending && (providerName == null ||
+                c.Providers.ProviderName.ToLower() == providerName.ToLower()),
 
                 orderBy: q => q.OrderByDescending(c => c.UpdateDate),
 
