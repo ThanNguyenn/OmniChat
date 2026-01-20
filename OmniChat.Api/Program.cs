@@ -177,14 +177,22 @@ void ConfigureAuthentication()
             {
                 OnMessageReceived = context =>
                 {
-                    var accessToken = context.Request.Headers["Authorization"].FirstOrDefault();
+                    var path = context.HttpContext.Request.Path;
 
+                    // signalR token from query string
+                    var signalRToken = context.Request.Query["access_token"];
+                    if (!string.IsNullOrEmpty(signalRToken) && path.StartsWithSegments("/supportConversationHub"))
+                    {
+                        context.Token = signalRToken;
+                        return Task.CompletedTask;
+                    }
+
+                    var accessToken = context.Request.Headers["Authorization"].FirstOrDefault();
                     if (!string.IsNullOrEmpty(accessToken) && !accessToken.StartsWith("Bearer "))
                     {
                         context.Request.Headers["Authorization"] = "Bearer " + accessToken;
                     }
-
-                    return Task.CompletedTask;
+                        return Task.CompletedTask;
                 },
 
                 OnChallenge = async context =>
@@ -212,6 +220,7 @@ void ConfigureAuthentication()
 
 
             };
+
         });
 
 
