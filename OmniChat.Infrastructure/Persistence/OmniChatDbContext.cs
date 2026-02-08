@@ -861,6 +861,14 @@ namespace OmniChat.Infrastructure.Persistence
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Order>()
+               .HasIndex(o => o.Code)
+               .IsUnique();
+
+            modelBuilder.Entity<Order>()
+               .Property(o => o.Code)
+               .IsRequired();
+
+            modelBuilder.Entity<Order>()
                 .HasIndex(o => o.CustomerId); // index scan order by customer faster
 
             modelBuilder.Entity<Order>()
@@ -919,6 +927,14 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(p => p.Id)
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<Product>()
+                .HasIndex(p => p.Code)
+                .IsUnique();
+
+            modelBuilder.Entity<Product>()
+             .Property(o => o.Code)
+             .IsRequired();
 
             modelBuilder.Entity<Product>()
                 .HasMany(p => p.ProductBatches)
