@@ -14,8 +14,6 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime CreateDate { get; set; }
 
-        public virtual ICollection<CustomerProfile> CustomerProfiles { get; set; } = new List<CustomerProfile>();
-
         public virtual ICollection<SupportConversation> SupportConversations { get; set; } = new List<SupportConversation>();
     }
 }

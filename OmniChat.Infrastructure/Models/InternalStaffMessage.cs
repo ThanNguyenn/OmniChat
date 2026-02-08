@@ -6,28 +6,28 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Models
 {
-    public class DepartmentStaffMessage
+    public class InternalStaffMessage
     {
         public Guid Id { get; set; }
-
+        
         public Guid StaffId { get; set; }
 
         public virtual Staff Staff { get; set; }
 
-        public string Content { get; set; }
+        public InternalStaffMessageStatus Status { get; set; }
 
-        public DepartmentStaffMessageStatus Status { get; set; }
+        public string Content { get; set; }
 
         public long Timestamp { get; set; }
 
-        public Guid DepartmentConversationId { get; set; }
+        public Guid? InternalConversationId { get; set; }
 
-        public virtual DepartmentConversation DepartmentConversation { get; set; }
+        public virtual InternalConversation? InternalConversation { get; set; }
     }
 
-    public enum DepartmentStaffMessageStatus
+    public enum InternalStaffMessageStatus
     {
         Pending = 0,
-        Sent = 1,
+        Sent = 1
     }
 }

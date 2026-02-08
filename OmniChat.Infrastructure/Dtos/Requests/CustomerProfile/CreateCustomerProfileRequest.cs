@@ -31,6 +31,12 @@ namespace OmniChat.Infrastructure.Dtos.Requests.CustomerProfile
         public string? AvatarUrl { get; set; }
 
         [Required]
-        public string SenderId { get; set; }
+        public string ZaloSenderId { get; set; }
+
+        [Required]
+        public string FacebookSenderId { get; set; }
+
+        [Required]
+        public string InstagramSenderId { get; set; }
     }
 }

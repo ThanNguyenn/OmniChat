@@ -30,6 +30,6 @@ namespace OmniChat.Infrastructure.Models
     public enum SupportStaffMessageStatus
     {
         Pending = 0,
-        Sended = 1,
+        Sent = 1,
     }
 }

@@ -18,7 +18,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string CustomerName { get; set; }
 
-        public string AvartarUrl { get; set; }
+        public string AvatarUrl { get; set; }
 
         public Guid? ActiveStaffId { get; set; }
 
@@ -43,8 +43,9 @@ namespace OmniChat.Infrastructure.Models
         public virtual ICollection<SupportStaffMessage> SupportStaffMessages { get; set; } = new List<SupportStaffMessage>();
 
         public virtual ICollection<SupportConversationFile> SupportConversationFiles { get; set; } = new List<SupportConversationFile>();
-    
-       public virtual Inquiry Inquiry { get; set; }
+
+        public virtual ICollection<SupportTask> SupportTasks { get; set; } = new List<SupportTask>();
+
     }
 
     public enum ConversationStatus

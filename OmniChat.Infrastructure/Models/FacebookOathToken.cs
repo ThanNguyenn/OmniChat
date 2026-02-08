@@ -6,19 +6,15 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Models
 {
-    public class ZaloOathToken
+    public class FacebookOathToken
     {
         public Guid Id { get; set; }
 
         public string AccessToken { get; set; }
 
-        public DateTime AccessTokenExpiredDate { get; set; }
+        public string AccessTokenExpiredDate { get; set; }
 
-        public string RefreshToken { get; set; }
-
-        public DateTime RefreshTokenExpiredDate { get; set; }
-
-        public DateTime LastRefreshTokenAt { get; set; }
+        public DateTime LastUpdateAt { get; set; }
 
         public bool? IsActive { get; set; }
     }

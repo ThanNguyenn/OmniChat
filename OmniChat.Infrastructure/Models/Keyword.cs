@@ -19,8 +19,10 @@ namespace OmniChat.Infrastructure.Models
         public bool? IsDeleted { get; set; }
 
         public string Code { get; set; }
+        
+        public Guid KeyWordTypeId { get; set; }
 
-        public virtual DepartmentKeyword DepartmentKeyword { get; set; }
+        public virtual KeywordTypes KeyWordType { get; set; }
 
         public virtual ICollection<MessageKeyword> MessageKeywords { get; set; } = new List<MessageKeyword>();
     }

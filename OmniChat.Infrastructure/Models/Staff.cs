@@ -18,25 +18,15 @@ namespace OmniChat.Infrastructure.Models
 
         public StaffStatus Status { get; set; }
 
-        public StaffLevel Level { get; set; }
-
         public bool? IsActive { get; set; }
 
         public Guid? AccountId { get; set; }
 
         public virtual Account Account { get; set; }
 
-        public Guid DepartmentId { get; set; }
-
-        public virtual Department Department { get; set; }
-
         public virtual ICollection<SupportConversation> SupportConversations { get; set; } = new List<SupportConversation>();
 
         public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();
-
-        public virtual ICollection<StaffShift> StaffShifts { get; set; } = new List<StaffShift>();
-
-        public virtual ICollection<StaffKpi> StaffKpis { get; set; } = new List<StaffKpi>();
 
         public virtual ICollection<FeedBack> FeedBacks { get; set; } = new List<FeedBack>();
 
@@ -44,21 +34,14 @@ namespace OmniChat.Infrastructure.Models
     
         public virtual ICollection<SupportStaffMessage> SupportStaffMessages { get; set; } = new List<SupportStaffMessage>();
 
-        public virtual ICollection<DepartmentStaffMessage> DepartmentStaffMessages { get; set; } = new List<DepartmentStaffMessage>();
+        public virtual ICollection<InternalStaffMessage> InternalStaffMessages { get; set; } = new List<InternalStaffMessage>();
 
-        public virtual ICollection<Inquiry> Inquiries { get; set; } = new List<Inquiry>();
+        public virtual ICollection<SupportTask> SupportTasks { get; set; } = new List<SupportTask>();
     }
 
     public enum StaffStatus
     {
         Online = 0,
         Offline = 1,
-    }
-
-    public enum StaffLevel
-    {
-        Low = 0,
-        Medium = 1,
-        High = 2,
     }
 }

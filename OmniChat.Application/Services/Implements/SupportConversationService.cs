@@ -67,7 +67,7 @@ namespace OmniChat.Application.Services.Implements
                     Status = x.Status,
                     IsDistributed = x.IsDistributed,
                     CustomerName = x.CustomerName,
-                    AvartarUrl = x.AvartarUrl,
+                    AvartarUrl = x.AvatarUrl,
                     ActiveStaffId = x.ActiveStaffId,
                     ActiveCustomerId = x.ActiveCustomerId,
                     ProvidersId = x.ProvidersId,
@@ -98,7 +98,7 @@ namespace OmniChat.Application.Services.Implements
                 {
                     ConversationId = c.Id,
                     CustomerName = c.CustomerName,
-                    AvartarUrl = c.AvartarUrl,
+                    AvartarUrl = c.AvatarUrl,
                     ProviderName = c.Providers.ProviderName,
 
                     LastMessage =
@@ -158,7 +158,7 @@ namespace OmniChat.Application.Services.Implements
                 Status = conversation.Status,
                 IsDistributed = conversation.IsDistributed,
                 CustomerName = conversation.CustomerName,
-                AvartarUrl = conversation.AvartarUrl,
+                AvartarUrl = conversation.AvatarUrl,
                 ActiveStaffId = conversation.ActiveStaffId,
                 ActiveCustomerId = conversation.ActiveCustomerId,
                 ProvidersId = conversation.ProvidersId,

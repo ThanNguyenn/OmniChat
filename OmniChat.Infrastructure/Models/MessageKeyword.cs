@@ -18,8 +18,8 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Keyword Keyword { get; set; }
 
-        public Guid CustomerMessageId { get; set; }
+        public Guid MessageKeywordTypesId { get; set; }
 
-        public virtual CustomerMessage CustomerMessage { get; set; }
+        public virtual MessageKeywordTypes MessageKeywordTypes { get; set; }
     }
 }

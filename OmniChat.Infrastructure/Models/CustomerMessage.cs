@@ -23,6 +23,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual SupportConversation Conversation { get; set; }
 
-        public virtual ICollection<MessageKeyword> MessageKeywords { get; set; } = new List<MessageKeyword>();
+        public virtual ICollection<MessageKeywordTypes> MessageKeywordTypes { get; set; } = new List<MessageKeywordTypes>();
+
     }
 }

@@ -59,7 +59,7 @@ public class ZaloOAuthService : BaseService<ZaloOAuthService>, IZaloOAuthService
     private async Task<ZaloOathToken> GetActiveTokenAsync()
     {
         var repo = _unitOfWork.GetRepository<ZaloOathToken>();
-        var token = await repo.SingleOrDefaultAsync(predicate: t => t.IsActive) ?? throw new BusinessException("There is no active token");
+        var token = await repo.SingleOrDefaultAsync(predicate: t => t.IsActive == true) ?? throw new BusinessException("There is no active token");
         return token;
     }
 

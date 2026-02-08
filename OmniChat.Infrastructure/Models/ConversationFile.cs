@@ -18,7 +18,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string Type { get; set; }
 
-        public virtual ICollection<DepartmentConversationFile> DepartmentConversationFiles { get; set; } = new List<DepartmentConversationFile>();
+        public virtual ICollection<InternalConversationFile> InternalConversationFiles { get; set; } = new List<InternalConversationFile>();
 
         public virtual ICollection<SupportConversationFile> SupportConversationFiles { get; set; } = new List<SupportConversationFile>();
     }

@@ -408,7 +408,7 @@ namespace OmniChat.Application.Services.Implements
                             await _customerProfileService.CreateCustomerProfileEntityAsync(
                                 new CreateCustomerProfileRequest
                                 {
-                                    SenderId = messaging.sender.id,
+                                    FacebookSenderId = messaging.sender.id,
                                     CustomerName =
                                         $"{fbUser?.FirstName} {fbUser?.LastName}".Trim(),
                                     ProvidersId = provider.Id,
@@ -453,7 +453,7 @@ namespace OmniChat.Application.Services.Implements
                             {
                             ConversationId = existconversation.Id,
                             CustomerName = existconversation.CustomerName,
-                            avartarUrl = existconversation.AvartarUrl,
+                            avartarUrl = existconversation.AvatarUrl,
                             providerName = provider.ProviderName,
                             LastMessage = newMessage.Content,
                             MessageUpdateDate = existconversation.UpdateDate
@@ -744,7 +744,7 @@ namespace OmniChat.Application.Services.Implements
                             await _customerProfileService.CreateCustomerProfileEntityAsync(
                                 new CreateCustomerProfileRequest
                                 {
-                                    SenderId = senderId,
+                                    InstagramSenderId = senderId,
                                     CustomerName = igUser?.Name ?? "Instagram User",
                                     ProvidersId = provider.Id,
                                     AvatarUrl = igUser?.ProfilePictureUrl,
@@ -784,7 +784,7 @@ namespace OmniChat.Application.Services.Implements
                             {
                                 ConversationId = existconversation.Id,
                                 CustomerName = existconversation.CustomerName,
-                                avartarUrl = existconversation.AvartarUrl,
+                                avartarUrl = existconversation.AvatarUrl,
                                 providerName = provider.ProviderName,
                                 LastMessage = newMessage.Content,
                                 MessageUpdateDate = existconversation.UpdateDate

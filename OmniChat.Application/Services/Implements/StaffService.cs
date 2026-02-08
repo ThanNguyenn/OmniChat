@@ -100,11 +100,11 @@ public class StaffService : BaseService<StaffService>, IStaffService
     public async Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(Guid deparmentId, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
     {
         var staffRepository = _unitOfWork.GetRepository<Staff>();
-        var departmentRepository = _unitOfWork.GetRepository<Department>();
+        var departmentRepository = _unitOfWork.GetRepository<KeywordTypes>();
         var existingDepartment = await departmentRepository.GetByIdAsync(deparmentId) ?? throw new NotFoundException("Department id not exist");
 
         var response = await staffRepository.GetPagingListAsync<GetStaffsResponse>(
-            predicate: s => s.DepartmentId == deparmentId && s.IsActive == true,
+            predicate: s =>  s.IsActive == true,
             orderBy: q => OrderBy(q, sortBy, descending),
             selector: e => _mapper.Map<GetStaffsResponse>(e),
             page: pageNumber,

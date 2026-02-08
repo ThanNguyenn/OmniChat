@@ -141,7 +141,7 @@ namespace OmniChat.Application.Services.Implements
 
                 var body = new
                 {
-                    recipient = new { id = existCustomerProfile.SenderId },
+                    recipient = new { id = existCustomerProfile.FacebookSenderId },
                     message = new { text = newSupportMess.Content }
                 };
 
@@ -153,7 +153,7 @@ namespace OmniChat.Application.Services.Implements
                     throw new BusinessException($"Facebook Send API error: {error}");
                 }
 
-                newStaffSupportMes.Status = SupportStaffMessageStatus.Sended;
+                newStaffSupportMes.Status = SupportStaffMessageStatus.Sent;
                 // After create new staff message Update Supportconversation UpdateDate -> now
 
                 //var conversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newSupportMess.SupportConversationId);
@@ -167,7 +167,7 @@ namespace OmniChat.Application.Services.Implements
                     {
                         ConversationId = existConversation.Id,
                         CustomerName = existConversation.CustomerName,
-                        avartarUrl = existConversation.AvartarUrl,
+                        avartarUrl = existConversation.AvatarUrl,
                         providerName = existConversation.Providers.ProviderName,
                         LastMessage = newStaffSupportMes.Content,
                         MessageUpdateDate = existConversation.UpdateDate
@@ -235,7 +235,7 @@ namespace OmniChat.Application.Services.Implements
 
                 var body = new
                 {
-                    recipient = new { id = existCustomerProfile.SenderId },
+                    recipient = new { id = existCustomerProfile.InstagramSenderId },
                     message = new { text = newSupportMess.Content }
                 };
 
@@ -248,7 +248,7 @@ namespace OmniChat.Application.Services.Implements
 
                 }
 
-                newStaffSupportMes.Status = SupportStaffMessageStatus.Sended;
+                newStaffSupportMes.Status = SupportStaffMessageStatus.Sent;
                 // After create new staff message Update Supportconversation UpdateDate -> now
 
                 // var conversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newSupportMess.SupportConversationId);
@@ -262,7 +262,7 @@ namespace OmniChat.Application.Services.Implements
                 {
                     ConversationId = existConversation.Id,
                     CustomerName = existConversation.CustomerName,
-                    avartarUrl = existConversation.AvartarUrl,
+                    avartarUrl = existConversation.AvatarUrl,
                     providerName = existConversation.Providers.ProviderName,
                     LastMessage = newStaffSupportMes.Content,
                     MessageUpdateDate = existConversation.UpdateDate

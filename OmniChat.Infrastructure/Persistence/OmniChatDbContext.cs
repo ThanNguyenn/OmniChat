@@ -19,27 +19,25 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<Staff> Staffs { get; set; }
 
-        public DbSet<Department> Departments { get; set; }
+        public DbSet<KeywordTypes> KeywordTypes { get; set; }
 
-        public DbSet<RefreshToken> RefeshTokens { get; set; }
+        public DbSet<MessageKeywordTypes> MessageKeywordTypes { get; set; }
+
+        public DbSet<InternalConversationFile> InternalConversationFiles { get; set; }
+
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public DbSet<Role> Roles { get; set; }
 
         public DbSet<Claim> Claims { get; set; }
 
+        public DbSet<SupportTask> SupportTasks { get; set; }
+
+        public DbSet<InternalStaffMessage> InternalStaffMessages { get; set; }
+
         public DbSet<ClaimType> ClaimTypes { get; set; }
 
-        public DbSet<Shift> Shifts { get; set; }
-
-        public DbSet<StaffShift> StaffShifts { get; set; }
-
-        public DbSet<Kpi> Kpis { get; set; }
-
-        public DbSet<StaffKpi> StaffKpis { get; set; }
-
         public DbSet<Keyword> Keywords { get; set; }
-
-        public DbSet<DepartmentKeyword> DepartmentKeywords { get; set; }
 
         public DbSet<CustomerMessage> CustomerMessages { get; set; }
 
@@ -57,25 +55,30 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<SupportStaffMessage> SupportStaffMessages { get; set; }
 
-        public DbSet<DepartmentConversation> DepartmentConversations { get; set; }
-
-        public DbSet<DepartmentStaffMessage> DepartmentStaffMessages { get; set; }
-
-        public DbSet<DepartmentConversationType> DepartmentConversationTypes { get; set; }
-
-        public DbSet<DepartmentConversationFile> DepartmentConversationFiles { get; set; }
-
         public DbSet<ConversationFile> ConversationFiles { get; set; }
 
         public DbSet<SupportConversationFile> SupportConversationFiles { get; set; }
+        
+        public DbSet<InternalConversation> InternalConversations { get; set; }
+
+        public DbSet<TaskAssignmentHistory> TaskAssignmentHistories { get; set; }
+
+        public DbSet<Order> Orders { get; set; }
+
+        public DbSet<OrderItem> OrderItems { get; set; }
+
+        public DbSet<Product> Products { get; set; }
+
+        public DbSet<ProductBatch> ProductBatches { get; set; }
 
         public DbSet<ChatTemplate> ChatTemplates { get; set; }
 
-        public DbSet<Inquiry> Inquiries { get; set; }
-
-        public DbSet<AuditLog> AuditLogs { get; set; }
-
         public DbSet<ZaloOathToken> ZaloOathTokens { get; set; }
+
+        public DbSet<FacebookOathToken> FacebookOathTokens { get; set; }
+
+        public DbSet<InstagramOathToken> InstagramOathTokens { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -84,16 +87,6 @@ namespace OmniChat.Infrastructure.Persistence
             // convert enum to string
             modelBuilder.Entity<Staff>()
                 .Property(s => s.Status)
-                .HasConversion<string>();
-
-            // convert enum to string
-            modelBuilder.Entity<StaffShift>()
-                .Property(ss => ss.Status)
-                .HasConversion<string>();
-
-            // convert enum to string
-            modelBuilder.Entity<StaffKpi>()
-                .Property(sk => sk.Status)
                 .HasConversion<string>();
 
             // convert enum to string
@@ -107,25 +100,38 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasConversion<string>();
 
             // convert enum to string
-            modelBuilder.Entity<DepartmentStaffMessage>()
-                .Property(dsm => dsm.Status)
+            modelBuilder.Entity<InternalConversation>()
+                .Property(ic => ic.Status)
                 .HasConversion<string>();
 
             // convert enum to string
-            modelBuilder.Entity<Inquiry>()
-                .Property(ta => ta.Status)
+            modelBuilder.Entity<InternalStaffMessage>()
+                .Property(ism => ism.Status)
                 .HasConversion<string>();
 
             // convert enum to string
-            modelBuilder.Entity<Inquiry>()
-                  .Property(ta => ta.Type)
+            modelBuilder.Entity<SupportTask>()
+                .Property(st => st.Status)
                 .HasConversion<string>();
 
             // convert enum to string
-            modelBuilder.Entity<Staff>()
-                .Property(sl => sl.Level)
+            modelBuilder.Entity<TaskAssignmentHistory>()
+                .Property(tah => tah.Action)
                 .HasConversion<string>();
 
+            // convert enum to string
+            modelBuilder.Entity<Order>()
+                .Property(o => o.Status)
+                .HasConversion<string>();
+
+            // convert enum to string
+            modelBuilder.Entity<Order>()
+                .Property(o => o.DeliveryStatus)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.ProductPackagingType)
+                .HasConversion<string>();
 
             // default value IsActive = true
 
@@ -141,30 +147,39 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(x => x.IsActive)
             .HasDefaultValueSql("true");
 
-       
+            modelBuilder.Entity<KeywordTypes>()
+             .Property(x => x.IsActive)
+             .HasDefaultValueSql("true");
+
             modelBuilder.Entity<ClaimType>()
             .Property(x => x.IsActive)
             .HasDefaultValueSql("true");
 
-            modelBuilder.Entity<Department>()
-           .Property(x => x.IsActive)
-           .HasDefaultValueSql("true");
+            modelBuilder.Entity<InternalConversation>()
+                .Property(x => x.IsActive)
+                .HasDefaultValueSql("true");
 
-            modelBuilder.Entity<Inquiry>()
-           .Property(x => x.IsActive)
-           .HasDefaultValueSql("true");
+            modelBuilder.Entity<ProductBatch>()
+                .Property(x => x.IsActive)
+                .HasDefaultValueSql("true");
 
-            modelBuilder.Entity<DepartmentConversation>()
-           .Property(x => x.IsActive)
-           .HasDefaultValueSql("true");
+            modelBuilder.Entity<Product>()
+                .Property(x => x.IsActive)
+                .HasDefaultValueSql("true");
 
-            modelBuilder.Entity<DepartmentConversationType>()
-          .Property(x => x.IsActive)
-          .HasDefaultValueSql("true");
+            modelBuilder.Entity<FacebookOathToken>()
+                .Property(x => x.IsActive)
+                .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<ZaloOathToken>()
+                .Property(x => x.IsActive)
+                .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<InstagramOathToken>()
+                .Property(x => x.IsActive)
+                .HasDefaultValueSql("true");
+
             // default vaule isDelete = false
-            modelBuilder.Entity<Kpi>()
-            .Property(x => x.IsDeleted)
-            .HasDefaultValueSql("false");
 
             modelBuilder.Entity<Keyword>()
             .Property(x => x.IsDeleted)
@@ -176,30 +191,12 @@ namespace OmniChat.Infrastructure.Persistence
             .HasColumnType("timestamp with time zone")
             .HasDefaultValueSql("now()");
 
-            modelBuilder.Entity<Shift>()
-             .Property(x => x.CreateDate)
-             .HasColumnType("timestamp with time zone")
-             .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<Kpi>()
-            .Property(x => x.CreateDate)
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
 
             modelBuilder.Entity<Keyword>()
             .Property(x => x.CreateDate)
             .HasColumnType("timestamp with time zone")
             .HasDefaultValueSql("now()");
 
-            modelBuilder.Entity<Inquiry>()
-            .Property(x => x.CreateDate)
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<DepartmentConversation>()
-            .Property(x => x.CreateDate)
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
 
             modelBuilder.Entity<Notification>()
             .Property(x => x.CreatedDate)
@@ -259,23 +256,6 @@ namespace OmniChat.Infrastructure.Persistence
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
-            // ==== Department - Staff ( one to Many ) ====
-
-            modelBuilder.Entity<Department>()
-                .HasKey(d => d.Id);
-
-            //Auto gen Guid Id Department
-            modelBuilder.Entity<Department>()
-            .Property(d => d.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Department>()
-                .HasMany(d => d.Staffs)
-                .WithOne(s => s.Department)
-                .HasForeignKey(s => s.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // ==== Account - Staff ( one to One ) ====
 
             modelBuilder.Entity<Account>()
@@ -299,11 +279,7 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasIndex(a => a.Phone) // 1 Phone only for 1 staff
                 .IsUnique();
 
-            // Index on DepartmentId in Staff
-            modelBuilder.Entity<Staff>()
-                .HasIndex(s => s.DepartmentId); // index scan staff by department faster
-
-            // ==== Department - Claim ( one to Many ) ====
+            // ==== keywordTypes - Claim ( one to Many ) ====
             modelBuilder.Entity<Claim>()
                 .HasKey(c => c.Id);
 
@@ -313,10 +289,10 @@ namespace OmniChat.Infrastructure.Persistence
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
-            modelBuilder.Entity<Department>()
+            modelBuilder.Entity<KeywordTypes>()
                 .HasMany(d => d.Claims)
-                .WithOne(c => c.Department)
-                .HasForeignKey(c => c.DepartmentId)
+                .WithOne(c => c.KeywordTypes)
+                .HasForeignKey(c => c.KeywordTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ==== Staff - Claim ( one to Many ) ====
@@ -357,176 +333,59 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Claim>()
                 .HasIndex(c => c.ClaimTypeId); // index scan claim by claim type faster
 
-            // index on DepartmentId in Claim
+            // index on KeywordTypeId in Claim
             modelBuilder.Entity<Claim>()
-                .HasIndex(c => c.DepartmentId); // index scan claim by department faster
+                .HasIndex(c => c.KeywordTypeId); // index scan claim by KeywordType faster
 
             // index on StaffId in Claim
             modelBuilder.Entity<Claim>()
                 .HasIndex(c => c.StaffId); // index scan claim by staff faster
 
-            // ==== Department - Shift ( one to Many ) ====
-
-            modelBuilder.Entity<Shift>()
-                .HasKey(s => s.Id);
-
-            //Auto gen Guid Id Shift
-            modelBuilder.Entity<Shift>()
-            .Property(s => s.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Department>()
-                .HasMany(d => d.Shifts)
-                .WithOne(s => s.Department)
-                .HasForeignKey(s => s.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // index on DepartmentId in Shift
-            modelBuilder.Entity<Shift>()
-                .HasIndex(s => s.DepartmentId); // index scan shift by department faster
-
-            // ==== Shift - StaffShift ( one to Many ) ====
-
-            modelBuilder.Entity<StaffShift>()
-                .HasKey(ss => ss.Id);
-
-            //Auto gen Guid Id StaffShift
-            modelBuilder.Entity<StaffShift>()
-            .Property(ss => ss.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Shift>()
-                .HasMany(s => s.StaffShifts)
-                .WithOne(ss => ss.Shift)
-                .HasForeignKey(ss => ss.ShiftId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ==== Staff - StaffShift ( one to Many ) ====
-
-            modelBuilder.Entity<Staff>()
-                .HasMany(s => s.StaffShifts)
-                .WithOne(ss => ss.Staff)
-                .HasForeignKey(ss => ss.StaffId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // index on status in StaffShift
-            modelBuilder.Entity<StaffShift>()
-            .HasIndex(ss => ss.Status); // index scan staffshift by status faster
-
-            // Unique constraint on StaffId and ShiftId in StaffShift
-            modelBuilder.Entity<StaffShift>()
-            .HasIndex(ss => new { ss.StaffId, ss.ShiftId }) // 1 staff only have 1 record in 1 shift
-            .IsUnique();
-
-            // index on ShiftId and Status in StaffShift
-            modelBuilder.Entity<StaffShift>()
-                .HasIndex(ss => new { ss.ShiftId, ss.Status }); // index scan staffshift by shift and status faster
-
-
-            // ==== Department - Kpi ( one to Many ) ====
-
-            modelBuilder.Entity<Kpi>()
-                .HasKey(k => k.Id);
-
-            //Auto gen Guid Id Kpi
-            modelBuilder.Entity<Kpi>()
-            .Property(k => k.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Department>()
-                .HasMany(d => d.Kpis)
-                .WithOne(k => k.Department)
-                .HasForeignKey(k => k.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // index on DepartmentId in Kpi
-            modelBuilder.Entity<Kpi>()
-                .HasIndex(k => k.DepartmentId); // index scan kpi by department faster
-
-            // ==== Kpi - StaffKpi ( one to Many ) ====
-
-            modelBuilder.Entity<StaffKpi>()
-                .HasKey(sk => sk.Id);
-
-            //Auto gen Guid Id StaffKpi
-            modelBuilder.Entity<StaffKpi>()
-            .Property(sk => sk.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Kpi>()
-                .HasMany(k => k.StaffKpis)
-                .WithOne(sk => sk.Kpi)
-                .HasForeignKey(sk => sk.KpiId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ==== Staff - StaffKpi ( one to Many ) ====
-
-            modelBuilder.Entity<Staff>()
-                .HasMany(s => s.StaffKpis)
-                .WithOne(sk => sk.Staff)
-                .HasForeignKey(sk => sk.StaffId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // index on status in StaffKpi
-            modelBuilder.Entity<StaffKpi>()
-                .HasIndex(sk => new { sk.KpiId, sk.Status }); // index scan staffkpi by kpi and status faster
-
-            modelBuilder.Entity<StaffKpi>()
-                .HasIndex(sk => new { sk.StaffId, sk.Status }); // index scan staffkpi by staff and status faster
-
-            // Unique constraint on StaffId and KpiId in StaffKpi
-            modelBuilder.Entity<StaffKpi>()
-                .HasIndex(sk => new { sk.StaffId, sk.KpiId }) // 1 staff only have 1 record in 1 kpi
-                .IsUnique();
-
-            // ==== Department - DepartmentKeyword ( one to Many ) ====
-            modelBuilder.Entity<DepartmentKeyword>()
-                .HasKey(dk => dk.Id);
-
-            //Auto gen Guid Id DepartmentKeyword
-            modelBuilder.Entity<DepartmentKeyword>()
-            .Property(dk => dk.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Department>()
-                .HasMany(d => d.DepartmentKeywords)
-                .WithOne(dk => dk.Department)
-                .HasForeignKey(dk => dk.DepartmentId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<DepartmentKeyword>()
-                .HasIndex(dk => dk.DepartmentId); // index scan departmentkeyword by department faster
-
-            // ==== Keyword - DepartmentKeyword ( one to one ) ====
+            // ==== KeywordTypes - Keyword ( one to many ) ====
             modelBuilder.Entity<Keyword>()
                 .HasKey(k => k.Id);
 
-            //Auto gen Guid Id Keyword
             modelBuilder.Entity<Keyword>()
-            .Property(k => k.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
+                 .Property(k => k.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<KeywordTypes>()
+                .HasMany(kt => kt.Keywords)
+                .WithOne(k => k.KeyWordType)
+                .HasForeignKey(k => k.KeyWordTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<KeywordTypes>()
+                .HasIndex(kt => kt.TypeName); // index scan keywordtypes by typename faster
 
             modelBuilder.Entity<Keyword>()
-                .HasOne(k => k.DepartmentKeyword)
-                .WithOne(dk => dk.Keyword)
-                .HasForeignKey<DepartmentKeyword>(dk => dk.KeywordId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Unique constraint on KeywordId in DepartmentKeyword
-            modelBuilder.Entity<DepartmentKeyword>()
-            .HasIndex(dk => dk.KeywordId)
-            .IsUnique();
+                .HasIndex(k => k.KeyWordTypeId); // index scan keyword by keywordtype faster
 
             // Unique constraint on Code in Keyword
             modelBuilder.Entity<Keyword>()
             .HasIndex(k => k.Code)
             .IsUnique();
+
+
+            // ==== MessageKeywordTypes - MessageKeyword ( one to Many ) ====
+            modelBuilder.Entity<MessageKeywordTypes>()
+                .HasKey(mkt => mkt.Id);
+
+            //Auto gen Guid Id MessageKeywordTypes
+            modelBuilder.Entity<MessageKeywordTypes>()
+                .Property(mkt => mkt.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<MessageKeywordTypes>()
+                .HasMany(mkt => mkt.MessageKeywords)
+                .WithOne(mk => mk.MessageKeywordTypes)
+                .HasForeignKey(mk => mk.MessageKeywordTypesId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+           modelBuilder.Entity<MessageKeyword>()
+                .HasIndex(mk => mk.MessageKeywordTypesId); // index scan messagekeyword by messagekeywordtypes faster
 
 
             // ==== Keyword - MessageKeyword ( one to Many ) ====
@@ -539,14 +398,19 @@ namespace OmniChat.Infrastructure.Persistence
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
-
             modelBuilder.Entity<Keyword>()
                 .HasMany(k => k.MessageKeywords)
                 .WithOne(mk => mk.Keyword)
                 .HasForeignKey(mk => mk.KeywordId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ==== CustomerMessage - MessageKeyword ( one to Many ) ====
+            modelBuilder.Entity<Keyword>()
+                .HasIndex(k => k.KeywordText); // index scan keyword by keywordtext faster
+
+            modelBuilder.Entity<MessageKeyword>()
+                .HasIndex(mk => mk.KeywordId); // index scan messagekeyword by keyword faster
+
+            // ==== CustomerMessage - MessageKeywordType ( one to Many ) ====
             modelBuilder.Entity<CustomerMessage>()
                 .HasKey(cm => cm.Id);
 
@@ -555,25 +419,32 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(cm => cm.Id)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
-
-
+             
             modelBuilder.Entity<CustomerMessage>()
-                .HasMany(cm => cm.MessageKeywords)
-                .WithOne(mk => mk.CustomerMessage)
-                .HasForeignKey(mk => mk.CustomerMessageId)
+                .HasMany(cm => cm.MessageKeywordTypes)
+                .WithOne(mkt => mkt.CustomerMessage)
+                .HasForeignKey(mkt => mkt.MessageId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Unique constraint on KeywordId and CustomerMessageId in MessageKeyword
-            modelBuilder.Entity<MessageKeyword>()
-             .HasIndex(mk => new { mk.KeywordId, mk.CustomerMessageId }) // 1 keyword only appear once in 1 customer message
-            .IsUnique();
 
-            modelBuilder.Entity<MessageKeyword>()
-            .HasIndex(mk => mk.CustomerMessageId); // index scan messagekeyword by customermessage faster
+            // ==== KeywordTypes - MessageKeywordType ( one to Many ) ====
+            modelBuilder.Entity<KeywordTypes>()
+                .HasKey(mkt => mkt.Id);
 
-            modelBuilder.Entity<MessageKeyword>()
-             .HasIndex(mk => mk.KeywordId); // index scan messagekeyword by keyword faster
+            modelBuilder.Entity<KeywordTypes>()
+                 .Property(kt => kt.Id)
+            .ValueGeneratedOnAdd()
+            .HasDefaultValueSql("gen_random_uuid()");
 
+
+            modelBuilder.Entity<KeywordTypes>()
+                .HasMany(kt => kt.MessageKeywordTypes)
+                .WithOne(mkt => mkt.KeywordTypes)
+                .HasForeignKey(mkt => mkt.KeywordTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MessageKeywordTypes>()
+                .HasIndex(mkt => mkt.KeywordTypeId); // index scan messagekeywordtypes by keywordtype faster
 
             // ==== CustomerProfile - CustomerMessage ( one to Many ) ====
             modelBuilder.Entity<CustomerProfile>()
@@ -585,6 +456,13 @@ namespace OmniChat.Infrastructure.Persistence
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
+            modelBuilder.Entity<CustomerProfile>()
+                .HasIndex(x => x.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<CustomerProfile>()
+                .HasIndex(x => x.PhoneNumber)
+                .IsUnique();
 
             modelBuilder.Entity<CustomerProfile>()
                 .HasMany(cp => cp.CustomerMessages)
@@ -595,36 +473,27 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<CustomerMessage>()
                 .HasIndex(cm => cm.CustomerId); // index scan customermessage by customer faster
 
-            modelBuilder.Entity<CustomerProfile>()
-                .HasIndex(cp => cp.ProvidersId); // index scan customerprofile by provider faster
-
             modelBuilder.Entity<CustomerMessage>()
                 .HasIndex(cm => new { cm.ConversationId, cm.Timestamp }); // index scan customermessage by conversation faster
 
 
-            // ==== Provider - CustomerProfile ( one to Many ) ====
-            modelBuilder.Entity<Provider>()
-                .HasKey(p => p.Id);
-
-            //Auto gen Guid Id Provider
-            modelBuilder.Entity<Provider>()
-            .Property(p => p.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Provider>()
-                .HasMany(p => p.CustomerProfiles)
-                .WithOne(cp => cp.Providers)
-                .HasForeignKey(cp => cp.ProvidersId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // ==== Provider - SupportConversation ( one to Many ) ====
+            modelBuilder.Entity<Provider>()
+                .HasIndex(p => p.Id);
+                
+            modelBuilder.Entity<Provider>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Provider>()
                 .HasMany(p => p.SupportConversations)
                 .WithOne(sc => sc.Providers)
                 .HasForeignKey(sc => sc.ProvidersId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<SupportConversation>()
+                .HasIndex(sc => sc.ProvidersId); // index scan supportconversation by provider faster
 
             // == CustomerMessage - SupportConversation ( many to one ) ==
             modelBuilder.Entity<SupportConversation>()
@@ -765,96 +634,14 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasForeignKey(sm => sm.SupportConversationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // ==== DepartmentConversation - DepartmentStaffMessage ( one to Many ) ====
+            modelBuilder.Entity<SupportConversation>()
+                .Property(x => x.CreatedDate)
+                .HasDefaultValueSql("now()");
 
-            modelBuilder.Entity<DepartmentStaffMessage>()
-                .HasKey(dsm => dsm.Id);
+            modelBuilder.Entity<SupportConversation>()
+                .Property(x => x.UpdateDate)
+                .HasDefaultValueSql("now()");
 
-
-            //Auto gen Guid Id DepartmentStaffMessage
-            modelBuilder.Entity<DepartmentStaffMessage>()
-            .Property(dsm => dsm.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<DepartmentConversation>()
-                .HasMany(dc => dc.DepartmentStaffMessages)
-                .WithOne(dsm => dsm.DepartmentConversation)
-                .HasForeignKey(dsm => dsm.DepartmentConversationId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<DepartmentStaffMessage>()
-                .HasIndex(dsm => new { dsm.DepartmentConversationId, dsm.Status }); // index scan DepartmentStaffMessage by departmentconversation and status faster
-
-            modelBuilder.Entity<DepartmentConversation>()
-                .HasKey(dc => dc.Id);
-
-            //Auto gen Guid Id DepartmentConversation
-            modelBuilder.Entity<DepartmentConversation>()
-            .Property(dc => dc.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            // ==== Staff - DepartmentStaffMessage ( one to Many ) ====
-
-            modelBuilder.Entity<Staff>()
-                .HasMany(s => s.DepartmentStaffMessages)
-                .WithOne(dsm => dsm.Staff)
-                .HasForeignKey(dsm => dsm.StaffId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ==== DepartmentConversationType - DepartmentConversation ( one to Many ) ====
-
-            modelBuilder.Entity<DepartmentConversationType>()
-                .HasKey(dct => dct.Id);
-
-            //Auto gen Guid Id DepartmentConversationType
-            modelBuilder.Entity<DepartmentConversationType>()
-            .Property(dct => dct.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<DepartmentConversationType>()
-                .HasMany(dct => dct.DepartmentConversations)
-                .WithOne(dc => dc.DepartmentConversationType)
-                .HasForeignKey(dc => dc.DepartmentConversationTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<DepartmentConversation>()
-                .HasIndex(dc => dc.DepartmentConversationTypeId); // index scan DepartmentConversation by DepartmentConversationType faster
-
-
-            // ==== Department - DepartmentConversation ( one to Many ) ====
-
-            modelBuilder.Entity<Department>()
-                .HasMany(d => d.DepartmentConversations)
-                .WithOne(dc => dc.Department)
-                .HasForeignKey(dc => dc.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<DepartmentConversation>()
-                .HasIndex(dc => new { dc.DepartmentId, dc.DepartmentConversationTypeId, dc.Status }); // index scan DepartmentConversation by Department and DepartmentConversationType and Status faster
-
-
-            // ==== DepartmentConversation - DepartmentConversationFile ( one to Many ) ====
-            modelBuilder.Entity<DepartmentConversationFile>()
-                .HasKey(dcf => dcf.Id);
-            //Auto gen Guid Id DepartmentConversationFile
-            modelBuilder.Entity<DepartmentConversationFile>()
-            .Property(dcf => dcf.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<DepartmentConversation>()
-                .HasMany(dc => dc.DepartmentConversationFiles)
-                .WithOne(dcf => dcf.DepartmentConversation)
-                .HasForeignKey(dcf => dcf.DepartmentConversationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<DepartmentConversationFile>()
-                .HasIndex(dcf => dcf.ConversationFileId);
-
-            // ==== ConversationFile - DepartmentConversationFile ( one to Many ) ====
 
             modelBuilder.Entity<ConversationFile>()
                 .HasKey(cf => cf.Id);
@@ -865,14 +652,9 @@ namespace OmniChat.Infrastructure.Persistence
             .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<ConversationFile>()
-                .HasMany(cf => cf.DepartmentConversationFiles)
-                .WithOne(dcf => dcf.ConversationFile)
-                .HasForeignKey(dcf => dcf.ConversationFileId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<DepartmentConversationFile>()
-                .HasIndex(dcf => new { dcf.DepartmentConversationId, dcf.ConversationFileId }).IsUnique();// scan by departmentconversation and conversationfile faster
-
+            .Property(x => x.TimeStamp)
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("now()");
 
             // ==== ConversationFile - SupportConversationFile ( one to Many ) ====
             modelBuilder.Entity<SupportConversationFile>()
@@ -903,6 +685,61 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<SupportConversationFile>()
                 .HasIndex(scf => new { scf.SupportConversationId, scf.ConversationFileId }).IsUnique();// scan by supportconversation and conversationfile faster
 
+            // ==== ConversationFile - InternalConversationFile ( one to Many ) ====
+
+            modelBuilder.Entity<InternalConversationFile>()
+                .HasKey(icf => icf.Id);
+
+            modelBuilder.Entity<InternalConversationFile>()
+                 .Property(icf => icf.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+
+
+            // ==== Staff - SupportTask ( one to Many ) ====
+
+            modelBuilder.Entity<SupportTask>()
+                .HasKey(st => st.Id);
+
+            //Auto gen Guid Id SupportTask
+            modelBuilder.Entity<SupportTask>()
+                .Property(st => st.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<Staff>()
+                .HasMany(s => s.SupportTasks)
+                .WithOne(st => st.CurrentAssignedStaff)
+                .HasForeignKey(st => st.CurrentAssignedStaffId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SupportTask>()
+                .HasIndex(st => st.CurrentAssignedStaffId); // scan by CurrentAssignedStaffId faster
+
+            modelBuilder.Entity<SupportTask>()
+                .HasIndex(st => st.Status);
+            // ==== SupportConversation - SupportTask ( one to Many ) ====
+
+            modelBuilder.Entity<SupportConversation>()
+                .HasMany(sc => sc.SupportTasks)
+                .WithOne(st => st.SupportConversation)
+                .HasForeignKey(st => st.SupportConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SupportTask>()
+                .HasIndex(st => st.SupportConversationId); // scan by SupportConversationId faster
+
+            // ==== KeywordTypes - SupportTask ( one to Many ) ====
+
+            modelBuilder.Entity<KeywordTypes>()
+                .HasMany(kt => kt.SupportTasks)
+                .WithOne(st => st.KeywordType)
+                .HasForeignKey(st => st.KeywordTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SupportTask>()
+                .HasIndex(st => st.KeywordTypeId); // scan by KeywordTypeId faster
 
             // ==== ChatTemplate ====
             modelBuilder.Entity<ChatTemplate>()
@@ -913,6 +750,54 @@ namespace OmniChat.Infrastructure.Persistence
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
+            // ==== InternalConversation - InternalConversationFile ( one to Many ) ====
+
+            modelBuilder.Entity<InternalConversation>()
+                .HasKey(ic => ic.Id);
+
+            // auto gen Guid Id InternalConversation
+
+            modelBuilder.Entity<InternalConversation>()
+                .Property(ic => ic.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<InternalConversation>()
+                .HasMany(ic => ic.InternalConversationFiles)
+                .WithOne(icf => icf.InternalConversation)
+                .HasForeignKey(icf => icf.InternalConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InternalConversationFile>()
+                .HasIndex(icf => icf.InternalConversationId); // scan by InternalConversationId faster
+
+            // ==== Staff - InternalStaffMessages ( one to Many ) ====
+            modelBuilder.Entity<Staff>()
+                .HasMany(s => s.InternalStaffMessages)
+                .WithOne(ism => ism.Staff)
+                .HasForeignKey(ism => ism.StaffId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InternalStaffMessage>()
+                .HasIndex(ism => ism.StaffId); // scan by StaffId faster 
+
+            // ==== InternalConversation - InternalStaffMessage ( one to Many ) ====
+            modelBuilder.Entity<InternalStaffMessage>()
+                .HasKey(ism => ism.Id);
+
+            modelBuilder.Entity<InternalStaffMessage>()
+                .Property(ism => ism.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<InternalConversation>()
+                .HasMany(ic => ic.InternalMessages)
+                .WithOne(ism => ism.InternalConversation)
+                .HasForeignKey(ism => ism.InternalConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InternalStaffMessage>()
+                .HasIndex(ism => ism.InternalConversationId); // scan by InternalConversationId faster
 
             modelBuilder.Entity<ChatTemplate>()
                 .HasIndex(ct => ct.Code).IsUnique(); // 1 code only for 1 chat template
@@ -926,84 +811,123 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(ct => ct.Content)
                 .IsRequired(); // Content is required
 
-            // ==== Staff - Inquiry ( one to Many ) ====
-            modelBuilder.Entity<Inquiry>()
-                .HasKey(ta => ta.Id);
-            //Auto gen Guid Id Inquiry
-            modelBuilder.Entity<Inquiry>()
-            .Property(ta => ta.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
+            // ==== staff - InternalStaffMessage ( one to Many ) ====
             modelBuilder.Entity<Staff>()
-                .HasMany(s => s.Inquiries)
-                .WithOne(ta => ta.Staff)
-                .HasForeignKey(ta => ta.StaffId)
+                .HasMany(s => s.InternalStaffMessages)
+                .WithOne(ism => ism.Staff)
+                .HasForeignKey(ism => ism.StaffId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Inquiry>()
-                .HasIndex(ta => new { ta.StaffId, ta.Status }); // index scan Inquiry by staff and status faster
+            modelBuilder.Entity<InternalStaffMessage>()
+                .HasIndex(ism => ism.StaffId); // scan by StaffId faster
 
-            // ==== Department - Inquiry ( one to Many ) ====
-            modelBuilder.Entity<Department>()
-                .HasMany(d => d.Inquiries)
-                .WithOne(ta => ta.Department)
-                .HasForeignKey(ta => ta.DepartmentId)
+            // == TaskAssignmentHistory - SupportTask ( many to one ) ==
+
+            modelBuilder.Entity<TaskAssignmentHistory>()
+                .HasKey(tah => tah.Id);
+
+            // Auto gen Guid Id TaskAssignmentHistory
+            modelBuilder.Entity<TaskAssignmentHistory>()
+                .Property(tah => tah.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+
+            modelBuilder.Entity<SupportTask>()
+                .HasMany(st => st.TaskAssignmentHistories)
+                .WithOne(tah => tah.SupportTask)
+                .HasForeignKey(tah => tah.SupportTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskAssignmentHistory>()
+                .HasIndex(tah => tah.SupportTaskId); // scan by SupportTaskId faster
+
+
+            // ==== CustomerProfile - Order ( one to Many ) ====
+
+            modelBuilder.Entity<Order>()
+                .HasKey(o => o.Id);
+
+            //Auto gen Guid Id Order
+            modelBuilder.Entity<Order>()
+                .Property(o => o.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<CustomerProfile>()
+                .HasMany(cp => cp.Orders)
+                .WithOne(o => o.CustomerProfile)
+                .HasForeignKey(o => o.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.CustomerId); // index scan order by customer faster
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.Status);
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.DeliveryStatus);
+
+            // ==== Order - OrderItem ( one to Many ) ====
+
+            modelBuilder.Entity<OrderItem>()
+                .HasKey(oi => oi.Id);
+
+            //Auto gen Guid Id OrderItem
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<Order>()
+                .HasMany(o => o.OrderItems)
+                .WithOne(oi => oi.Order)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasIndex(oi => oi.OrderId); // index scan orderitem by order faster
+
+            // ==== ProductBatch - OrderItem ( one to Many ) ====
+
+            modelBuilder.Entity<ProductBatch>()
+                .HasKey(pb => pb.Id);
+
+            //Auto gen Guid Id ProductBatch
+            modelBuilder.Entity<ProductBatch>()
+                .Property(pb => pb.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<ProductBatch>()
+                .HasMany(pb => pb.OrderItems)
+                .WithOne(oi => oi.ProductBatch)
+                .HasForeignKey(oi => oi.ProductBatchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Inquiry>()
-                .HasIndex(ta => new { ta.DepartmentId, ta.Status }); // index scan Inquiry by department and status faster
+            modelBuilder.Entity<OrderItem>()
+                .HasIndex(oi => oi.ProductBatchId); // index scan orderitem by productbatch faster
 
+            // ==== Product - ProductBatch ( one to Many ) ====
 
-            // ==== SupportConversation - Inquiry ( one to One ) ====
+            modelBuilder.Entity<Product>()
+                .HasKey(p => p.Id);
 
-            modelBuilder.Entity<SupportConversation>()
-                .HasOne(d => d.Inquiry)
-                .WithOne(ta => ta.SupportConversation)
-                .HasForeignKey<Inquiry>(ta => ta.SupportConversationId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //Auto gen Guid Id Product
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
 
-            modelBuilder.Entity<Inquiry>()
-                .HasIndex(ta => ta.SupportConversationId) // index scan Inquiry by supportconversation faster
-                .IsUnique();
+            modelBuilder.Entity<Product>()
+                .HasMany(p => p.ProductBatches)
+                .WithOne(pb => pb.Product)
+                .HasForeignKey(pb => pb.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Inquiry>()
-               .HasIndex(ta => new { ta.SupportConversationId, ta.IsActive }) // only 1 active Inquiry in 1 supportconversation
-               .IsUnique();
-
-            // ==== AuditLog ====
-            modelBuilder.Entity<AuditLog>()
-                .HasKey(al => al.Id);
-            //Auto gen Guid Id AuditLog
-            modelBuilder.Entity<AuditLog>()
-            .Property(al => al.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-
-            modelBuilder.Entity<AuditLog>()
-                .HasIndex(a => a.CreateDate); // index scan auditlog by createdate faster
-
-            modelBuilder.Entity<AuditLog>()
-                .HasIndex(al => new { al.EntityType, al.EntityId }); // index scan auditlog by entitytype and entityid faster
-
-            modelBuilder.Entity<AuditLog>()
-                .Property(a => a.OldData)
-                .HasColumnType("jsonb");
-
-            modelBuilder.Entity<AuditLog>()
-                .Property(a => a.NewData)
-                .HasColumnType("jsonb");
-
-            modelBuilder.Entity<AuditLog>()
-                .Property(a => a.Action)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            modelBuilder.Entity<AuditLog>()
-                .Property(a => a.EntityType)
-                .IsRequired()
-                .HasMaxLength(100);
+            modelBuilder.Entity<ProductBatch>()
+                .HasIndex(pb => pb.ProductId); // index scan productbatch by product faster
 
             // ==== ZaloOathToken ====
 
@@ -1025,6 +949,42 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<ZaloOathToken>()
                 .HasIndex(x => x.IsActive); // scan by isActive
+
+            // ==== FacebookOathToken ====
+            modelBuilder.Entity<FacebookOathToken>()
+                .HasKey(fot => fot.Id);
+
+            //Auto gen Guid Id FacebookOathToken
+            modelBuilder.Entity<FacebookOathToken>()
+                .Property(fot => fot.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<FacebookOathToken>()
+                .Property(fot => fot.AccessToken)
+                .IsRequired();
+
+            modelBuilder.Entity<FacebookOathToken>()
+                .HasIndex(x => x.IsActive); // scan by isActive
+
+            // ==== InstagramOathToken ====
+
+            modelBuilder.Entity<InstagramOathToken>()
+                .HasKey(iot => iot.Id);
+
+            //Auto gen Guid Id InstagramOathToken
+            modelBuilder.Entity<InstagramOathToken>()
+                .Property(iot => iot.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<InstagramOathToken>()
+                .Property(iot => iot.AccessToken)
+                .IsRequired();
+
+            modelBuilder.Entity<InstagramOathToken>()
+                .HasIndex(x => x.IsActive); // scan by isActive
+
 
             var entitiesWithoutGuidDefault = modelBuilder.Model
     .GetEntityTypes()

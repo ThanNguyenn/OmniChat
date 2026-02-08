@@ -33,8 +33,9 @@ namespace OmniChat.Application.Services.Implements
 
                     var existedProfile = await repo.SingleOrDefaultAsync(
                         predicate: x =>
-                            x.SenderId == createCustomerProfileRequest.SenderId &&
-                            x.ProvidersId == createCustomerProfileRequest.ProvidersId
+                            x.FacebookSenderId == createCustomerProfileRequest.FacebookSenderId &&
+                            x.InstagramSenderId == createCustomerProfileRequest.InstagramSenderId &&
+                            x.ZaloSenderId == createCustomerProfileRequest.ZaloSenderId
                     );
 
                     if (existedProfile != null)
@@ -59,9 +60,10 @@ namespace OmniChat.Application.Services.Implements
                     {
                         Id = x.Id,
                         CustomerName = x.CustomerName,
-                        ProvidersId = x.ProvidersId,
                         AvatarUrl = x.AvatarUrl,
-                        SenderId = x.SenderId
+                        FacebookSenderId = x.FacebookSenderId,
+                        ZaloSenderId = x.ZaloSenderId,
+                        InstagramSenderId = x.InstagramSenderId,
                     },
                     predicate: string.IsNullOrWhiteSpace(customerName)
                         ? null
@@ -72,12 +74,12 @@ namespace OmniChat.Application.Services.Implements
                 ); 
         }
 
-        public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(string senderId, Guid providersId)
+        public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(string zaloSenderId, Guid providersId)
         {
             
                 var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                return await repo.SingleOrDefaultAsync(predicate: x => x.SenderId == senderId && x.ProvidersId == providersId);
+                return await repo.SingleOrDefaultAsync(predicate: x => x.ZaloSenderId == zaloSenderId);
         }
 
         public async Task<CustomerProfile> GetCustomerProfileByIdAsync(Guid customerProfileId)
