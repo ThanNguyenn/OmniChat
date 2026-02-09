@@ -24,7 +24,7 @@ namespace OmniChat.Application.Services.Implements
         }
 
 
-        public async Task<CustomerProfile> CreateCustomerProfileEntityAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
+        public async Task<CustomerProfile> CreateCustomerProfileAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
         {
            
                 return await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -97,7 +97,55 @@ namespace OmniChat.Application.Services.Implements
             return existCustomerProfile;
         }
 
+        public async Task<GetCustomerProfileResponse> GetCustomerProfileByEmailOrPhoneAsync(string email, string phone)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
+            var existCustomProfile = await repo.SingleOrDefaultAsync(
+                predicate: x => x.Email.Equals(email) || x.PhoneNumber.Equals(phone));
+
+            if (existCustomProfile == null)
+                throw new NotFoundException("No CustomerProfile Found");
+
+            var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile); 
+            return result;
+        }
+
+
+
+
+        public async Task<GetCustomerProfileResponse> MergeAndDeleteAsync(Guid sourceId, Guid targetId)
+        {
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+                var source = await GetCustomerProfileByIdAsync(sourceId);
+                var target = await GetCustomerProfileByIdAsync(targetId);
+
+                if (source == null || target == null)
+                    throw new BusinessException("Customer not found");
+
+                if (target.Id == source.Id)
+                    throw new BusinessException("Cannot merge same customer");
+
+                target.FacebookSenderId ??= source.FacebookSenderId;
+                target.ZaloSenderId ??= source.ZaloSenderId;
+                target.InstagramSenderId ??= source.InstagramSenderId;
+
+                await _customerMessageRepo.UpdateCustomerIdAsync(
+                   source.Id,
+                   target.Id
+                );
+
+                await _supportConversationRepo.UpdateCustomerIdAsync(
+                  source.Id,
+                  target.Id
+                 );
+
+                await repo.DeleteAsync(source);
+            });
+        }
 
     }
 }

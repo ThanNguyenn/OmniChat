@@ -423,6 +423,8 @@ namespace OmniChat.Application.Services.Implements
                     Guid ConversationTempId =
                         Guid.Parse("cba10005-e594-47e2-a9e4-4a11d82167ce");
 
+                    Guid ConversationTicketTempId = "";
+
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
                             new CreateCustomerMessageRequest
@@ -431,7 +433,9 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = messaging.timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = ConversationTempId
+                                ConversationId = ConversationTempId,
+                                ConversationTicketId = ConversationTicketTempId,
+
                             }
                         );
 
@@ -751,6 +755,8 @@ namespace OmniChat.Application.Services.Implements
                     Guid conversationTempId =
                         Guid.Parse("eee885ee-eccd-4423-914b-a0823d325368");
 
+                    Guid ConversationTicketTempId = "dddddaasdasda223";
+
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
                             new CreateCustomerMessageRequest
@@ -759,7 +765,8 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = msg.Timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = conversationTempId
+                                ConversationId = conversationTempId,
+                                ConversationTicketId = ConversationTicketTempId,
                             }
                         );
 
