@@ -711,7 +711,15 @@ namespace OmniChat.Infrastructure.Persistence
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
 
+            // ==== staff - KeywordType (many - one)
+                modelBuilder.Entity<KeywordTypes>()
+                .HasMany(kt => kt.Staffs)
+                .WithOne(s => s.KeywordTypes)
+                .HasForeignKey(s => s.KeyWordTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Staff>()
+                .HasIndex(s => s.KeyWordTypeId); // scan by keyword index faster
 
             // ==== Staff - SupportTask ( one to Many ) ====
 

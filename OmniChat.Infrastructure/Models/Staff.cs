@@ -24,6 +24,10 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Account Account { get; set; }
 
+        public Guid? KeyWordTypeId { get; set; }
+
+        public virtual KeywordTypes? KeywordTypes { get; set; }
+
         public virtual ICollection<SupportConversation> SupportConversations { get; set; } = new List<SupportConversation>();
 
         public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();

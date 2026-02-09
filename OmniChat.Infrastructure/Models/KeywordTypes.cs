@@ -28,5 +28,6 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<SupportTask> SupportTasks { get; set; } = new List<SupportTask>();
 
+        public virtual ICollection<Staff> Staffs { get; set; } = new List<Staff>();
     }
 }
