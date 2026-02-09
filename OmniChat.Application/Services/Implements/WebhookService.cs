@@ -351,7 +351,7 @@ namespace OmniChat.Application.Services.Implements
             }
 
             var provider =
-                await _providerService.GetProviderAsync("Facebook")
+                await _providerService.GetProviderByNameAsync("Facebook")
                 ?? throw new BusinessException("Provider Facebook Not found");
 
             _logger.LogInformation(
@@ -674,7 +674,7 @@ namespace OmniChat.Application.Services.Implements
             }
 
             var provider =
-                await _providerService.GetProviderAsync("Instagram")
+                await _providerService.GetProviderByNameAsync("Instagram")
                 ?? throw new BusinessException("Provider Instagram Not found");
 
             bool result = false;

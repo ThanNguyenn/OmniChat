@@ -32,7 +32,7 @@ namespace OmniChat.Application.Services.Implements
 
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
             {
-                var existProvider = await GetProviderAsync(CreateProviderRequest.ProviderName);
+                var existProvider = await GetProviderByNameAsync(CreateProviderRequest.ProviderName);
                 if (existProvider != null)
                 {
                     // provider early exist
@@ -72,7 +72,7 @@ namespace OmniChat.Application.Services.Implements
             });
         }
 
-        public async Task<Provider> GetProviderAsync(string providerName)
+        public async Task<Provider> GetProviderByNameAsync(string providerName)
         {
             try
             {
