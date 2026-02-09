@@ -166,5 +166,20 @@ namespace OmniChat.Application.Services.Implements
                 Messages = messages
             };
         }
+
+        public async Task UpdateConversationAfterMergeAsync(CustomerProfile source, CustomerProfile target)
+        {
+            var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var conversations = await conversationRepo
+                .GetQueryable()
+                .Where(x => x.ActiveCustomerId == source.Id)
+                .ToListAsync();
+
+            foreach (var conv in conversations)
+            {
+                conv.ActiveCustomerId = target.Id;
+            }
+        }
     }
 }

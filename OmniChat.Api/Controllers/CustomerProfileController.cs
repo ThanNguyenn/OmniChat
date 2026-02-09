@@ -2,6 +2,7 @@
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
@@ -42,6 +43,34 @@ namespace OmniChat.Api.Controllers
             {
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Get customer profiles successfully",
+                IsSuccess = true,
+                Data = result
+            });
+        }
+
+        [HttpPost(ApiEndPointConstant.CustomerProfileEndPoint.MergeAndDeleteCustomerProfile)]
+        [ProducesResponseType(
+                typeof(ApiResponse<GetCustomerProfileResponse>),
+                StatusCodes.Status200OK)]
+                    [SwaggerOperation(
+                Summary = "Gộp và xóa Customer Profile",
+                Description =
+                    "Gộp profile mới tạo (Facebook/Instagram) vào profile đã tồn tại, " +
+                    "update message & conversation, sau đó xóa profile nguồn"
+            )]
+        public async Task<IActionResult> MergeAndDeleteCustomerProfileAsync(
+    [FromBody] MergeCustomerProfileRequest request)
+        {
+            var result =
+                await _customerProfileService.MergeAndDeleteAsync(
+                    request.SourceCustomerId,
+                    request.TargetCustomerId
+                );
+
+            return Ok(new ApiResponse<GetCustomerProfileResponse>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Merge customer profile successfully",
                 IsSuccess = true,
                 Data = result
             });

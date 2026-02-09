@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
@@ -69,6 +70,22 @@ namespace OmniChat.Application.Services.Implements
         page: pageNumber,
         size: pageSize
             );
+        }
+
+
+        public async Task UpdateCustomerMessageAfterMergeAsync(CustomerProfile source, CustomerProfile target)
+        {
+            var messageRepo = _unitOfWork.GetRepository<CustomerMessage>();
+
+            var messages = await messageRepo
+                .GetQueryable()
+                .Where(x => x.CustomerId == source.Id)
+                .ToListAsync();
+
+            foreach (var msg in messages)
+            {
+                msg.CustomerId = target.Id;
+            }
         }
     }
 }

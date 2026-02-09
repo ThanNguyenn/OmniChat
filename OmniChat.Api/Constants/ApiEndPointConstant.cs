@@ -48,6 +48,8 @@ public class ApiEndPointConstant
         public const string CustomerProfile = ApiV1 + "/customer-profile";
 
         public const string GetAllCustomerProfileByCustomerName = CustomerProfile + "/paging";
+
+        public const string MergeAndDeleteCustomerProfile =CustomerProfile + "/merge";
     }
 
     public static class SupportStaffMessageEndPoint

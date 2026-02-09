@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
@@ -19,8 +20,14 @@ namespace OmniChat.Application.Services.Implements
 {
     public class CustomerProfileService : BaseService<CustomerProfileService>, ICustomerProfileService
     {
-        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly ICustomerMessageService _customerMessageService;
+
+        private readonly SupportConversationService _supportConversationService;
+
+        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerMessageService customerMessageService, SupportConversationService supportConversationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _customerMessageService = customerMessageService;
+            _supportConversationService = supportConversationService;
         }
 
 
@@ -111,14 +118,13 @@ namespace OmniChat.Application.Services.Implements
             return result;
         }
 
-
-
-
         public async Task<GetCustomerProfileResponse> MergeAndDeleteAsync(Guid sourceId, Guid targetId)
         {
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
             {
-                var repo = _unitOfWork.GetRepository<CustomerProfile>();
+                var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
+                //var messageRepo = _unitOfWork.GetRepository<CustomerMessage>();
+                //var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
 
                 var source = await GetCustomerProfileByIdAsync(sourceId);
                 var target = await GetCustomerProfileByIdAsync(targetId);
@@ -126,24 +132,44 @@ namespace OmniChat.Application.Services.Implements
                 if (source == null || target == null)
                     throw new BusinessException("Customer not found");
 
-                if (target.Id == source.Id)
+                if (source.Id == target.Id)
                     throw new BusinessException("Cannot merge same customer");
 
+                //  Merge senderId
                 target.FacebookSenderId ??= source.FacebookSenderId;
                 target.ZaloSenderId ??= source.ZaloSenderId;
                 target.InstagramSenderId ??= source.InstagramSenderId;
 
-                await _customerMessageRepo.UpdateCustomerIdAsync(
-                   source.Id,
-                   target.Id
-                );
+                // Update CustomerMessage
+                // var messages = await messageRepo
+                //.GetQueryable()
+                //.Where(x => x.CustomerId == source.Id)
+                //.ToListAsync();
 
-                await _supportConversationRepo.UpdateCustomerIdAsync(
-                  source.Id,
-                  target.Id
-                 );
+                // foreach (var msg in messages)
+                // {
+                //     msg.CustomerId = target.Id;
+                // }
 
-                await repo.DeleteAsync(source);
+                await _customerMessageService.UpdateCustomerMessageAfterMergeAsync(source, target);
+
+                //  Update SupportConversation
+                //    var conversations = await conversationRepo
+                //.GetQueryable()
+                //.Where(x => x.ActiveCustomerId == source.Id)
+                //.ToListAsync();
+
+                //foreach (var conv in conversations)
+                //{
+                //    conv.ActiveCustomerId = target.Id;
+                //}
+                await _supportConversationService.UpdateConversationAfterMergeAsync(source, target);
+
+                // Delete source customer profile
+                await customerRepo.DeleteAsync(x => x.Id == source.Id);
+
+                return _mapper.Map<GetCustomerProfileResponse>(target);
+
             });
         }
 
