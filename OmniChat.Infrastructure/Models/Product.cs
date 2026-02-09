@@ -30,6 +30,8 @@ namespace OmniChat.Infrastructure.Models
 
         public int Quantity { get; set; }
 
+        public DateTime CreateDate { get; set; }
+
         public virtual ICollection<ProductBatch> ProductBatches { get; set; } = new List<ProductBatch>();
     }
 
