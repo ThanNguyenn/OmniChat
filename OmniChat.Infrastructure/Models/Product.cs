@@ -28,6 +28,8 @@ namespace OmniChat.Infrastructure.Models
 
         public string Code { get; set; } 
 
+        public int Quantity { get; set; }
+
         public virtual ICollection<ProductBatch> ProductBatches { get; set; } = new List<ProductBatch>();
     }
 
