@@ -74,12 +74,15 @@ namespace OmniChat.Application.Services.Implements
                 ); 
         }
 
-        public async Task<CustomerProfile> GetCustomerProfileBySenderAndProviderIdIdAsync(string zaloSenderId, Guid providersId)
+        public async Task<CustomerProfile> GetCustomerProfileBySenderAsync(string senderId)
         {
             
                 var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                return await repo.SingleOrDefaultAsync(predicate: x => x.ZaloSenderId == zaloSenderId);
+                return await repo.SingleOrDefaultAsync(predicate: x => 
+                x.FacebookSenderId == senderId 
+                || x.ZaloSenderId == senderId ||
+                x.InstagramSenderId == senderId);
         }
 
         public async Task<CustomerProfile> GetCustomerProfileByIdAsync(Guid customerProfileId)
@@ -93,5 +96,8 @@ namespace OmniChat.Application.Services.Implements
             
             return existCustomerProfile;
         }
+
+
+
     }
 }

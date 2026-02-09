@@ -387,9 +387,8 @@ namespace OmniChat.Application.Services.Implements
                     );
 
                     var customerProfile =
-                        await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
-                            senderId: messaging.sender.id,
-                            providersId: provider.Id
+                        await _customerProfileService.GetCustomerProfileBySenderAsync(
+                            senderId: messaging.sender.id
                         );
 
                     if (customerProfile == null)
@@ -405,13 +404,12 @@ namespace OmniChat.Application.Services.Implements
                             );
 
                         customerProfile =
-                            await _customerProfileService.CreateCustomerProfileEntityAsync(
+                            await _customerProfileService.CreateCustomerProfileAsync(
                                 new CreateCustomerProfileRequest
                                 {
                                     FacebookSenderId = messaging.sender.id,
                                     CustomerName =
                                         $"{fbUser?.FirstName} {fbUser?.LastName}".Trim(),
-                                    ProvidersId = provider.Id,
                                     AvatarUrl = fbUser?.ProfilePic,
                                 }
                             );
@@ -726,9 +724,8 @@ namespace OmniChat.Application.Services.Implements
                     // ==== BUSINESS LOGIC ====
 
                     var customerProfile =
-                        await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
-                            senderId: senderId,
-                            providersId: provider.Id
+                        await _customerProfileService.GetCustomerProfileBySenderAsync(
+                            senderId: senderId
                         );
 
                     if (customerProfile == null)
@@ -741,12 +738,11 @@ namespace OmniChat.Application.Services.Implements
                         var igUser = await _instagramUserService.GetUserProfileAsync(senderId);
 
                         customerProfile =
-                            await _customerProfileService.CreateCustomerProfileEntityAsync(
+                            await _customerProfileService.CreateCustomerProfileAsync(
                                 new CreateCustomerProfileRequest
                                 {
                                     InstagramSenderId = senderId,
                                     CustomerName = igUser?.Name ?? "Instagram User",
-                                    ProvidersId = provider.Id,
                                     AvatarUrl = igUser?.ProfilePictureUrl,
                                 }
                             );

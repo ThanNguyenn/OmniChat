@@ -13,8 +13,10 @@ namespace OmniChat.Infrastructure.Dtos.Requests.CustomerProfile
         [StringLength(200)]
         public string CustomerName { get; set; }
 
-        [Required]
-        public Guid ProvidersId { get; set; }
+        public string Address { get; set; }
+
+        [Url]
+        public string? AvatarUrl { get; set; }
 
         [EmailAddress]
         public string? Email { get; set; }
@@ -22,21 +24,10 @@ namespace OmniChat.Infrastructure.Dtos.Requests.CustomerProfile
         [Phone]
         public string? PhoneNumber { get; set; }
 
-        //true => Male
-        public bool Gender { get; set; }
+        public string? ZaloSenderId { get; set; }
+  
+        public string? FacebookSenderId { get; set; }
 
-        public DateTime? DateOfBirth { get; set; }
-
-        [Url]
-        public string? AvatarUrl { get; set; }
-
-        [Required]
-        public string ZaloSenderId { get; set; }
-
-        [Required]
-        public string FacebookSenderId { get; set; }
-
-        [Required]
-        public string InstagramSenderId { get; set; }
+        public string? InstagramSenderId { get; set; }
     }
 }
