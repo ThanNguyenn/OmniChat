@@ -71,6 +71,10 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<ProductBatch> ProductBatches { get; set; }
 
+        public DbSet<Payment> Payments { get; set; }
+
+        public DbSet<BillingItem> BillingItems { get; set; }
+
         public DbSet<ChatTemplate> ChatTemplates { get; set; }
 
         public DbSet<ZaloOathToken> ZaloOathTokens { get; set; }
@@ -131,6 +135,18 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<Product>()
                 .Property(p => p.ProductPackagingType)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.PayStatus)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.PayMethod)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<BillingItem>()
+                .Property(bi => bi.BillStatus)
                 .HasConversion<string>();
 
             // default value IsActive = true
@@ -944,6 +960,53 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<ProductBatch>()
                 .HasIndex(pb => pb.ProductId); // index scan productbatch by product faster
+
+            // ==== CustomerProfile - Paymment( one - Many)
+            modelBuilder.Entity<Payment>()
+                .HasKey(p => p.Id);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<CustomerProfile>()
+                .HasMany(cp => cp.Payments)
+                .WithOne(p => p.CustomerProfile)
+                .HasForeignKey(p => p.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(p => p.CustomerId); // index scan payment by customer faster
+
+            // ==== Order - BillingItem (one - Many)
+
+            modelBuilder.Entity<BillingItem>()
+                .HasKey(p => p.Id);
+
+            modelBuilder.Entity<BillingItem>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<Order>()
+                .HasMany(o => o.BillingItems)
+                .WithOne(o => o.Order)
+                .HasForeignKey(o => o.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<BillingItem>()
+                .HasIndex(o => o.OrderId);   // index scan bill by order faster
+
+            // ==== Payment - billingItem (one - many)
+            modelBuilder.Entity<Payment>()
+                .HasMany(p => p.BillingItems)
+                .WithOne(bi => bi.Payment)
+                .HasForeignKey(p => p.PaymentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BillingItem>()
+                .HasIndex(o => o.PaymentId); // index scan bill by payment Id faster
 
             // ==== ZaloOathToken ====
 

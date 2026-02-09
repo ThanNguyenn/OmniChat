@@ -14,7 +14,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual CustomerProfile CustomerProfile { get; set; }
 
-        public string OrderDate { get; set; }
+        public DateTime OrderDate { get; set; }
 
         public string Name { get; set; }
 
@@ -27,6 +27,8 @@ namespace OmniChat.Infrastructure.Models
         public string Code { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        public virtual ICollection<BillingItem> BillingItems { get; set; } = new List<BillingItem>();
     }
 
     public enum OrderStatus
