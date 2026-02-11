@@ -27,9 +27,6 @@ namespace OmniChat.Application.Services.Implements
         public async Task<CreateCustomerMessageResponse> CreateCustomerMessageAsync(CreateCustomerMessageRequest createCustomerMessageRequest)
         {
            
-            
-                return await _unitOfWork.ProcessInTransactionAsync(async () =>
-                {
                     // call repo 
                     var repo = _unitOfWork.GetRepository<CustomerMessage>();
 
@@ -40,12 +37,12 @@ namespace OmniChat.Application.Services.Implements
                     // Insert Database
 
                     await   repo.InsertAsync(entity);
-
+                    
+                     await _unitOfWork.CommitAsync();
                     // Map entity =>  response
 
                     return _mapper.Map<CreateCustomerMessageResponse>(entity);
 
-                });
         }
 
         public async Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageByCustomerIdAsync(int pageNumber = 1, int pageSize = 20, Guid? customerId = null)

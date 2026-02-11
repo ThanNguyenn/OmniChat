@@ -26,5 +26,9 @@ namespace OmniChat.Application.Services.Interface
         public  Task<SupportConversationDetailResponse> CreateNewSupportConversationAsync(CreateSupportConversationRequest request);
 
         public  Task<List<SupportConversationDetailResponse>> GetCustomerConversationHistoryAsync(Guid customerId);
+
+        public Task<SupportConversation> GetSupportConversationHavePendingByCustomerIdAsync(Guid customerId, Guid providerId);
+
+        public  Task<SupportConversation> AsignForSupportConversationByIdAsync(Guid supportConversationId, Guid staffAsignId);
     }
 }

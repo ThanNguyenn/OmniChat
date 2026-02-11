@@ -11,7 +11,7 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface IWebhookService
     {
-        //public  Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent);
+        public Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent);
 
         public  Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload);
 
