@@ -18,7 +18,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string CustomerName { get; set; }
 
-        public string AvatarUrl { get; set; }
+        public string? AvatarUrl { get; set; }
 
         public Guid? ActiveStaffId { get; set; }
 
@@ -32,7 +32,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Provider Providers { get; set; }
 
-        public DateTime UpdateDate { get; set; }
+        public DateTime? UpdateDate { get; set; }
 
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
 
