@@ -15,7 +15,7 @@ namespace OmniChat.Infrastructure.Mappings
 
             CreateMap<CreateSupportConversationRequest, SupportConversation>()
                  .ForMember(x => x.UpdateDate,
-                opt => opt.MapFrom(_ => DateTime.Now)
+                opt => opt.MapFrom(_ => DateTime.UtcNow)
                 );
 
         }
