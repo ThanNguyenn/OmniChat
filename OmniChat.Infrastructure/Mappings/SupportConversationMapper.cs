@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using OmniChat.Infrastructure.Dtos.Requests.SupportConversation;
+using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace OmniChat.Infrastructure.Mappings
                  .ForMember(x => x.UpdateDate,
                 opt => opt.MapFrom(_ => DateTime.UtcNow)
                 );
-
+            CreateMap<SupportConversation, SupportConversationDetailResponse>();
         }
     }
 }
