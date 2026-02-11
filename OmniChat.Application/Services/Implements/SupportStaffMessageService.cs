@@ -120,18 +120,20 @@ namespace OmniChat.Application.Services.Implements
             var result = await response.Content.ReadAsStringAsync();
 
             _logger.LogInformation(
-               "[ZALO-SEND] Zalo response | StatusCode={StatusCode} | ConversationId={ConversationId}",
+               "[ZALO-SEND] Zalo response | StatusCode={StatusCode} | Body={Body} | ConversationId={ConversationId}",
                response.StatusCode,
+               result,
                existConversation.Id
             );
 
             if (!response.IsSuccessStatusCode) {
 
                 _logger.LogError(
-               "[ZALO-SEND] Failed sending to Zalo | StatusCode={StatusCode} | Response={Response}",
-               response.StatusCode,
-               response.Content
+                     "[ZALO-SEND] Failed sending to Zalo | StatusCode={StatusCode} | Body={Body}",
+                     response.StatusCode,
+                     result
                  );
+
                 throw new Exception(result);
             }
 
