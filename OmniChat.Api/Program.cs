@@ -119,6 +119,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IStaffService, StaffService>();
+    builder.Services.AddScoped<ICustomerMergeService,CustomerMergeService>();
     builder.Services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
 }
 

@@ -15,6 +15,20 @@ namespace OmniChat.Infrastructure.Mappings
         public CustomerProfileMapper()
         {
             CreateMap<CreateCustomerProfileRequest, CustomerProfile>();
+
+            CreateMap<CustomerProfile, GetCustomerProfileResponse>()
+         .ForMember(
+             dest => dest.TotalOrder,
+             opt => opt.MapFrom(src => src.Orders.Count)
+         )
+         .ForMember(
+             dest => dest.TotalPayment,
+             opt => opt.MapFrom(src => src.Payments.Sum(p => p.Total))
+         )
+            .ForMember(
+            dest => dest.CustomerDate,
+            opt => opt.MapFrom(src => DateTime.Parse(src.CreateDate))
+        );
         }
     }
 }

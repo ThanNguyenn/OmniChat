@@ -24,5 +24,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.CustomerMessage
 
         [Required]
         public Guid ConversationId { get; set; }
+
     }
 }

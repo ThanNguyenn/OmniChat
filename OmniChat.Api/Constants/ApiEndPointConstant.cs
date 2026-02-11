@@ -48,8 +48,19 @@ public class ApiEndPointConstant
         public const string CustomerProfile = ApiV1 + "/customer-profile";
 
         public const string GetAllCustomerProfileByCustomerName = CustomerProfile + "/paging";
+
+        public const string GetCustomerByEmailOrPhone =
+      CustomerProfile + "/search";
+
+        public const string UpdateCustomerProfile =
+           CustomerProfile + "/{customerId}";
     }
 
+    public static class CustomerServiceMergeEndpoint
+    {
+        public const string CustomerMerge =
+        ApiV1 + "/customer-profile/merge";
+    }
     public static class SupportStaffMessageEndPoint
     {
         public const string SupportStaffMessage = ApiV1 + "/support-staff-message";
@@ -68,6 +79,7 @@ public class ApiEndPointConstant
         public const string GetAllPagingByCustomerName = SupportConversation + "/paging";
         public const string StaffPendingSidebar = SupportConversations + "/staff/{staffId}/pending";
         public const string GetConversationDetail = SupportConversations + "/{conversationId}";
+        public const string CustomerConversationHistory = SupportConversations + "/customer/{customerId}/history";
     }
 
     public static class Auth

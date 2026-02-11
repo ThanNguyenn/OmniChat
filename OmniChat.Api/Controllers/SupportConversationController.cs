@@ -4,6 +4,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
+using static OmniChat.Api.Constants.ApiEndPointConstant;
 
 namespace OmniChat.Api.Controllers
 {
@@ -17,22 +18,6 @@ namespace OmniChat.Api.Controllers
             _supportConversationService = supportConversationService;
         }
 
-        // Get all support conversations with pagination
-        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.GetAllPagingByCustomerName)]
-        [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetAllSupportConversationResponse>>), StatusCodes.Status200OK)]
-        [SwaggerOperation(
-            Summary = "Lấy toàn bộ SupportConversation Paging",
-            Description = "Lấy toàn bộ thông tin của SupportConversation có Paging và search theo CustomerName"
-            )]
-        public async Task<IActionResult> GetAllSupportConversationsPaging([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string? customerName = null)
-        {
-            var result = await _supportConversationService.SupportConversationByCustomerNamePagingAsync(
-                pageNumber,
-                pageSize,
-                customerName);
-
-            return Ok(result);
-        }
 
         // Get support conversation detail by ID
         [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.GetConversationDetail)]
@@ -73,6 +58,26 @@ namespace OmniChat.Api.Controllers
                 IsSuccess = true,
                 Data = sidebarConversations
             });
-        } 
+        }
+
+        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.CustomerConversationHistory)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<SupportConversationDetailResponse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+      Summary = "Lấy lịch sử cuộc trò chuyện của khách hàng",
+      Description = "Lấy toàn bộ lịch sử cuộc trò chuyện support trước đó của khách hàng theo CustomerId"
+        )]
+        public async Task<IActionResult> GetCustomerConversationHistoryAsync([FromRoute] Guid customerId)
+        {
+            var conversations = await _supportConversationService
+                .GetCustomerConversationHistoryAsync(customerId);
+
+            return Ok(new ApiResponse<IEnumerable<SupportConversationDetailResponse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Customer Conversation History Successfully",
+                IsSuccess = true,
+                Data = conversations
+            });
+        }
     }
 }

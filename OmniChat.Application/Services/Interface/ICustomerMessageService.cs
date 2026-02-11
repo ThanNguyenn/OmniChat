@@ -1,6 +1,7 @@
 ﻿using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,6 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageByCustomerIdAsync(int pageNumber = 1, int pageSize = 20, Guid? customerId = null);
 
-
+        public  Task UpdateCustomerMessageAfterMergeAsync(CustomerProfile source, CustomerProfile target);
     }
 }
