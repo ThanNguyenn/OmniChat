@@ -16,9 +16,9 @@ public class ApiEndPointConstant
     {
         public const string Base = ApiV1 + "/webhooks";
 
-       //  ZaloWebhook
-        //public const string ZaloWebhook = Base + "/zalo";
-       // FacebookWebhook
+        //  ZaloWebhook
+        public const string ZaloWebhook = Base + "/zalo";
+        // FacebookWebhook
         public const string FacebookWebhook = Base + "/facebook";
 
         public const string InstagramWebhook = Base + "/instagram";

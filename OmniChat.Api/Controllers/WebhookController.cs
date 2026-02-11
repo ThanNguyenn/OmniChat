@@ -19,28 +19,28 @@ namespace OmniChat.Api.Controllers
             _webhookService = webhookService;
         }
 
-        // POST /api/v1/webhooks/zalo
-        //[HttpPost(ApiEndPointConstant.Webhooks.ZaloWebhook)]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //POST /api/v1/webhooks/zalo
+       [HttpPost(ApiEndPointConstant.Webhooks.ZaloWebhook)]
+       [ProducesResponseType(StatusCodes.Status200OK)]
+       [ProducesResponseType(StatusCodes.Status400BadRequest)]
 
-        //[SwaggerOperation(
-        //Summary = "Webhook set up của zalo",
-        //Description = "Webhook hứng evernt từ phía zalo "
-        //)]
-        //public async Task<IActionResult> ZaloWebhookAsync(
-        //    [FromBody] ZaloWebhookEvent zaloEvent)
-        //{
-        //   await _webhookService.ZaloWebhookAsync(zaloEvent);
+       [SwaggerOperation(
+       Summary = "Webhook set up của zalo",
+       Description = "Webhook hứng evernt từ phía zalo "
+       )]
+        public async Task<IActionResult> ZaloWebhookAsync(
+            [FromBody] ZaloWebhookEvent zaloEvent)
+        {
+            await _webhookService.ZaloWebhookAsync(zaloEvent);
 
-        //    return Ok(new ApiResponse<object>
-        //    {
-        //        StatusCode = StatusCodes.Status200OK,
-        //        Message = "Zalo webhook processed successfully",
-        //        IsSuccess = true,
-        //        Data = null
-        //    });
-        //}
+            return Ok(new ApiResponse<object>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Zalo webhook processed successfully",
+                IsSuccess = true,
+                Data = null
+            });
+        }
 
         // POST /api/v1/webhooks/facebook
         [HttpPost(ApiEndPointConstant.Webhooks.FacebookWebhook)]

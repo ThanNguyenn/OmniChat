@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
@@ -48,7 +49,7 @@ namespace OmniChat.Application.Services.Implements
         private readonly IConfiguration _configuration;
 
         private readonly IHubContext<SupportConversationHub> _hubContext;
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService,IConfiguration configuration, IInstagramUserService instagramUserService,IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
@@ -61,288 +62,202 @@ namespace OmniChat.Application.Services.Implements
             _supportConversationService = supportConversationService;
         }
 
-                        //========== Zalo //==========
+        //========== Zalo //==========
+        public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
+        {
+            bool result = false;
 
-        //public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
-        //{
+            Guid conversationId = Guid.Empty;
 
-        //        if (zaloEvent == null)
-        //            return false;
+            _logger.LogInformation(
+                "[ZALO] Webhook received | EventName={EventName} | SenderId={SenderId} | Timestamp={Timestamp}",
+                zaloEvent?.EventName,
+                zaloEvent?.Sender?.Id,
+                zaloEvent?.Timestamp
+            );
 
-        //        if (zaloEvent.EventName != "user_send_text")
-        //            return true;
+            if (zaloEvent == null)
+            {
+                _logger.LogWarning("[ZALO] Payload is NULL");
+                return false;
+            }
 
-        //        //  Provider Zalo
-        //        var provider = await _providerService.GetProviderAsync("Zalo")
-        //            ?? throw new BusinessException("Provider Zalo not found");
+            if (zaloEvent.EventName != "user_send_text")
+            {
+                _logger.LogInformation(
+                    "[ZALO] Ignored event | EventName={EventName}",
+                    zaloEvent.EventName
+                );
+                return true;
+            }
 
-        //        //  Get CustomerProfile theo SenderId + ProviderId
-        //        var customerProfile =
-        //            await _customerProfileService
-        //                .GetCustomerProfileBySenderAndProviderIdIdAsync(
-        //                    senderId: zaloEvent.Sender.Id,
-        //                    providersId: provider.Id
-        //                );
+            // Get Provider
+            var provider = await _providerService.GetProviderByNameAsync("Zalo");
+            if (provider == null)
+            {
+                _logger.LogError("[ZALO] Provider Zalo not found");
+                throw new BusinessException("Provider Zalo not found");
+            }
 
-        //        //  if don't have profile => create new
-        //        if (customerProfile == null)
-        //        {
+            _logger.LogInformation(
+                "[ZALO] Provider loaded | ProviderId={ProviderId}",
+                provider.Id
+            );
 
-        //            var zaloProfile =
-        //                await _zaloUserService.GetUserProfileAsync(zaloEvent.Sender.Id);
-
-        //            customerProfile =
-        //                await _customerProfileService.CreateCustomerProfileEntityAsync(
-        //                    new CreateCustomerProfileRequest
-        //                    {
-        //                        SenderId = zaloEvent.Sender.Id,
-        //                        ProvidersId = provider.Id,
-
-        //                        CustomerName =
-        //                            zaloProfile?.DisplayName
-        //                            ?? $"Zalo User {zaloEvent.Sender.Id}",
-
-        //                        AvatarUrl = zaloProfile?.Avatar,
-        //                        PhoneNumber = zaloProfile?.SharedInfo?.Phone,
-
-        //                        Gender = zaloProfile?.Gender == 1,
-        //                        DateOfBirth = _zaloUserService.ParseZaloBirthDate(
-        //                            zaloProfile?.BirthDate
-        //                        )
-        //                    }
-        //                );
-        //        }
-
-        //        Guid ConversationTempId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+            // Get CustomerProfile
+            var customerProfile =
+                await _customerProfileService.GetCustomerProfileBySenderAsync(zaloEvent.Sender.Id.ToString());
 
 
-        //        var messageRequest = new CreateCustomerMessageRequest
-        //        {
-        //            Content = zaloEvent.Message?.Text,
-        //            Timestamp = zaloEvent.Timestamp,
-        //            KeywordActive = false,
-        //            CustomerId = customerProfile.Id,
-        //            ConversationId = ConversationTempId // just temp -> this will have after done atribute funton
-        //        };
+            if (customerProfile == null)
+            {
+                _logger.LogInformation(
+                    "[ZALO] CustomerProfile not found | SenderId={SenderId} → Creating new",
+                    zaloEvent.Sender.Id
+                );
 
-        //       var newCustomerMess = await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
+                var zaloProfile =
+                    await _zaloUserService.GetUserProfileAsync(zaloEvent.Sender.Id);
 
-        //        if(newCustomerMess == null)
-        //        {
-        //            return false;
-        //        }
+                customerProfile =
+                    await _customerProfileService.CreateCustomerProfileAsync(
+                        new CreateCustomerProfileRequest
+                        {
+                            ZaloSenderId = zaloEvent.Sender.Id.ToString(),
+                            CustomerName =
+                                zaloProfile?.DisplayName
+                                ?? $"Zalo User {zaloEvent.Sender.Id}",
+                            AvatarUrl = zaloProfile?.Avatar,
+                            PhoneNumber = zaloProfile?.SharedInfo?.Phone,
+                        }
+                    );
 
-        //        return true;      
-        //}
-        //public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
-        //{
-        //    _logger.LogInformation(
-        //        "[ZALO] Webhook received | EventName={EventName} | SenderId={SenderId} | Timestamp={Timestamp}",
-        //        zaloEvent?.EventName,
-        //        zaloEvent?.Sender?.Id,
-        //        zaloEvent?.Timestamp
-        //    );
+                _logger.LogInformation(
+                    "[ZALO] CustomerProfile created | CustomerId={CustomerId}",
+                    customerProfile.Id
+                );
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "[ZALO] CustomerProfile found | CustomerId={CustomerId}",
+                    customerProfile.Id
+                );
+            }
+            // find pending Conversation 
 
-        //    if (zaloEvent == null)
-        //    {
-        //        _logger.LogWarning("[ZALO] Payload is NULL");
-        //        return false;
-        //    }
+            var existConversation = await _supportConversationService.GetSupportConversationHavePendingByCustomerIdAsync(customerProfile.Id, provider.Id);
 
-        //    if (zaloEvent.EventName != "user_send_text")
-        //    {
-        //        _logger.LogInformation(
-        //            "[ZALO] Ignored event | EventName={EventName}",
-        //            zaloEvent.EventName
-        //        );
-        //        return true;
-        //    }
+            if (existConversation != null)
+            {
+                conversationId = existConversation.Id;
 
-        //    // Get Provider
-        //    var provider = await _providerService.GetProviderAsync("Zalo");
-        //    if (provider == null)
-        //    {
-        //        _logger.LogError("[ZALO] Provider Zalo not found");
-        //        throw new BusinessException("Provider Zalo not found");
-        //    }
+            }
+            else
+            {
+                // if no have pending conversation
+                var newSupportConversation = new CreateSupportConversationRequest
+                {
+                    ActiveCustomerId = customerProfile.Id,
+                    ActiveStaffId = null,
+                    AvatarUrl = customerProfile.AvatarUrl,
+                    CustomerName = customerProfile.CustomerName,
+                    IsDistributed = true,
+                    ProvidersId = provider.Id,
+                    Status = ConversationStatus.Pending,
 
-        //    _logger.LogInformation(
-        //        "[ZALO] Provider loaded | ProviderId={ProviderId}",
-        //        provider.Id
-        //    );
+                };
+                try
+                {
+                    // dung cho truong hop 2 tin nhan gui toi cung luc 
+                    var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
 
-        //    // Get CustomerProfile
-        //    var customerProfile =
-        //        await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
-        //            senderId: zaloEvent.Sender.Id,
-        //            providersId: provider.Id
-        //        );
+                    conversationId = newComversation.Id;
+                }
+                catch(DbUpdateException)
+{
+                    var checkExistConversation =
+                        await _supportConversationService
+                            .GetSupportConversationHavePendingByCustomerIdAsync(
+                                customerProfile.Id,
+                                provider.Id);
 
-        //    if (customerProfile == null)
-        //    {
-        //        _logger.LogInformation(
-        //            "[ZALO] CustomerProfile not found | SenderId={SenderId} → Creating new",
-        //            zaloEvent.Sender.Id
-        //        );
+                    if (checkExistConversation == null)
+                        throw;
 
-        //        var zaloProfile =
-        //            await _zaloUserService.GetUserProfileAsync(zaloEvent.Sender.Id);
+                    conversationId = checkExistConversation.Id;
+                }
 
-        //        customerProfile =
-        //            await _customerProfileService.CreateCustomerProfileEntityAsync(
-        //                new CreateCustomerProfileRequest
-        //                {
-        //                    SenderId = zaloEvent.Sender.Id,
-        //                    ProvidersId = provider.Id,
-        //                    CustomerName =
-        //                        zaloProfile?.DisplayName
-        //                        ?? $"Zalo User {zaloEvent.Sender.Id}",
-        //                    AvatarUrl = zaloProfile?.Avatar,
-        //                    PhoneNumber = zaloProfile?.SharedInfo?.Phone,
-        //                    Gender = zaloProfile?.Gender == 1,
-        //                    DateOfBirth = _zaloUserService.ParseZaloBirthDate(
-        //                        zaloProfile?.BirthDate
-        //                    )
-        //                }
-        //            );
+                // asign Staff after run distribute
 
-        //        _logger.LogInformation(
-        //            "[ZALO] CustomerProfile created | CustomerId={CustomerId}",
-        //            customerProfile.Id
-        //        );
-        //    }
-        //    else
-        //    {
-        //        _logger.LogInformation(
-        //            "[ZALO] CustomerProfile found | CustomerId={CustomerId}",
-        //            customerProfile.Id
-        //        );
-        //    }
+                Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-        //    Guid ConversationTempId = Guid.Parse("ad07c5a4-55aa-4708-aeaf-cc9de6fb089e");
+                var AsignConversationSupport = await _supportConversationService.AsignForSupportConversationByIdAsync(conversationId, StaffId);
+            }
 
-        //    var messageRequest = new CreateCustomerMessageRequest
-        //    {
-        //        Content = zaloEvent.Message?.Text,
-        //        Timestamp = zaloEvent.Timestamp,
-        //        KeywordActive = false,
-        //        CustomerId = customerProfile.Id,
-        //        ConversationId = ConversationTempId
-        //    };
+            var newMessage = await _customerMessageService.CreateCustomerMessageAsync(
+                new CreateCustomerMessageRequest
+                {
+                    Content = zaloEvent.Message?.Text,
+                    Timestamp = zaloEvent.Timestamp,
+                    KeywordActive = false,
+                    CustomerId = customerProfile.Id,
+                    ConversationId = conversationId,
+                }
+            );
 
-        //    _logger.LogInformation(
-        //        "[ZALO] Creating message | CustomerId={CustomerId} | Content={Content}",
-        //        customerProfile.Id,
-        //        messageRequest.Content
-        //    );
+            if (newMessage != null)
+            {
+                _logger.LogInformation(
+                    "[ZALO] Message created | MessageId={MessageId}",
+                    newMessage.Id
+                );
+                result = true;
+                // After get new customer message Update Supportconversation UpdateDate -> now
+                var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationId);
 
-        //    var newCustomerMess =
-        //        await _customerMessageService.CreateCustomerMessageAsync(messageRequest);
+                if (existconversation.ActiveStaffId != null)
+                {
+                    // Add SignalR Realtime for sidebar staff 
+                    await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
+                        .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                        {
+                            ConversationId = existconversation.Id,
+                            CustomerName = existconversation.CustomerName,
+                            avartarUrl = existconversation.AvatarUrl,
+                            providerName = provider.ProviderName,
+                            LastMessage = newMessage.Content,
+                            MessageUpdateDate = existconversation.UpdateDate
+                        });
 
-        //    if (newCustomerMess == null)
-        //    {
-        //        _logger.LogError(
-        //            "[ZALO] Failed to create message | CustomerId={CustomerId}",
-        //            customerProfile.Id
-        //        );
-        //        return false;
-        //    }
-
-        //    _logger.LogInformation(
-        //        "[ZALO] Message created successfully | MessageId={MessageId}",
-        //        newCustomerMess.Id
-        //    );
-
-        //    return true;
-        //}
-
-                                 //========== Facebook //==========
-
-        //public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
-        //{
-        //   bool result = false;
-
-        //        if(faceBookWebhookPayload?.FacebookEntry == null || !faceBookWebhookPayload.FacebookEntry.Any())
-        //        {
-        //            return false;
-        //        }
-
-        //        // get provider 
-
-        //        var provider = await _providerService.GetProviderAsync("Facebook") ?? throw new BusinessException("Provider Facebook Not found");
+                    // Add SignalR realTime for chat detail if staff is viewing
+                    await _hubContext.Clients.Group($"conversation:{existconversation.Id}")
+                        .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
+                        {
+                            SenderType = "Customer",
+                            SenderId = customerProfile.Id,
+                            Content = newMessage.Content,
+                            Timestamp = newMessage.Timestamp
+                        });
+                }
+            }
+            else
+            {
+                _logger.LogError(
+                    "[Zalo] Failed to create message | SenderId={SenderId}",
+                    customerProfile.ZaloSenderId
+                );
+            }
+            return result;
+        }
 
 
-        //        //  Get CustomerProfile theo SenderId + ProviderId
-
-        //        foreach (var entry in faceBookWebhookPayload.FacebookEntry)
-        //        {
-
-        //            if(entry.facebookMessages == null)
-        //                continue;
-
-        //            foreach (var messaging in entry.facebookMessages)
-        //            {
-        //                // now just message text 
-        //                if(messaging.message?.text == null)
-        //                    continue;
-
-        //                // Get or Create CustomerProfile
-        //                var customerProfile = await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
-        //                    senderId: messaging.sender.id,
-        //                    providersId: provider.Id
-        //                    );
-
-        //                if (customerProfile == null)
-        //                {
-        //                    // create if don't exit
-
-        //                    var fbUser = await _facebookUserService.GetUserProfileAsync(messaging.sender.id);
-
-        //                    var CustomerName = $"{fbUser?.FirstName} {fbUser?.LastName}".Trim();
-
-        //                    bool customerGender = fbUser?.Gender == "male";
-
-
-        //                    customerProfile = await _customerProfileService.CreateCustomerProfileEntityAsync(new CreateCustomerProfileRequest
-        //                    {
-        //                        SenderId = messaging.sender.id,
-        //                        CustomerName = CustomerName,
-        //                        ProvidersId = provider.Id,
-        //                        AvatarUrl = fbUser?.ProfilePic,
-        //                        Gender = customerGender,
-        //                        Email = null,
-        //                        PhoneNumber = null,
-        //                        DateOfBirth = null,
-        //                    });
-        //                }
-
-        //                // create Message 
-
-        //                // conversation temp
-        //                Guid ConversationTempId = Guid.Parse("55555555-5555-5555-5555-555555555555");
-
-        //              var newMessage =  await _customerMessageService.CreateCustomerMessageAsync(
-        //                    new CreateCustomerMessageRequest
-        //                    {
-        //                        Content = messaging.message.text,
-        //                        Timestamp = messaging.timestamp,
-        //                        KeywordActive = false,
-        //                        CustomerId = customerProfile.Id,
-        //                        ConversationId = ConversationTempId
-        //                    }
-        //              );
-
-        //                if(newMessage != null)
-        //                {
-        //                result = true;
-        //                }
-        //            }
-        //        }
-        //    return result;
-        //}
+        //========== Facebook //==========
 
         public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
         {
+           
+
             _logger.LogInformation("[FACEBOOK] Webhook received");
 
             if (faceBookWebhookPayload?.entry == null ||
@@ -365,6 +280,8 @@ namespace OmniChat.Application.Services.Implements
 
             foreach (var entry in faceBookWebhookPayload.entry)
             {
+                var conversationId = Guid.Empty;
+
                 if (entry.messaging == null)
                 {
                     _logger.LogWarning("[FACEBOOK] Entry has no messages");
@@ -422,21 +339,54 @@ namespace OmniChat.Application.Services.Implements
                         );
                     }
 
-                    Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
+                    var existConversation = await _supportConversationService.GetSupportConversationHavePendingByCustomerIdAsync(customerProfile.Id, provider.Id);
 
-                    var newSupportConversation = new CreateSupportConversationRequest
+                    if (existConversation != null)
                     {
-                         ActiveCustomerId = customerProfile.Id,
-                          ActiveStaffId =  StaffId,
-                           AvatarUrl = customerProfile.AvatarUrl,
-                             CustomerName = customerProfile.CustomerName,
-                              IsDistributed = true,
-                               ProvidersId = provider.Id,
-                                Status = ConversationStatus.Pending,
+                        conversationId = existConversation.Id;
 
-                    };
+                    }
+                    else
+                    {
+                        // if no have pending conversation
+                        var newSupportConversation = new CreateSupportConversationRequest
+                        {
+                            ActiveCustomerId = customerProfile.Id,
+                            ActiveStaffId = null,
+                            AvatarUrl = customerProfile.AvatarUrl,
+                            CustomerName = customerProfile.CustomerName,
+                            IsDistributed = true,
+                            ProvidersId = provider.Id,
+                            Status = ConversationStatus.Pending,
 
-                    var newComversation =  await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
+                        };
+                        try
+                        {
+                            // dung cho truong hop 2 tin nhan gui toi cung luc 
+                            var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
+
+                            conversationId = newComversation.Id;
+                        }
+                        catch (DbUpdateException)
+                        {
+                            var checkExistConversation =
+                                await _supportConversationService
+                                    .GetSupportConversationHavePendingByCustomerIdAsync(
+                                        customerProfile.Id,
+                                        provider.Id);
+
+                            if (checkExistConversation == null)
+                                throw;
+
+                            conversationId = checkExistConversation.Id;
+                        }
+
+                        // asign Staff after run distribute
+
+                        Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
+
+                        var AsignConversationSupport = await _supportConversationService.AsignForSupportConversationByIdAsync(conversationId, StaffId);
+                    }
 
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
@@ -446,7 +396,7 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = messaging.timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = newComversation.Id,
+                                ConversationId = conversationId,
 
                             }
                         );
@@ -459,29 +409,32 @@ namespace OmniChat.Application.Services.Implements
                         );
                         result = true;
                         // After get new customer message Update Supportconversation UpdateDate -> now
-                        var existconversation =  await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newComversation.Id);
+                        var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationId);
 
-                        // Add SignalR Realtime for sidebar staff 
-                        await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
-                            .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                            {
-                            ConversationId = existconversation.Id,
-                            CustomerName = existconversation.CustomerName,
-                            avartarUrl = existconversation.AvatarUrl,
-                            providerName = provider.ProviderName,
-                            LastMessage = newMessage.Content,
-                            MessageUpdateDate = existconversation.UpdateDate
-                        });
+                        if (existconversation.ActiveStaffId != null)
+                        {
+                            // Add SignalR Realtime for sidebar staff 
+                            await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
+                                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                                {
+                                    ConversationId = existconversation.Id,
+                                    CustomerName = existconversation.CustomerName,
+                                    avartarUrl = existconversation.AvatarUrl,
+                                    providerName = provider.ProviderName,
+                                    LastMessage = newMessage.Content,
+                                    MessageUpdateDate = existconversation.UpdateDate
+                                });
 
-                        // Add SignalR realTime for chat detail if staff is viewing
-                        await _hubContext.Clients.Group($"conversation:{existconversation.Id}")
-                            .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                            {
-                                SenderType = "Customer",
-                                SenderId = customerProfile.Id,
-                                Content = newMessage.Content,
-                                Timestamp = newMessage.Timestamp
-                            });
+                            // Add SignalR realTime for chat detail if staff is viewing
+                            await _hubContext.Clients.Group($"conversation:{existconversation.Id}")
+                                .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
+                                {
+                                    SenderType = "Customer",
+                                    SenderId = customerProfile.Id,
+                                    Content = newMessage.Content,
+                                    Timestamp = newMessage.Timestamp
+                                });
+                        }
                     }
                     else
                     {
@@ -496,12 +449,6 @@ namespace OmniChat.Application.Services.Implements
             return result;
         }
 
-
-        //public async Task<bool> VerifyWebhook(string mode, string token)
-        //{
-        //    var verifyToken = _configuration["facebookWebHook:verifyToken"];
-        //    return mode == "subscribe" && token == verifyToken;
-        //}
 
         public async Task<bool> VerifyFacebookWebhook(string mode, string token)
         {
@@ -550,127 +497,6 @@ namespace OmniChat.Application.Services.Implements
 
         //========== Instagram //==========
 
-
-        //public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
-        //{
-        //    _logger.LogInformation("[INSTAGRAM] Webhook received");
-
-        //    _logger.LogInformation(
-        //        "[INSTAGRAM] RAW PAYLOAD:\n{Payload}",
-        //        JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true })
-        //    );
-
-        //    if (payload?.entry == null || !payload.entry.Any())
-        //    {
-        //        _logger.LogWarning("[INSTAGRAM] Payload invalid or empty entry");
-        //        return false;
-        //    }
-
-        //    var provider =
-        //        await _providerService.GetProviderAsync("Instagram")
-        //        ?? throw new BusinessException("Provider Instagram Not found");
-
-        //    bool result = false;
-
-        //    foreach (var entry in payload.entry)
-        //    {
-        //        if (entry.messaging == null || !entry.messaging.Any())
-        //        {
-        //            _logger.LogWarning(
-        //                "[INSTAGRAM] Entry has no changes | BusinessId={BusinessId}",
-        //                entry.id
-        //            );
-        //            continue;
-        //        }
-
-        //        foreach (var message in entry.messaging)
-        //        {
-        //            // Instagram Login API chỉ quan tâm messages
-        //            if (change.field != "messages")
-        //                continue;
-
-        //            var value = change.value;
-
-        //            if (value?.message?.text == null)
-        //            {
-        //                _logger.LogInformation(
-        //                    "[INSTAGRAM] Ignored non-text message | BusinessId={BusinessId} | SenderId={SenderId}",
-        //                    entry.id,
-        //                    value?.sender?.id
-        //                );
-        //                continue;
-        //            }
-
-        //            var businessId = entry.id;          // Instagram account của bạn
-        //            var senderId = value.sender.id;     // Customer
-        //            var text = value.message.text;
-
-        //            _logger.LogInformation(
-        //                "[INSTAGRAM] Message received | BusinessId={BusinessId} | SenderId={SenderId} | Text={Text}",
-        //                businessId,
-        //                senderId,
-        //                text
-        //            );
-
-        //            // ==== BUSINESS LOGIC ====
-
-        //            var customerProfile =
-        //                await _customerProfileService.GetCustomerProfileBySenderAndProviderIdIdAsync(
-        //                    senderId: senderId,
-        //                    providersId: provider.Id
-        //                );
-
-        //            if (customerProfile == null)
-        //            {
-        //                _logger.LogInformation(
-        //                    "[INSTAGRAM] CustomerProfile not found | SenderId={SenderId} → Creating new",
-        //                    senderId
-        //                );
-
-        //                var igUser = await _instagramUserService.GetUserProfileAsync(senderId);
-
-        //                customerProfile =
-        //                    await _customerProfileService.CreateCustomerProfileEntityAsync(
-        //                        new CreateCustomerProfileRequest
-        //                        {
-        //                            SenderId = senderId,
-        //                            CustomerName = igUser?.Username ?? "Instagram User",
-        //                            ProvidersId = provider.Id,
-        //                            AvatarUrl = igUser?.ProfilePictureUrl,
-        //                            Gender = false
-        //                        }
-        //                    );
-        //            }
-
-        //            Guid conversationTempId =
-        //                Guid.Parse("55555555-5555-5555-5555-555555555555");
-
-        //            var newMessage =
-        //                await _customerMessageService.CreateCustomerMessageAsync(
-        //                    new CreateCustomerMessageRequest
-        //                    {
-        //                        Content = text,
-        //                        Timestamp = long.Parse(value.timestamp),
-        //                        KeywordActive = false,
-        //                        CustomerId = customerProfile.Id,
-        //                        ConversationId = conversationTempId
-        //                    }
-        //                );
-
-        //            if (newMessage != null)
-        //            {
-        //                _logger.LogInformation(
-        //                    "[INSTAGRAM] Message created | MessageId={MessageId}",
-        //                    newMessage.Id
-        //                );
-        //                result = true;
-        //            }
-        //        }
-        //    }
-
-        //    return result;
-        //}
-
         public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
         {
             const string ourSenderId = "17841478357005004"; // if message is our past continue next message
@@ -695,6 +521,8 @@ namespace OmniChat.Application.Services.Implements
 
             foreach (var entry in payload.entry)
             {
+                var conversationId = Guid.Empty;
+
                 if (entry.messaging == null || !entry.messaging.Any())
                 {
                     _logger.LogWarning(
@@ -706,7 +534,7 @@ namespace OmniChat.Application.Services.Implements
 
                 foreach (var msg in entry.messaging)
                 {
-                    if(msg.Sender.id == ourSenderId)
+                    if (msg.Sender.id == ourSenderId)
                     {
                         _logger.LogInformation(
                             "[INSTAGRAM] Ignored staff message | BusinessId={BusinessId} | SenderId={SenderId}",
@@ -764,20 +592,55 @@ namespace OmniChat.Application.Services.Implements
                             );
                     }
 
-                    Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-                    var newSupportConversation = new CreateSupportConversationRequest
+                    var existConversation = await _supportConversationService.GetSupportConversationHavePendingByCustomerIdAsync(customerProfile.Id, provider.Id);
+
+                    if (existConversation != null)
                     {
-                        ActiveCustomerId = customerProfile.Id,
-                        ActiveStaffId = StaffId,
-                        AvatarUrl = customerProfile.AvatarUrl,
-                        CustomerName = customerProfile.CustomerName,
-                        IsDistributed = true,
-                        ProvidersId = provider.Id,
-                        Status = ConversationStatus.Pending,
+                        conversationId = existConversation.Id;
 
-                    };
-                    var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
+                    }
+                    else
+                    {
+                        // if no have pending conversation
+                        var newSupportConversation = new CreateSupportConversationRequest
+                        {
+                            ActiveCustomerId = customerProfile.Id,
+                            ActiveStaffId = null,
+                            AvatarUrl = customerProfile.AvatarUrl,
+                            CustomerName = customerProfile.CustomerName,
+                            IsDistributed = true,
+                            ProvidersId = provider.Id,
+                            Status = ConversationStatus.Pending,
+
+                        };
+                        try
+                        {
+                            // dung cho truong hop 2 tin nhan gui toi cung luc 
+                            var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
+
+                            conversationId = newComversation.Id;
+                        }
+                        catch (DbUpdateException)
+                        {
+                            var checkExistConversation =
+                                await _supportConversationService
+                                    .GetSupportConversationHavePendingByCustomerIdAsync(
+                                        customerProfile.Id,
+                                        provider.Id);
+
+                            if (checkExistConversation == null)
+                                throw;
+
+                            conversationId = checkExistConversation.Id;
+                        }
+
+                        // asign Staff after run distribute
+
+                        Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
+
+                        var AsignConversationSupport = await _supportConversationService.AsignForSupportConversationByIdAsync(conversationId, StaffId);
+                    }
 
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
@@ -787,7 +650,7 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = msg.Timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = newComversation.Id,
+                                ConversationId = conversationId,
                             }
                         );
 
@@ -800,30 +663,32 @@ namespace OmniChat.Application.Services.Implements
                         result = true;
 
                         // After get new customer message Update Supportconversation UpdateDate -> now
-                        var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newComversation.Id);
+                        var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationId);
 
-                        // Add SignalR Realtime for sidebar staff 
-                        await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
-                            .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                            {
-                                ConversationId = existconversation.Id,
-                                CustomerName = existconversation.CustomerName,
-                                avartarUrl = existconversation.AvatarUrl,
-                                providerName = provider.ProviderName,
-                                LastMessage = newMessage.Content,
-                                MessageUpdateDate = existconversation.UpdateDate
-                            });
+                        if (existconversation.ActiveStaffId != null)
+                        {
+                            // Add SignalR Realtime for sidebar staff 
+                            await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
+                                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+                                {
+                                    ConversationId = existconversation.Id,
+                                    CustomerName = existconversation.CustomerName,
+                                    avartarUrl = existconversation.AvatarUrl,
+                                    providerName = provider.ProviderName,
+                                    LastMessage = newMessage.Content,
+                                    MessageUpdateDate = existconversation.UpdateDate
+                                });
 
-                        // Add SignalR realTime for chat detail if staff is viewing
-                        await _hubContext.Clients.Group($"conversation:{existconversation.Id}")
-                            .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                            {
-                                SenderType = "Customer",
-                                SenderId = customerProfile.Id,
-                                Content = newMessage.Content,
-                                Timestamp = newMessage.Timestamp
-                            });
-
+                            // Add SignalR realTime for chat detail if staff is viewing
+                            await _hubContext.Clients.Group($"conversation:{existconversation.Id}")
+                                .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
+                                {
+                                    SenderType = "Customer",
+                                    SenderId = customerProfile.Id,
+                                    Content = newMessage.Content,
+                                    Timestamp = newMessage.Timestamp
+                                });
+                        }
                     }
                 }
             }

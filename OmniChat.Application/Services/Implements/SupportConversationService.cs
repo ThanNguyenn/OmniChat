@@ -231,18 +231,52 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<SupportConversationDetailResponse> CreateNewSupportConversationAsync(CreateSupportConversationRequest request)
         {
-            return await _unitOfWork.ProcessInTransactionAsync(async () =>
-            {
+           
                 var repo = _unitOfWork.GetRepository<SupportConversation>();
 
                 var enity = _mapper.Map<SupportConversation>(request);
 
                 await repo.InsertAsync(enity);
 
+                await _unitOfWork.CommitAsync();
+
                 return _mapper.Map<SupportConversationDetailResponse>(enity);
-            });
+
         }
 
-        
+        public async Task<SupportConversation> GetSupportConversationHavePendingByCustomerIdAsync(Guid customerId, Guid providerId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+            return await repo.SingleOrDefaultAsync(predicate:
+                epc => epc.ActiveCustomerId == customerId
+                    && epc.ProvidersId == providerId
+                    && epc.Status == ConversationStatus.Pending);
+        }
+
+        public async Task<SupportConversation> AsignForSupportConversationByIdAsync(Guid supportConversationId, Guid staffAsignId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var conversation = await repo.SingleOrDefaultAsync(
+                predicate: x => x.Id == supportConversationId
+            );
+
+            if (conversation == null)
+                throw new BusinessException("SupportConversation not found");
+
+            if (conversation.Status == ConversationStatus.Complete)
+                throw new BusinessException("Cannot assign completed conversation");
+
+           if(conversation.ActiveStaffId == null)
+            {
+                // Assign staff when no have staff support
+                conversation.ActiveStaffId = staffAsignId;
+            }
+
+            await _unitOfWork.CommitAsync();
+
+            return conversation;
+        }
     }
 }

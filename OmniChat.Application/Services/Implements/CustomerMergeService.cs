@@ -59,6 +59,14 @@ namespace OmniChat.Application.Services.Implements
                 target.ZaloSenderId ??= source.ZaloSenderId;
                 target.InstagramSenderId ??= source.InstagramSenderId;
 
+                //Merge Profile Fields
+                target.CustomerName = MergeField(target.CustomerName, source.CustomerName);
+                target.Email = MergeField(target.Email, source.Email);
+                target.PhoneNumber = MergeField(target.PhoneNumber, source.PhoneNumber);
+                target.Address = MergeField(target.Address, source.Address);
+                target.AvatarUrl = MergeField(target.AvatarUrl, source.AvatarUrl);
+
+                //  Re-assign FK Data 
                 await _customerMessageService
                     .UpdateCustomerMessageAfterMergeAsync(source, target);
 
@@ -76,6 +84,14 @@ namespace OmniChat.Application.Services.Implements
 
                 return response;
             });
+        }
+
+        private string? MergeField(string? targetValue, string? sourceValue)
+        {
+            if (string.IsNullOrWhiteSpace(targetValue))
+                return sourceValue;
+
+            return targetValue;
         }
     }
 }

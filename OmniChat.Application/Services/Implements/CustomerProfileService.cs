@@ -28,30 +28,25 @@ namespace OmniChat.Application.Services.Implements
         {
             _hubContext = hubContext;
         }
-        public async Task<CustomerProfile> CreateCustomerProfileAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
+
+        public async Task<CustomerProfile> CreateCustomerProfileAsync(CreateCustomerProfileRequest request)
         {
-           
-                return await _unitOfWork.ProcessInTransactionAsync(async () =>
-                {
-                    var repo = _unitOfWork.GetRepository<CustomerProfile>();
+            var existedProfile = await GetCustomerProfileBySenderAsync(
+                request.ZaloSenderId
+                ?? request.FacebookSenderId
+                ?? request.InstagramSenderId
+            );
 
-                    var existedProfile = await repo.SingleOrDefaultAsync(
-                        predicate: x =>
-                            x.FacebookSenderId == createCustomerProfileRequest.FacebookSenderId &&
-                            x.InstagramSenderId == createCustomerProfileRequest.InstagramSenderId &&
-                            x.ZaloSenderId == createCustomerProfileRequest.ZaloSenderId
-                    );
+            if (existedProfile != null)
+                return existedProfile;
 
-                    if (existedProfile != null)
-                        return existedProfile;
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+            var entity = _mapper.Map<CustomerProfile>(request);
 
-                    var entity = _mapper.Map<CustomerProfile>(createCustomerProfileRequest);
+            await repo.InsertAsync(entity);
+            await _unitOfWork.CommitAsync();
 
-                    await repo.InsertAsync(entity);
-
-                    return entity;
-                });
-           
+            return entity;
         }
 
         public async Task<PagingResponse<GetCustomerProfileResponse>> GetCustomerProfilesPagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
