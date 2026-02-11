@@ -87,5 +87,11 @@ namespace OmniChat.Application.Services.Implements
                 throw;
             }
         }
+
+        public async Task<Provider> GetProviderByIdAsync(Guid providerId)
+        {
+            var repo = _unitOfWork.GetRepository<Provider>();
+            return await repo.SingleOrDefaultAsync(predicate: x => x.Id == providerId);
+        }
     }
 }

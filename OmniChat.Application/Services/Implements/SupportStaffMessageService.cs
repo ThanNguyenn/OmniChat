@@ -33,9 +33,10 @@ namespace OmniChat.Application.Services.Implements
         private readonly IZaloOAuthService _zaloOAuthService;
         private readonly ICustomerProfileService _customerProfileService;
         private readonly ISupportConversationService _supportConversationService;
+        private readonly IProviderService _providerService;
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration,IHubContext<SupportConversationHub> hubContext) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration,IHubContext<SupportConversationHub> hubContext, IProviderService providerService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _httpClient = httpClient;
             _zaloOAuthService = zaloOAuthService;
@@ -43,6 +44,7 @@ namespace OmniChat.Application.Services.Implements
             _supportConversationService = supportConversationService;
             _configuration = configuration;
             _hubContext = hubContext;
+            _providerService = providerService;
         }
 
         public async Task<bool> SendZaloMessageAsync(CreateSupportStaffMessageRequest newSupportMess)
@@ -132,7 +134,9 @@ namespace OmniChat.Application.Services.Implements
                  );
                 throw new Exception(result);
             }
-                
+
+            var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
+
 
             // update staff message status pending -> send
 
@@ -143,6 +147,9 @@ namespace OmniChat.Application.Services.Implements
                 newStaffSupportMes.Id
             );
 
+            existConversation.UpdateDate = DateTime.UtcNow;
+            _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
+
             // Update Sidebar for Staff via SignalR (GROUP-BASED)
             await _hubContext.Clients
                 .User(existConversation.ActiveStaffId.ToString())
@@ -151,7 +158,7 @@ namespace OmniChat.Application.Services.Implements
                     ConversationId = existConversation.Id,
                     CustomerName = existConversation.CustomerName,
                     avartarUrl = existConversation.AvatarUrl,
-                    providerName = existConversation.Providers.ProviderName,
+                    providerName = provider.ProviderName,
                     LastMessage = newStaffSupportMes.Content,
                     MessageUpdateDate = existConversation.UpdateDate
                 });
@@ -233,6 +240,8 @@ namespace OmniChat.Application.Services.Implements
                 existConversation.UpdateDate = DateTime.UtcNow;
                 _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
+                var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
+
                 // Update Sidebar for Staff via SignalR (GROUP-BASED)
                 await _hubContext.Clients
                     .User(existConversation.ActiveStaffId.ToString())
@@ -241,7 +250,7 @@ namespace OmniChat.Application.Services.Implements
                         ConversationId = existConversation.Id,
                         CustomerName = existConversation.CustomerName,
                         avartarUrl = existConversation.AvatarUrl,
-                        providerName = existConversation.Providers.ProviderName,
+                        providerName = provider.ProviderName,
                         LastMessage = newStaffSupportMes.Content,
                         MessageUpdateDate = existConversation.UpdateDate
                     });
@@ -329,6 +338,7 @@ namespace OmniChat.Application.Services.Implements
                 existConversation.UpdateDate = DateTime.UtcNow;
                 _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
+                var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
                 // Update Sidebar for Staff via SignalR
                 await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
                 .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
@@ -336,7 +346,7 @@ namespace OmniChat.Application.Services.Implements
                     ConversationId = existConversation.Id,
                     CustomerName = existConversation.CustomerName,
                     avartarUrl = existConversation.AvatarUrl,
-                    providerName = existConversation.Providers.ProviderName,
+                    providerName = provider.ProviderName,
                     LastMessage = newStaffSupportMes.Content,
                     MessageUpdateDate = existConversation.UpdateDate
                 });

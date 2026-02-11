@@ -17,5 +17,7 @@ namespace OmniChat.Application.Services.Interface
         public Task<PagingResponse<GetAllProviderResponse>> GetAllProviderAsync(int pageNumber = 1, int pageSize = 20, string? providerName = null);
 
         public  Task<Provider> GetProviderByNameAsync(string providerName);
+
+        public  Task<Provider> GetProviderByIdAsync(Guid providerId);
     }
 }
