@@ -21,6 +21,11 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task<CustomerProfile> CreateCustomerProfileAsync(CreateCustomerProfileRequest request);
 
-        public  Task<GetCustomerProfileResponse> MergeAndDeleteAsync(Guid sourceId, Guid targetId);
+        public  Task<GetCustomerProfileResponse> GetCustomerProfileByEmailOrPhoneAsync(string keyword);
+
+        public  Task<GetCustomerProfileResponse> GetCustomerProfileByCustomerIdAsync(Guid CustomerId);
+
+        public  Task<GetCustomerProfileResponse> UpdateCustomerProfileByIdAsync(Guid customerId, UpdateCustomerProfileRequest newInfor);
+
     }
 }

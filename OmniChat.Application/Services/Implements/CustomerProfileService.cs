@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
+using OmniChat.Infrastructure.Dtos.Requests.SupportConversation;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerProfile;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
@@ -20,17 +23,11 @@ namespace OmniChat.Application.Services.Implements
 {
     public class CustomerProfileService : BaseService<CustomerProfileService>, ICustomerProfileService
     {
-        private readonly ICustomerMessageService _customerMessageService;
-
-        private readonly SupportConversationService _supportConversationService;
-
-        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerMessageService customerMessageService, SupportConversationService supportConversationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IHubContext<SupportConversationHub> _hubContext;
+        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IHubContext<SupportConversationHub> hubContext) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
-            _customerMessageService = customerMessageService;
-            _supportConversationService = supportConversationService;
+            _hubContext = hubContext;
         }
-
-
         public async Task<CustomerProfile> CreateCustomerProfileAsync(CreateCustomerProfileRequest createCustomerProfileRequest)
         {
            
@@ -86,17 +83,24 @@ namespace OmniChat.Application.Services.Implements
             
                 var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                return await repo.SingleOrDefaultAsync(predicate: x => 
-                x.FacebookSenderId == senderId 
-                || x.ZaloSenderId == senderId ||
-                x.InstagramSenderId == senderId);
+                return await repo.SingleOrDefaultAsync(predicate: cp =>
+                cp.FacebookSenderId == senderId 
+                || cp.ZaloSenderId == senderId ||
+                cp.InstagramSenderId == senderId,
+                include: cp => cp.Include(o => o.Orders)
+                .Include(p => p.Payments)
+                );
         }
 
         public async Task<CustomerProfile> GetCustomerProfileByIdAsync(Guid customerProfileId)
         {
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-            var existCustomerProfile = await repo.SingleOrDefaultAsync(predicate: x => x.Id == customerProfileId);
+            var existCustomerProfile = await repo.SingleOrDefaultAsync(
+                predicate: x => x.Id == customerProfileId,
+                 include: cp => cp.Include(o => o.Orders)
+                .Include(p => p.Payments)
+                );
 
             if(existCustomerProfile == null)
                 throw new NotFoundException("No CustomerProfile foundd");
@@ -104,12 +108,18 @@ namespace OmniChat.Application.Services.Implements
             return existCustomerProfile;
         }
 
-        public async Task<GetCustomerProfileResponse> GetCustomerProfileByEmailOrPhoneAsync(string email, string phone)
+        public async Task<GetCustomerProfileResponse> GetCustomerProfileByEmailOrPhoneAsync(string keyword)
         {
+            if (string.IsNullOrWhiteSpace(keyword))
+                throw new BadRequestException("Email or Phone is required");
+
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
             var existCustomProfile = await repo.SingleOrDefaultAsync(
-                predicate: x => x.Email.Equals(email) || x.PhoneNumber.Equals(phone));
+                predicate: x => x.Email.Equals(keyword) || x.PhoneNumber.Equals(keyword),
+                 include: cp => cp.Include(o => o.Orders)
+                .Include(p => p.Payments)
+                );
 
             if (existCustomProfile == null)
                 throw new NotFoundException("No CustomerProfile Found");
@@ -118,60 +128,56 @@ namespace OmniChat.Application.Services.Implements
             return result;
         }
 
-        public async Task<GetCustomerProfileResponse> MergeAndDeleteAsync(Guid sourceId, Guid targetId)
+        public async Task<GetCustomerProfileResponse> GetCustomerProfileByCustomerIdAsync(Guid CustomerId)
         {
-            return await _unitOfWork.ProcessInTransactionAsync(async () =>
-            {
-                var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
-                //var messageRepo = _unitOfWork.GetRepository<CustomerMessage>();
-                //var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
+            if(CustomerId == Guid.Empty)
+                throw new BadRequestException("CustomerId is required");
 
-                var source = await GetCustomerProfileByIdAsync(sourceId);
-                var target = await GetCustomerProfileByIdAsync(targetId);
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                if (source == null || target == null)
-                    throw new BusinessException("Customer not found");
+            var existCustomProfile = await repo.SingleOrDefaultAsync(
+               predicate: x => x.Id == CustomerId,
+                include: cp => cp.Include(o => o.Orders)
+               .Include(p => p.Payments)
+               );
 
-                if (source.Id == target.Id)
-                    throw new BusinessException("Cannot merge same customer");
-
-                //  Merge senderId
-                target.FacebookSenderId ??= source.FacebookSenderId;
-                target.ZaloSenderId ??= source.ZaloSenderId;
-                target.InstagramSenderId ??= source.InstagramSenderId;
-
-                // Update CustomerMessage
-                // var messages = await messageRepo
-                //.GetQueryable()
-                //.Where(x => x.CustomerId == source.Id)
-                //.ToListAsync();
-
-                // foreach (var msg in messages)
-                // {
-                //     msg.CustomerId = target.Id;
-                // }
-
-                await _customerMessageService.UpdateCustomerMessageAfterMergeAsync(source, target);
-
-                //  Update SupportConversation
-                //    var conversations = await conversationRepo
-                //.GetQueryable()
-                //.Where(x => x.ActiveCustomerId == source.Id)
-                //.ToListAsync();
-
-                //foreach (var conv in conversations)
-                //{
-                //    conv.ActiveCustomerId = target.Id;
-                //}
-                await _supportConversationService.UpdateConversationAfterMergeAsync(source, target);
-
-                // Delete source customer profile
-                await customerRepo.DeleteAsync(x => x.Id == source.Id);
-
-                return _mapper.Map<GetCustomerProfileResponse>(target);
-
-            });
+            var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile);
+            return result;
         }
 
+        public async Task<GetCustomerProfileResponse> UpdateCustomerProfileByIdAsync(Guid customerId,UpdateCustomerProfileRequest newInfor)
+        {
+            if (customerId == Guid.Empty)
+                throw new BadRequestException("CustomerId is required");
+
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+                var customer = await repo.SingleOrDefaultAsync(predicate: x => x.Id == customerId);
+
+                if (customer == null)
+                    throw new NotFoundException("Customer not found");
+
+            
+                customer.CustomerName = newInfor.CustomerName ?? customer.CustomerName;
+                customer.Address = newInfor.Address ?? customer.Address;
+                customer.AvatarUrl = newInfor.AvatarUrl ?? customer.AvatarUrl;
+                customer.Email = newInfor.Email ?? customer.Email;
+                customer.PhoneNumber = newInfor.PhoneNumber ?? customer.PhoneNumber;
+
+                 repo.Update(customer);
+
+                var response = _mapper.Map<GetCustomerProfileResponse>(customer);
+
+                
+                await _hubContext.Clients.All.SendAsync(
+                    "CustomerProfileUpdated",
+                    response
+                );
+
+                return response;
+            });
+        }
     }
 }

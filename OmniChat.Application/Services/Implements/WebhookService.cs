@@ -12,8 +12,10 @@ using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Requests.Provider;
+using OmniChat.Infrastructure.Dtos.Requests.SupportConversation;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Exceptions;
+using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
@@ -420,8 +422,21 @@ namespace OmniChat.Application.Services.Implements
                         );
                     }
 
-                    Guid ConversationTempId =
-                        Guid.Parse("cba10005-e594-47e2-a9e4-4a11d82167ce");
+                    Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
+
+                    var newSupportConversation = new CreateSupportConversationRequest
+                    {
+                         ActiveCustomerId = customerProfile.Id,
+                          ActiveStaffId =  StaffId,
+                           AvatarUrl = customerProfile.AvatarUrl,
+                             CustomerName = customerProfile.CustomerName,
+                              IsDistributed = true,
+                               ProvidersId = provider.Id,
+                                Status = ConversationStatus.Pending,
+
+                    };
+
+                    var newComversation =  await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
 
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
@@ -431,7 +446,7 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = messaging.timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = ConversationTempId,
+                                ConversationId = newComversation.Id,
 
                             }
                         );
@@ -444,7 +459,7 @@ namespace OmniChat.Application.Services.Implements
                         );
                         result = true;
                         // After get new customer message Update Supportconversation UpdateDate -> now
-                        var existconversation =  await _supportConversationService.UpdateSupportConversationUpdateDateAsync(ConversationTempId);
+                        var existconversation =  await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newComversation.Id);
 
                         // Add SignalR Realtime for sidebar staff 
                         await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())
@@ -749,9 +764,20 @@ namespace OmniChat.Application.Services.Implements
                             );
                     }
 
-                    Guid conversationTempId =
-                        Guid.Parse("eee885ee-eccd-4423-914b-a0823d325368");
+                    Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
+                    var newSupportConversation = new CreateSupportConversationRequest
+                    {
+                        ActiveCustomerId = customerProfile.Id,
+                        ActiveStaffId = StaffId,
+                        AvatarUrl = customerProfile.AvatarUrl,
+                        CustomerName = customerProfile.CustomerName,
+                        IsDistributed = true,
+                        ProvidersId = provider.Id,
+                        Status = ConversationStatus.Pending,
+
+                    };
+                    var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
 
                     var newMessage =
                         await _customerMessageService.CreateCustomerMessageAsync(
@@ -761,7 +787,7 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = msg.Timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = conversationTempId,
+                                ConversationId = newComversation.Id,
                             }
                         );
 
@@ -774,7 +800,7 @@ namespace OmniChat.Application.Services.Implements
                         result = true;
 
                         // After get new customer message Update Supportconversation UpdateDate -> now
-                        var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationTempId);
+                        var existconversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newComversation.Id);
 
                         // Add SignalR Realtime for sidebar staff 
                         await _hubContext.Clients.User(existconversation.ActiveStaffId.ToString())

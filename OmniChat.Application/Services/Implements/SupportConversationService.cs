@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.SupportConversation;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Exceptions;
@@ -56,31 +58,6 @@ namespace OmniChat.Application.Services.Implements
            
         }
 
-        public async Task<PagingResponse<GetAllSupportConversationResponse>> SupportConversationByCustomerNamePagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
-        {
-            var repo = _unitOfWork.GetRepository<SupportConversation>();
-            return await repo.GetPagingListAsync(
-                selector: x => new GetAllSupportConversationResponse
-                {
-                    Id = x.Id,
-                    CreatedDate = x.CreatedDate,
-                    Status = x.Status,
-                    IsDistributed = x.IsDistributed,
-                    CustomerName = x.CustomerName,
-                    AvartarUrl = x.AvatarUrl,
-                    ActiveStaffId = x.ActiveStaffId,
-                    ActiveCustomerId = x.ActiveCustomerId,
-                    ProvidersId = x.ProvidersId,
-                },
-                predicate: string.IsNullOrWhiteSpace(customerName)
-                    ? null
-                    : x => x.CustomerName.Contains(customerName),
-                orderBy: q => q.OrderByDescending(x => x.CreatedDate),
-                page: pageNumber,
-                size: pageSize
-            );
-        }
-
         // Staff Pending SupportConversation side bar
         public async Task<IEnumerable<StaffConversationSideBarResponse>>GetStaffConversationSideBarAsync(Guid staffId, string providerName)
         {
@@ -114,6 +91,75 @@ namespace OmniChat.Application.Services.Implements
                 }
             );
             return conversations;
+        }
+
+        public async Task<List<SupportConversationDetailResponse>> GetCustomerConversationHistoryAsync(Guid customerId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var conversations = await repo.GetListAsync(predicate: sc => sc.ActiveCustomerId == customerId,
+
+                include: source => source
+                .Include(c => c.CustomerMessages)
+                .Include(c => c.SupportStaffMessages)
+                );
+
+            if (conversations == null)
+                throw new NotFoundException("No support conversation found");
+
+      
+            var result = conversations.Select( conversation =>
+            {
+                // sum all message 
+                var allMessages = new List<SupportConversationMessagesResponse>();
+
+                if (conversation.CustomerMessages != null)
+                {
+                    allMessages.AddRange(conversation.CustomerMessages.Select(m =>
+                    new SupportConversationMessagesResponse
+                    {
+                        SenderType = "Customer",
+                        SenderId = m.CustomerId,
+                        Content = m.Content,
+                        Timestamp = m.Timestamp
+                    }
+                    ));
+                }
+
+                if (conversation.SupportStaffMessages != null)
+                {
+                    allMessages.AddRange(conversation.SupportStaffMessages.Select(m =>
+                        new SupportConversationMessagesResponse
+                        {
+                            SenderType = "Staff",
+                            SenderId = m.StaffId,
+                            Content = m.Content,
+                            Timestamp = m.Timestamp
+                        }));
+                }
+                allMessages = allMessages
+                 .OrderBy(m => m.Timestamp)
+                 .ToList();
+
+                return new SupportConversationDetailResponse
+                {
+                    Id = conversation.Id,
+                    CreatedDate = conversation.CreatedDate,
+                    Status = conversation.Status,
+                    IsDistributed = conversation.IsDistributed,
+                    CustomerName = conversation.CustomerName,
+                    AvartarUrl = conversation.AvatarUrl,
+                    ActiveStaffId = conversation.ActiveStaffId,
+                    ActiveCustomerId = conversation.ActiveCustomerId,
+                    ProvidersId = conversation.ProvidersId,
+                    Messages = allMessages
+                };
+
+            })
+            .OrderByDescending(c => c.Messages.LastOrDefault()?.Timestamp ?? 0)
+            .ToList();
+
+            return result;
         }
 
         // conversattion detail
@@ -181,5 +227,22 @@ namespace OmniChat.Application.Services.Implements
                 conv.ActiveCustomerId = target.Id;
             }
         }
+
+
+        public async Task<SupportConversationDetailResponse> CreateNewSupportConversationAsync(CreateSupportConversationRequest request)
+        {
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+                var enity = _mapper.Map<SupportConversation>(request);
+
+                await repo.InsertAsync(enity);
+
+                return _mapper.Map<SupportConversationDetailResponse>(enity);
+            });
+        }
+
+        
     }
 }

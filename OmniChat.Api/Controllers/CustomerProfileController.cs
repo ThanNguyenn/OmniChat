@@ -48,30 +48,48 @@ namespace OmniChat.Api.Controllers
             });
         }
 
-        [HttpPost(ApiEndPointConstant.CustomerProfileEndPoint.MergeAndDeleteCustomerProfile)]
-        [ProducesResponseType(
-                typeof(ApiResponse<GetCustomerProfileResponse>),
-                StatusCodes.Status200OK)]
-                    [SwaggerOperation(
-                Summary = "Gộp và xóa Customer Profile",
-                Description =
-                    "Gộp profile mới tạo (Facebook/Instagram) vào profile đã tồn tại, " +
-                    "update message & conversation, sau đó xóa profile nguồn"
-            )]
-        public async Task<IActionResult> MergeAndDeleteCustomerProfileAsync(
-    [FromBody] MergeCustomerProfileRequest request)
+        [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetCustomerByEmailOrPhone)]
+        [ProducesResponseType(typeof(ApiResponse<GetCustomerProfileResponse>),StatusCodes.Status200OK)]
+        [SwaggerOperation(
+           Summary = "Tìm Customer theo Email hoặc Phone",
+           Description = "Dùng để tìm customer đã tồn tại trước khi thực hiện merge"
+         )]
+        public async Task<IActionResult> GetCustomerByEmailOrPhoneAsync(
+       [FromQuery] string keyword)
         {
             var result =
-                await _customerProfileService.MergeAndDeleteAsync(
-                    request.SourceCustomerId,
-                    request.TargetCustomerId
-                );
+                await _customerProfileService
+                    .GetCustomerProfileByEmailOrPhoneAsync(keyword);
 
             return Ok(new ApiResponse<GetCustomerProfileResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Merge customer profile successfully",
                 IsSuccess = true,
+                Message = "Get customer profile successfully",
+                Data = result
+            });
+        }
+
+        [HttpPut(ApiEndPointConstant.CustomerProfileEndPoint.UpdateCustomerProfile)]
+        [ProducesResponseType(
+        typeof(ApiResponse<GetCustomerProfileResponse>),
+        StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Cập nhật thông tin Customer",
+            Description = "Cập nhật thông tin Customer theo CustomerId"
+        )]
+        public async Task<IActionResult> UpdateCustomerProfileAsync(
+        [FromRoute] Guid customerId,
+        [FromBody] UpdateCustomerProfileRequest request)
+        {
+            var result = await _customerProfileService
+                .UpdateCustomerProfileByIdAsync(customerId, request);
+
+            return Ok(new ApiResponse<GetCustomerProfileResponse>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                IsSuccess = true,
+                Message = "Customer profile updated successfully",
                 Data = result
             });
         }
