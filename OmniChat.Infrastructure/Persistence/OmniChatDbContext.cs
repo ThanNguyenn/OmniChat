@@ -575,9 +575,10 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<FeedBack>()
                 .HasIndex(fb => new { fb.StaffId, fb.Rating }); // index scan feedback by staff and rating faster
 
+            // one customer in one provider only have one Pending supportconversation, if different provider still ok
             modelBuilder.Entity<SupportConversation>()
             .HasIndex(sc => new { sc.ActiveCustomerId, sc.ProvidersId })
-            .HasFilter("\"Status\" = 0") // 0 = Pending
+            .HasFilter("\"Status\" = 'Pending'") // status = Pending 
             .IsUnique();
 
             // ==== SupportConversation - FeedBack ( one to one ) ====
