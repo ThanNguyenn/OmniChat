@@ -34,20 +34,23 @@ namespace OmniChat.Api.Controllers
             return Ok(result);
         }
 
-        ///// Send message to Zalo
-        //[HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendZaloMessage)]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //[SwaggerOperation(
-        //    Summary = "Gửi tin nhắn Zalo",
-        //    Description = "Gửi tin nhắn của staff đến Zalo"
-        //    )]
-        //public async Task<IActionResult> SendZaloMessage(
-        //    [FromBody] CreateSupportStaffMessageRequest request)
-        //{
-        //    await _supportStaffMessageService.SendZaloMessageAsync(request);
-        //    return Ok(new { message = "Message sent to Zalo successfully" });
-        //}
+        /// Send message to Zalo
+        [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendZaloMessage)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Gửi tin nhắn Zalo",
+            Description = "Gửi tin nhắn của staff đến Zalo"
+            )]
+        public async Task<IActionResult> SendZaloMessage(
+            [FromBody] CreateSupportStaffMessageRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await _supportStaffMessageService.SendZaloMessageAsync(request);
+            return Ok(new { message = "Message sent to Zalo successfully" });
+        }
 
         /// Send message to Facebook
         [HttpPost(ApiEndPointConstant.SupportStaffMessageEndPoint.SendFacebookMessage)]
