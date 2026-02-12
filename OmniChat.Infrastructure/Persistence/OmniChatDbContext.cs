@@ -195,6 +195,9 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(x => x.IsActive)
                 .HasDefaultValueSql("true");
 
+            modelBuilder.Entity<CustomerProfile>()
+                .Property(x => x.IsNewCustomer)
+                .HasDefaultValueSql("true");
             // default vaule isDelete = false
 
             modelBuilder.Entity<Keyword>()

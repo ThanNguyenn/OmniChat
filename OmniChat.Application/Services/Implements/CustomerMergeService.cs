@@ -65,6 +65,7 @@ namespace OmniChat.Application.Services.Implements
                 target.PhoneNumber = MergeField(target.PhoneNumber, source.PhoneNumber);
                 target.Address = MergeField(target.Address, source.Address);
                 target.AvatarUrl = MergeField(target.AvatarUrl, source.AvatarUrl);
+                target.IsNewCustomer = false;
 
                 //  Re-assign FK Data 
                 await _customerMessageService

@@ -160,6 +160,7 @@ namespace OmniChat.Application.Services.Implements
                 customer.AvatarUrl = newInfor.AvatarUrl ?? customer.AvatarUrl;
                 customer.Email = newInfor.Email ?? customer.Email;
                 customer.PhoneNumber = newInfor.PhoneNumber ?? customer.PhoneNumber;
+                customer.IsNewCustomer = false;
 
                  repo.Update(customer);
 

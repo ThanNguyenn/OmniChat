@@ -26,6 +26,8 @@ namespace OmniChat.Infrastructure.Models
 
         public string? InstagramSenderId { get; set; }
 
+        public bool? IsNewCustomer { get; set; }
+
         public string CreateDate { get; set; }
 
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
