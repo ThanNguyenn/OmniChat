@@ -226,19 +226,16 @@ namespace OmniChat.Application.Services.Implements
         }
 
 
-        public async Task<SupportConversationDetailResponse> CreateNewSupportConversationAsync(CreateSupportConversationRequest request)
+        public async Task<SupportConversation> CreateNewSupportConversationAsync(CreateSupportConversationRequest request)
         {
-           
-                var repo = _unitOfWork.GetRepository<SupportConversation>();
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
 
-                var enity = _mapper.Map<SupportConversation>(request);
+            var entity = _mapper.Map<SupportConversation>(request);
 
-                await repo.InsertAsync(enity);
+            await repo.InsertAsync(entity);
+            await _unitOfWork.CommitAsync();
 
-                await _unitOfWork.CommitAsync();
-
-                return _mapper.Map<SupportConversationDetailResponse>(enity);
-
+            return entity; // trả entity luôn
         }
 
         public async Task<SupportConversation> GetSupportConversationHavePendingByCustomerIdAsync(Guid customerId, Guid providerId)

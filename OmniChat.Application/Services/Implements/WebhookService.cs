@@ -67,7 +67,7 @@ namespace OmniChat.Application.Services.Implements
         {
             bool result = false;
 
-            Guid conversationId = Guid.Empty;
+            SupportConversation conversation;
 
             _logger.LogInformation(
                 "[ZALO] Webhook received | EventName={EventName} | SenderId={SenderId} | Timestamp={Timestamp}",
@@ -150,7 +150,7 @@ namespace OmniChat.Application.Services.Implements
 
             if (existConversation != null)
             {
-                conversationId = existConversation.Id;
+                conversation = existConversation;
 
             }
             else
@@ -172,7 +172,7 @@ namespace OmniChat.Application.Services.Implements
                     // dung cho truong hop 2 tin nhan gui toi cung luc 
                     var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
 
-                    conversationId = newComversation.Id;
+                    conversation = newComversation;
                 }
                 catch(DbUpdateException)
 {
@@ -184,8 +184,7 @@ namespace OmniChat.Application.Services.Implements
 
                     if (checkExistConversation == null)
                         throw;
-
-                    conversationId = checkExistConversation.Id;
+                    conversation = checkExistConversation;
                 }
             }
 
@@ -196,11 +195,9 @@ namespace OmniChat.Application.Services.Implements
                     Timestamp = zaloEvent.Timestamp,
                     KeywordActive = false,
                     CustomerId = customerProfile.Id,
-                    ConversationId = conversationId,
+                    ConversationId = conversation.Id,
                 }
             );
-
-            var conversation = await _supportConversationService.GetSupportConversationByIdAsync(conversationId);
 
             if (conversation.ActiveStaffId == null)
             {
@@ -265,7 +262,8 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
         {
-           
+            SupportConversation conversation;
+
 
             _logger.LogInformation("[FACEBOOK] Webhook received");
 
@@ -289,8 +287,8 @@ namespace OmniChat.Application.Services.Implements
 
             foreach (var entry in faceBookWebhookPayload.entry)
             {
-                var conversationId = Guid.Empty;
 
+              
                 if (entry.messaging == null)
                 {
                     _logger.LogWarning("[FACEBOOK] Entry has no messages");
@@ -352,7 +350,7 @@ namespace OmniChat.Application.Services.Implements
 
                     if (existConversation != null)
                     {
-                        conversationId = existConversation.Id;
+                        conversation = existConversation;
 
                     }
                     else
@@ -374,7 +372,7 @@ namespace OmniChat.Application.Services.Implements
                             // dung cho truong hop 2 tin nhan gui toi cung luc 
                             var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
 
-                            conversationId = newComversation.Id;
+                            conversation = newComversation;
                         }
                         catch (DbUpdateException)
                         {
@@ -387,7 +385,7 @@ namespace OmniChat.Application.Services.Implements
                             if (checkExistConversation == null)
                                 throw;
 
-                            conversationId = checkExistConversation.Id;
+                            conversation = checkExistConversation;
                         }
                     
                     }
@@ -400,11 +398,11 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = messaging.timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = conversationId,
+                                ConversationId = conversation.Id,
 
                             }
                         );
-                    var conversation = await _supportConversationService.GetSupportConversationByIdAsync(conversationId);
+              
                    
                     if (conversation.ActiveStaffId == null)
                     {
@@ -518,6 +516,8 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload)
         {
+            SupportConversation conversation;
+
             const string ourSenderId = "17841478357005004"; // if message is our past continue next message
             _logger.LogInformation("[INSTAGRAM] Webhook received");
 
@@ -540,7 +540,6 @@ namespace OmniChat.Application.Services.Implements
 
             foreach (var entry in payload.entry)
             {
-                var conversationId = Guid.Empty;
 
                 if (entry.messaging == null || !entry.messaging.Any())
                 {
@@ -616,7 +615,7 @@ namespace OmniChat.Application.Services.Implements
 
                     if (existConversation != null)
                     {
-                        conversationId = existConversation.Id;
+                        conversation = existConversation;
 
                     }
                     else
@@ -638,7 +637,7 @@ namespace OmniChat.Application.Services.Implements
                             // dung cho truong hop 2 tin nhan gui toi cung luc 
                             var newComversation = await _supportConversationService.CreateNewSupportConversationAsync(newSupportConversation);
 
-                            conversationId = newComversation.Id;
+                            conversation = newComversation;
                         }
                         catch (DbUpdateException)
                         {
@@ -651,7 +650,7 @@ namespace OmniChat.Application.Services.Implements
                             if (checkExistConversation == null)
                                 throw;
 
-                            conversationId = checkExistConversation.Id;
+                            conversation = checkExistConversation;
                         }
 
                       
@@ -665,11 +664,10 @@ namespace OmniChat.Application.Services.Implements
                                 Timestamp = msg.Timestamp,
                                 KeywordActive = false,
                                 CustomerId = customerProfile.Id,
-                                ConversationId = conversationId,
+                                ConversationId = conversation.Id,
                             }
                         );
 
-                    var conversation = await _supportConversationService.GetSupportConversationByIdAsync(conversationId);
 
                     if (conversation.ActiveStaffId == null)
                     {

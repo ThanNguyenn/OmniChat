@@ -23,8 +23,7 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task UpdateConversationAfterMergeAsync(CustomerProfile source, CustomerProfile target);
 
-        public  Task<SupportConversationDetailResponse> CreateNewSupportConversationAsync(CreateSupportConversationRequest request);
-
+        public Task<SupportConversation> CreateNewSupportConversationAsync(CreateSupportConversationRequest request);
         public  Task<List<SupportConversationDetailResponse>> GetCustomerConversationHistoryAsync(Guid customerId);
 
         public Task<SupportConversation> GetSupportConversationHavePendingByCustomerIdAsync(Guid customerId, Guid providerId);
