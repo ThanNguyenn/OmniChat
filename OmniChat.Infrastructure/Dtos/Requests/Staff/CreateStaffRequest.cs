@@ -15,7 +15,5 @@ public class CreateStaffRequest
 
     public string Phone { get; set; }
 
-    public Guid DepartmentId { get; set; }
-
     public Guid RoleId { get; set; }
 }
