@@ -118,5 +118,16 @@ public class ApiEndPointConstant
         public const string GetAll = "get";
     }
 
+    public static class Product
+    {
+        public const string Base = ApiV1 + "/products";
+        public const string Create = "create";  
+        public const string Update = "update/{id}";
+        public const string Delete = "delete/{id}";
+        public const string GetAll = "get";
+        public const string GetById = "get/{id}";
+        public const string AddStock = "add-stock";
+    }
+
 
 }
