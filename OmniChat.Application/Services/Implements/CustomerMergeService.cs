@@ -77,6 +77,8 @@ namespace OmniChat.Application.Services.Implements
                 await customerRepo.DeleteAsync(x => x.Id == source.Id);
 
                 var response = _mapper.Map<GetCustomerProfileResponse>(target);
+    
+                 customerRepo.Update(target);
 
                 await _hubContext.Clients.All.SendAsync(
                     "SidebarCustomerUpdated",

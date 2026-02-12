@@ -274,6 +274,8 @@ namespace OmniChat.Application.Services.Implements
                 conversation.ActiveStaffId = staffAsignId;
             }
 
+            repo.Update(conversation);
+
             await _unitOfWork.CommitAsync();
 
             return conversation;
