@@ -41,20 +41,17 @@ namespace OmniChat.Application.Services.Implements
             return exitSupportConversation;
         }
 
-        public async Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(Guid Id)
+        public async Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(SupportConversation conversation)
         {
-            
-                // call repo
-                var repo = _unitOfWork.GetRepository<SupportConversation>();
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
 
-                // check exist 
-                var existingSupportConversation = await GetSupportConversationByIdAsync(Id);
-                if (existingSupportConversation == null)
-                    throw new NotFoundException("No SupportConversation Found");
+            conversation.UpdateDate = DateTime.UtcNow;
 
-                existingSupportConversation.UpdateDate = DateTime.UtcNow;
-                repo.Update(existingSupportConversation);
-                return existingSupportConversation;
+                repo.Update(conversation);
+
+            await _unitOfWork.CommitAsync();
+
+            return conversation;
            
         }
 

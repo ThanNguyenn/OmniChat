@@ -223,7 +223,7 @@ namespace OmniChat.Application.Services.Implements
                 );
                 result = true;
                 // After get new customer message Update Supportconversation UpdateDate -> now
-                var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversation.Id);
+                var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversation);
 
                 if (updatedConversation.ActiveStaffId != null)
                 {
@@ -428,7 +428,7 @@ namespace OmniChat.Application.Services.Implements
                         );
                         result = true;
                         // After get new customer message Update Supportconversation UpdateDate -> now
-                        var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationId);
+                        var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversation);
 
                         if (updatedConversation.ActiveStaffId != null)
                         {
@@ -695,7 +695,7 @@ namespace OmniChat.Application.Services.Implements
                         result = true;
 
                         // After get new customer message Update Supportconversation UpdateDate -> now
-                        var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationId);
+                        var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversation);
 
                         if (updatedConversation.ActiveStaffId != null)
                         {
