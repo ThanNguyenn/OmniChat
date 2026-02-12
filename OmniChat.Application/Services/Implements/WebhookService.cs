@@ -208,7 +208,9 @@ namespace OmniChat.Application.Services.Implements
 
                 Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-                var AsignConversationSupport = await _supportConversationService.AsignForSupportConversationByIdAsync(conversationId, StaffId);
+            var check =   await _supportConversationService.AsignForSupportConversationByIdAsync(conversation.Id, StaffId);
+
+                _logger.LogInformation("DEBUG STAFF AFTER ASSIGN: {StaffId}", check.ActiveStaffId);
             }
 
             if (newMessage != null)
@@ -219,7 +221,7 @@ namespace OmniChat.Application.Services.Implements
                 );
                 result = true;
                 // After get new customer message Update Supportconversation UpdateDate -> now
-                var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversationId);
+                var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversation.Id);
 
                 if (updatedConversation.ActiveStaffId != null)
                 {
