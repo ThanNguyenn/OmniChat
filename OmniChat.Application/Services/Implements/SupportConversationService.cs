@@ -254,16 +254,9 @@ namespace OmniChat.Application.Services.Implements
                     && epc.Status == ConversationStatus.Pending);
         }
 
-        public async Task<SupportConversation> AsignForSupportConversationByIdAsync(Guid supportConversationId, Guid staffAsignId)
+        public async Task<SupportConversation> AsignForSupportConversationByIdAsync(SupportConversation conversation, Guid staffAsignId)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
-
-            var conversation = await repo.SingleOrDefaultAsync(
-                predicate: x => x.Id == supportConversationId
-            );
-
-            if (conversation == null)
-                throw new BusinessException("SupportConversation not found");
 
             if (conversation.Status == ConversationStatus.Complete)
                 throw new BusinessException("Cannot assign completed conversation");

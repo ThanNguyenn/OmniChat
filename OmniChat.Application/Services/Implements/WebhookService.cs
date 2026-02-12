@@ -208,9 +208,11 @@ namespace OmniChat.Application.Services.Implements
 
                 Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-            var check =   await _supportConversationService.AsignForSupportConversationByIdAsync(conversation.Id, StaffId);
+               conversation =  await _supportConversationService.AsignForSupportConversationByIdAsync(conversation, StaffId);
 
-                _logger.LogInformation("DEBUG STAFF AFTER ASSIGN: {StaffId}", check.ActiveStaffId);
+                _logger.LogInformation(
+                  "[ZALO] Check Actvice Staff | ActiveStaff={ActiveStaffId}",
+                  conversation.ActiveStaffId);
             }
 
             if (newMessage != null)
@@ -411,7 +413,11 @@ namespace OmniChat.Application.Services.Implements
 
                         Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-                        var AsignConversationSupport = await _supportConversationService.AsignForSupportConversationByIdAsync(conversationId, StaffId);
+                        conversation = await _supportConversationService.AsignForSupportConversationByIdAsync(conversation, StaffId);
+
+                        _logger.LogInformation(
+                          "[Facebook] Check Actvice Staff | ActiveStaff={ActiveStaffId}",
+                          conversation.ActiveStaffId);
                     }
 
                     if (newMessage != null)
@@ -672,7 +678,11 @@ namespace OmniChat.Application.Services.Implements
 
                         Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-                        var AsignConversationSupport = await _supportConversationService.AsignForSupportConversationByIdAsync(conversationId, StaffId);
+                        conversation = await _supportConversationService.AsignForSupportConversationByIdAsync(conversation, StaffId);
+
+                        _logger.LogInformation(
+                          "[Facebook] Check Actvice Staff | ActiveStaff={ActiveStaffId}",
+                          conversation.ActiveStaffId);
                     }
 
 
