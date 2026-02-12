@@ -121,6 +121,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IStaffService, StaffService>();
     builder.Services.AddScoped<ICustomerMergeService,CustomerMergeService>();
     builder.Services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
+    builder.Services.AddScoped<IProductService, ProductService>();
 }
 
 void RegisterBackgroundServices()

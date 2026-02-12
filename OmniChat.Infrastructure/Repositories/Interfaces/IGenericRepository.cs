@@ -21,7 +21,7 @@ public interface IGenericRepository<T> : IDisposable where T : class
         Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
         Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null);
 
-    Task<ICollection<TResult>> GetListAsync<TResult>(
+    Task<ICollection<   TResult>> GetListAsync<TResult>(
         Expression<Func<T, TResult>> selector,
         Expression<Func<T, bool>> predicate = null,
         Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
