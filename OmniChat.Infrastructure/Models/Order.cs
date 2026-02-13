@@ -26,6 +26,8 @@ namespace OmniChat.Infrastructure.Models
 
         public string Code { get; set; }
 
+        public bool? IsDeleted { get; set; }
+
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
         public virtual ICollection<BillingItem> BillingItems { get; set; } = new List<BillingItem>();

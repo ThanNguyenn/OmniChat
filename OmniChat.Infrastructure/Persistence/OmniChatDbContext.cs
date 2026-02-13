@@ -198,9 +198,14 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<CustomerProfile>()
                 .Property(x => x.IsNewCustomer)
                 .HasDefaultValueSql("true");
+
             // default vaule isDelete = false
 
             modelBuilder.Entity<Keyword>()
+            .Property(x => x.IsDeleted)
+            .HasDefaultValueSql("false");
+
+            modelBuilder.Entity<Order>()
             .Property(x => x.IsDeleted)
             .HasDefaultValueSql("false");
 
@@ -226,8 +231,6 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(x => x.CreateDate)
             .HasColumnType("timestamp with time zone")
             .HasDefaultValueSql("now()");
-
-
             // ==== Role - Account ( one to Many ) ====
 
             modelBuilder.Entity<Role>()
