@@ -12,7 +12,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string AccessToken { get; set; }
 
-        public string AccessTokenExpiredDate { get; set; }
+        public DateTime AccessTokenExpiredDate { get; set; }
 
         public DateTime LastUpdateAt { get; set; }
 
