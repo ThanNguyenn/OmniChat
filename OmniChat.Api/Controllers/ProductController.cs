@@ -30,7 +30,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequest createProductRequest)
     {
         var result = await _productService.CreateProductAsync(createProductRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product created successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Product created successfully", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
