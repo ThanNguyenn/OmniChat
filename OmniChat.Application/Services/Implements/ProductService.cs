@@ -46,9 +46,15 @@ public class ProductService : BaseService<ProductService>, IProductService
                     : 0;
             var newCode = GenerateProductCode(lastCode);
 
+            var imageUrl = "https://via.placeholder.com";
+            //imagelogic
+
+            //end
+
+
             var newProduct = _mapper.Map<Product>(createProductRequest);
             newProduct.Code = newCode;
-
+            newProduct.ImageUrl = imageUrl;
             await productRepo.InsertAsync(newProduct);
         });
         return true;
