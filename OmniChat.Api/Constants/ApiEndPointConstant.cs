@@ -162,4 +162,12 @@ public class ApiEndPointConstant
         public const string Delete = Base + "/{id}"; 
     }
 
+    public static class InstagramOAuthToken
+    {
+        public const string Base = ApiV1 + "/instagram-token";
+        public const string Create = Base;
+        public const string Update = Base + "/{id}";
+        public const string Delete = Base + "/{id}";
+    }
+
 }
