@@ -129,6 +129,17 @@ public class ApiEndPointConstant
         public const string AddStock = "add-stock";
     }
 
+    public static class ClaimEndPoint
+    {
+        public const string Base = "api/v1/claims";
+
+        public const string GetAll = Base;
+        public const string Create = Base;
+        public const string Update = Base + "/{id}";
+        public const string Approve = Base + "/{id}/approve";
+        public const string Reject = Base + "/{id}/reject";
+    }
+
     public static class Order
     {
         public const string Base = ApiV1 + "/orders";
