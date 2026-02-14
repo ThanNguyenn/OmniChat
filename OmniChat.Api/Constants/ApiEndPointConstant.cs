@@ -140,5 +140,18 @@ public class ApiEndPointConstant
         public const string Reject = Base + "/{id}/reject";
     }
 
+    public static class Order
+    {
+        public const string Base = ApiV1 + "/orders";
+        public const string Create = "create";  
+        public const string Update = "update/{id}";
+        public const string Delete = "delete/{id}";
+        public const string GetAll = "get";
+        public const string GetById = "get/{id}";
+        public const string GetByCustomerId = "customer/{customerId}/get";
+        public const string CancelOrder = "{id}/cancel";
+        public const string CompleteDeliveredOrder = "{id}/complete-delivery";
+
+    }
 
 }
