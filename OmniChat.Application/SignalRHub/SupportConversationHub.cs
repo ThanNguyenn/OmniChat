@@ -73,6 +73,6 @@ namespace OmniChat.Application.SignalRHub
             }
         }
 
-        //FE : await connection.invoke("StaffSendMessage", providerName, newStaffMessage);
+        //FE : await connection.invoke("StaffSendMessage", providerName, newStaffMessage); after staff click send button
     }
 }
