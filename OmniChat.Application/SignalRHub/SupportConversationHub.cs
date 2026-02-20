@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.SignalR;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
+using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
+using OmniChat.Infrastructure.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,55 +36,43 @@ namespace OmniChat.Application.SignalRHub
             await base.OnConnectedAsync();
         }
 
-        public async Task SendMessage(SendSupportMessageCommand command)
+        // Join the conversation group to receive real-time updates for that conversation
+        public async Task JoinConversationGroup(Guid conversationId)
         {
-            if(command.Provider == "Facebook")
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation:{conversationId}");
+        }
+
+        // FE : await connection.invoke("JoinConversationGroup", conversationId);
+
+        // Leave the conversation group when the user navigates away from the conversation
+        public async Task LeaveConversationGroup(Guid conversationId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"conversation:{conversationId}");
+        }
+
+        // FE : await connection.invoke("LeaveConversationGroup", oldConversationId);
+
+        // staff send message to conversation 
+
+        public async Task StaffSendMessage(string providerName, CreateSupportStaffMessageRequest newStaffMessage)
+        {
+            if (providerName == "Zalo")
             {
-                await _supportStaffMessageService
-              .SendFacebookMesageAsync(
-                  new CreateSupportStaffMessageRequest
-                  {
-                      SupportConversationId = command.SupportConversationId,
-                      StaffId = command.StaffId,
-                      Content = command.Content
-                  }
-              );
+                await _supportStaffMessageService.SendZaloMessageAsync(newStaffMessage);
             }
-            else if (command.Provider == "Instagram")
+            else if (providerName == "Facebook")
             {
-                await _supportStaffMessageService
-                    .SendInstagramMesageAsync(
-                        new CreateSupportStaffMessageRequest
-                        {
-                            SupportConversationId = command.SupportConversationId,
-                            StaffId = command.StaffId,
-                            Content = command.Content
-                        }
-                    );
+                await _supportStaffMessageService.SendFacebookMesageAsync(newStaffMessage);
             }
-            else
+            else if (providerName == "Instagram")
             {
-                throw new HubException("Unsupported provider");
+                await _supportStaffMessageService.SendInstagramMesageAsync(newStaffMessage);
+            }
+            else {
+                throw new NotFoundException("No provider found");
             }
         }
 
-
-        public async Task JoinConversation(Guid conversationId)
-        {
-            // show the realtime message on the current conversation was chosen on the conversation detail
-            await Groups.AddToGroupAsync(
-                Context.ConnectionId,
-                $"conversation:{conversationId}"
-            );
-        }
-
-        // leave conversation, No show the old message on the new conversation 
-        public async Task LeaveConversation(Guid conversationId)
-        {
-            await Groups.RemoveFromGroupAsync(
-                Context.ConnectionId,
-                $"conversation:{conversationId}"
-            );
-        }
+        //FE : await connection.invoke("StaffSendMessage", providerName, newStaffMessage); after staff click send button
     }
 }

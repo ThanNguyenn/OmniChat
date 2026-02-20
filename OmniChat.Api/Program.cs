@@ -123,6 +123,8 @@ void RegisterApplicationServices()
     builder.Services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
     builder.Services.AddScoped<IProductService, ProductService>();
     builder.Services.AddScoped<IClaimService, ClaimService>();
+    builder.Services.AddScoped<IFacebookOAuthService, FacebookOAuthService>();
+    builder.Services.AddScoped<IInstagramOAuthService, InstagramOAuthService>();
     builder.Services.AddScoped<IOrderService, OrderService>();
 }
 

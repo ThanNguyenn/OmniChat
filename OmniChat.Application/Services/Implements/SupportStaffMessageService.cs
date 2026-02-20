@@ -153,27 +153,33 @@ namespace OmniChat.Application.Services.Implements
             _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
             // Update Sidebar for Staff via SignalR (GROUP-BASED)
-            await _hubContext.Clients
+
+            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+            {
+                ConversationId = existConversation.Id,
+                CustomerName = existConversation.CustomerName,
+                avartarUrl = existConversation.AvatarUrl,
+                providerName = provider.ProviderName,
+                LastMessage = newStaffSupportMes.Content,
+                MessageUpdateDate = existConversation.UpdateDate
+            };
+             await _hubContext.Clients
                 .User(existConversation.ActiveStaffId.ToString())
-                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                {
-                    ConversationId = existConversation.Id,
-                    CustomerName = existConversation.CustomerName,
-                    avartarUrl = existConversation.AvatarUrl,
-                    providerName = provider.ProviderName,
-                    LastMessage = newStaffSupportMes.Content,
-                    MessageUpdateDate = existConversation.UpdateDate
-                });
+                .SendAsync("SidebarUpdated", sidebarUpdate);
+
 
             // Update conversationDetail for Staff via SignalR
+
+            var supportConversationMessages = new SupportConversationMessagesResponse
+            {
+                SenderType = "Staff",
+                SenderId = newStaffSupportMes.StaffId,
+                Content = newStaffSupportMes.Content,
+                Timestamp = newStaffSupportMes.Timestamp
+            };
+                
             await _hubContext.Clients.Group($"conversation:{existConversation.Id}")
-                .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                {
-                    SenderType = "Staff",
-                    SenderId = newStaffSupportMes.StaffId,
-                    Content = newStaffSupportMes.Content,
-                    Timestamp = newStaffSupportMes.Timestamp
-                });
+                .SendAsync("StaffReceiveMessage", supportConversationMessages);
 
             return true;
         }
@@ -245,27 +251,33 @@ namespace OmniChat.Application.Services.Implements
                 var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
 
                 // Update Sidebar for Staff via SignalR (GROUP-BASED)
+
+                var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+                {
+                    ConversationId = existConversation.Id,
+                    CustomerName = existConversation.CustomerName,
+                    avartarUrl = existConversation.AvatarUrl,
+                    providerName = provider.ProviderName,
+                    LastMessage = newStaffSupportMes.Content,
+                    MessageUpdateDate = existConversation.UpdateDate
+                };
                 await _hubContext.Clients
-                    .User(existConversation.ActiveStaffId.ToString())
-                    .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                    {
-                        ConversationId = existConversation.Id,
-                        CustomerName = existConversation.CustomerName,
-                        avartarUrl = existConversation.AvatarUrl,
-                        providerName = provider.ProviderName,
-                        LastMessage = newStaffSupportMes.Content,
-                        MessageUpdateDate = existConversation.UpdateDate
-                    });
+                   .User(existConversation.ActiveStaffId.ToString())
+                   .SendAsync("SidebarUpdated", sidebarUpdate);
+
 
                 // Update conversationDetail for Staff via SignalR
+
+                var supportConversationMessages = new SupportConversationMessagesResponse
+                {
+                    SenderType = "Staff",
+                    SenderId = newStaffSupportMes.StaffId,
+                    Content = newStaffSupportMes.Content,
+                    Timestamp = newStaffSupportMes.Timestamp
+                };
+
                 await _hubContext.Clients.Group($"conversation:{existConversation.Id}")
-                    .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                    {
-                        SenderType = "Staff",
-                        SenderId = newStaffSupportMes.StaffId,
-                        Content = newStaffSupportMes.Content,
-                        Timestamp = newStaffSupportMes.Timestamp
-                    });
+                    .SendAsync("StaffReceiveMessage", supportConversationMessages);
 
                 return true;
             });
@@ -341,9 +353,10 @@ namespace OmniChat.Application.Services.Implements
                 _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
                 var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
-                // Update Sidebar for Staff via SignalR
-                await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
-                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
+               
+                // Update Sidebar for Staff via SignalR (GROUP-BASED)
+
+                var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                 {
                     ConversationId = existConversation.Id,
                     CustomerName = existConversation.CustomerName,
@@ -351,17 +364,24 @@ namespace OmniChat.Application.Services.Implements
                     providerName = provider.ProviderName,
                     LastMessage = newStaffSupportMes.Content,
                     MessageUpdateDate = existConversation.UpdateDate
-                });
+                };
+                await _hubContext.Clients
+                   .User(existConversation.ActiveStaffId.ToString())
+                   .SendAsync("SidebarUpdated", sidebarUpdate);
+
 
                 // Update conversationDetail for Staff via SignalR
+
+                var supportConversationMessages = new SupportConversationMessagesResponse
+                {
+                    SenderType = "Staff",
+                    SenderId = newStaffSupportMes.StaffId,
+                    Content = newStaffSupportMes.Content,
+                    Timestamp = newStaffSupportMes.Timestamp
+                };
+
                 await _hubContext.Clients.Group($"conversation:{existConversation.Id}")
-                    .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                    {
-                        SenderType = "Staff",
-                        SenderId = newStaffSupportMes.StaffId,
-                        Content = newStaffSupportMes.Content,
-                        Timestamp = newStaffSupportMes.Timestamp
-                    });
+                    .SendAsync("StaffReceiveMessage", supportConversationMessages);
                 return true;
             });
         }

@@ -225,26 +225,32 @@ namespace OmniChat.Application.Services.Implements
                 if (updatedConversation.ActiveStaffId != null)
                 {
                     // Add SignalR Realtime for sidebar staff 
-                    await _hubContext.Clients.User(updatedConversation.ActiveStaffId.ToString())
-                        .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                        {
-                            ConversationId = updatedConversation.Id,
-                            CustomerName = updatedConversation.CustomerName,
-                            avartarUrl = updatedConversation.AvatarUrl,
-                            providerName = provider.ProviderName,
-                            LastMessage = newMessage.Content,
-                            MessageUpdateDate = updatedConversation.UpdateDate
-                        });
+
+                    var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+                    {
+                        ConversationId = updatedConversation.Id,
+                        CustomerName = updatedConversation.CustomerName,
+                        avartarUrl = updatedConversation.AvatarUrl,
+                        providerName = provider.ProviderName,
+                        LastMessage = newMessage.Content,
+                        MessageUpdateDate = updatedConversation.UpdateDate
+                    };
+                    await _hubContext.Clients
+                       .User(updatedConversation.ActiveStaffId.ToString())
+                       .SendAsync("SidebarUpdated", sidebarUpdate);
 
                     // Add SignalR realTime for chat detail if staff is viewing
+
+                    var supportConversationMessages = new SupportConversationMessagesResponse
+                    {
+                        SenderType = "Customer",
+                        SenderId = customerProfile.Id,
+                        Content = newMessage.Content,
+                        Timestamp = newMessage.Timestamp
+                    };
+
                     await _hubContext.Clients.Group($"conversation:{updatedConversation.Id}")
-                        .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                        {
-                            SenderType = "Customer",
-                            SenderId = customerProfile.Id,
-                            Content = newMessage.Content,
-                            Timestamp = newMessage.Timestamp
-                        });
+                   .SendAsync("CustomerReceiveMessage", supportConversationMessages);
                 }
             }
             else
@@ -431,26 +437,33 @@ namespace OmniChat.Application.Services.Implements
                         if (updatedConversation.ActiveStaffId != null)
                         {
                             // Add SignalR Realtime for sidebar staff 
-                            await _hubContext.Clients.User(updatedConversation.ActiveStaffId.ToString())
-                                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                                {
-                                    ConversationId = updatedConversation.Id,
-                                    CustomerName = updatedConversation.CustomerName,
-                                    avartarUrl = updatedConversation.AvatarUrl,
-                                    providerName = provider.ProviderName,
-                                    LastMessage = newMessage.Content,
-                                    MessageUpdateDate = updatedConversation.UpdateDate
-                                });
+
+                            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+                            {
+                                ConversationId = updatedConversation.Id,
+                                CustomerName = updatedConversation.CustomerName,
+                                avartarUrl = updatedConversation.AvatarUrl,
+                                providerName = provider.ProviderName,
+                                LastMessage = newMessage.Content,
+                                MessageUpdateDate = updatedConversation.UpdateDate
+                            };
+                            await _hubContext.Clients
+                               .User(updatedConversation.ActiveStaffId.ToString())
+                               .SendAsync("SidebarUpdated", sidebarUpdate);
 
                             // Add SignalR realTime for chat detail if staff is viewing
+
+                            var supportConversationMessages = new SupportConversationMessagesResponse
+                            {
+                                SenderType = "Customer",
+                                SenderId = customerProfile.Id,
+                                Content = newMessage.Content,
+                                Timestamp = newMessage.Timestamp
+                            };
+
                             await _hubContext.Clients.Group($"conversation:{updatedConversation.Id}")
-                                .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                                {
-                                    SenderType = "Customer",
-                                    SenderId = customerProfile.Id,
-                                    Content = newMessage.Content,
-                                    Timestamp = newMessage.Timestamp
-                                });
+                           .SendAsync("CustomerReceiveMessage", supportConversationMessages);
+
                         }
                     }
                     else
@@ -698,26 +711,33 @@ namespace OmniChat.Application.Services.Implements
                         if (updatedConversation.ActiveStaffId != null)
                         {
                             // Add SignalR Realtime for sidebar staff 
-                            await _hubContext.Clients.User(updatedConversation.ActiveStaffId.ToString())
-                                .SendAsync("SidebarUpdated", new StaffConversationSideBarUpdateResponse
-                                {
-                                    ConversationId = updatedConversation.Id,
-                                    CustomerName = updatedConversation.CustomerName,
-                                    avartarUrl = updatedConversation.AvatarUrl,
-                                    providerName = provider.ProviderName,
-                                    LastMessage = newMessage.Content,
-                                    MessageUpdateDate = updatedConversation.UpdateDate
-                                });
+
+                            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+                            {
+                                ConversationId = updatedConversation.Id,
+                                CustomerName = updatedConversation.CustomerName,
+                                avartarUrl = updatedConversation.AvatarUrl,
+                                providerName = provider.ProviderName,
+                                LastMessage = newMessage.Content,
+                                MessageUpdateDate = updatedConversation.UpdateDate
+                            };
+                            await _hubContext.Clients
+                               .User(updatedConversation.ActiveStaffId.ToString())
+                               .SendAsync("SidebarUpdated", sidebarUpdate);
 
                             // Add SignalR realTime for chat detail if staff is viewing
+
+                            var supportConversationMessages = new SupportConversationMessagesResponse
+                            {
+                                SenderType = "Customer",
+                                SenderId = customerProfile.Id,
+                                Content = newMessage.Content,
+                                Timestamp = newMessage.Timestamp
+                            };
+
                             await _hubContext.Clients.Group($"conversation:{updatedConversation.Id}")
-                                .SendAsync("ReceiveMessage", new SupportConversationMessagesResponse
-                                {
-                                    SenderType = "Customer",
-                                    SenderId = customerProfile.Id,
-                                    Content = newMessage.Content,
-                                    Timestamp = newMessage.Timestamp
-                                });
+                           .SendAsync("CustomerReceiveMessage", supportConversationMessages);
+
                         }
                     }
                 }
