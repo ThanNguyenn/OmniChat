@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
+using OmniChat.Infrastructure.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,11 @@ namespace OmniChat.Application.SignalRHub
     [Authorize]
     public class SupportConversationHub : Hub
     {
+        private readonly ISupportStaffMessageService _supportStaffMessageService;
 
-
-        public SupportConversationHub()
+        public SupportConversationHub(ISupportStaffMessageService supportStaffMessageService)
         {
-
+            _supportStaffMessageService = supportStaffMessageService;
         }
 
         public override async Task OnConnectedAsync()
@@ -50,5 +51,28 @@ namespace OmniChat.Application.SignalRHub
         }
 
         // FE : await connection.invoke("LeaveConversationGroup", oldConversationId);
+
+        // staff send message to conversation 
+
+        public async Task StaffSendMessage(string providerName, CreateSupportStaffMessageRequest newStaffMessage)
+        {
+            if (providerName == "Zalo")
+            {
+                await _supportStaffMessageService.SendZaloMessageAsync(newStaffMessage);
+            }
+            else if (providerName == "Facebook")
+            {
+                await _supportStaffMessageService.SendFacebookMesageAsync(newStaffMessage);
+            }
+            else if (providerName == "Instagram")
+            {
+                await _supportStaffMessageService.SendInstagramMesageAsync(newStaffMessage);
+            }
+            else {
+                throw new NotFoundException("No provider found");
+            }
+        }
+
+        //FE : await connection.invoke("StaffSendMessage", providerName, newStaffMessage);
     }
 }
