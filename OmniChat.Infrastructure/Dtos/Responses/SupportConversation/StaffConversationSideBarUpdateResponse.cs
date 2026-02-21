@@ -18,6 +18,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
 
         public string LastMessage { get; set; } = null!;
         
-        public DateTime MessageUpdateDate { get; set; } = DateTime.UtcNow;
+        public DateTime UpdateDate { get; set; } = DateTime.UtcNow;
     }
 }
