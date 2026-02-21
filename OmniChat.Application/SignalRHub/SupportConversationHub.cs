@@ -56,20 +56,29 @@ namespace OmniChat.Application.SignalRHub
 
         public async Task StaffSendMessage(string providerName, CreateSupportStaffMessageRequest newStaffMessage)
         {
-            if (providerName == "Zalo")
+            try
             {
-                await _supportStaffMessageService.SendZaloMessageAsync(newStaffMessage);
+                if (providerName == "Zalo")
+                {
+                    await _supportStaffMessageService.SendZaloMessageAsync(newStaffMessage);
+                }
+                else if (providerName == "Facebook")
+                {
+                    await _supportStaffMessageService.SendFacebookMesageAsync(newStaffMessage);
+                }
+                else if (providerName == "Instagram")
+                {
+                    await _supportStaffMessageService.SendInstagramMesageAsync(newStaffMessage);
+                }
+                else
+                {
+                    throw new Exception("Provider not found");
+                }
             }
-            else if (providerName == "Facebook")
+            catch (Exception ex)
             {
-                await _supportStaffMessageService.SendFacebookMesageAsync(newStaffMessage);
-            }
-            else if (providerName == "Instagram")
-            {
-                await _supportStaffMessageService.SendInstagramMesageAsync(newStaffMessage);
-            }
-            else {
-                throw new NotFoundException("No provider found");
+                Console.WriteLine("ERROR StaffSendMessage: " + ex.ToString());
+                throw;
             }
         }
 
