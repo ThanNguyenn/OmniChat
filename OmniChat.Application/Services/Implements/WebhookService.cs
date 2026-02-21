@@ -232,8 +232,7 @@ namespace OmniChat.Application.Services.Implements
                         CustomerName = updatedConversation.CustomerName,
                         avartarUrl = updatedConversation.AvatarUrl,
                         providerName = provider.ProviderName,
-                        LastMessage = newMessage.Content,
-                        MessageUpdateDate = updatedConversation.UpdateDate
+                        LastMessage = newMessage.Content
                     };
                     await _hubContext.Clients
                        .User(updatedConversation.ActiveStaffId.ToString())
@@ -444,8 +443,7 @@ namespace OmniChat.Application.Services.Implements
                                 CustomerName = updatedConversation.CustomerName,
                                 avartarUrl = updatedConversation.AvatarUrl,
                                 providerName = provider.ProviderName,
-                                LastMessage = newMessage.Content,
-                                MessageUpdateDate = updatedConversation.UpdateDate
+                                LastMessage = newMessage.Content
                             };
                             await _hubContext.Clients
                                .User(updatedConversation.ActiveStaffId.ToString())
@@ -718,8 +716,7 @@ namespace OmniChat.Application.Services.Implements
                                 CustomerName = updatedConversation.CustomerName,
                                 avartarUrl = updatedConversation.AvatarUrl,
                                 providerName = provider.ProviderName,
-                                LastMessage = newMessage.Content,
-                                MessageUpdateDate = updatedConversation.UpdateDate
+                                LastMessage = newMessage.Content
                             };
                             await _hubContext.Clients
                                .User(updatedConversation.ActiveStaffId.ToString())
