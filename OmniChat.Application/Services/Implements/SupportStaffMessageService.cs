@@ -49,138 +49,142 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> SendZaloMessageAsync(CreateSupportStaffMessageRequest newSupportMess)
         {
-            _logger.LogInformation(
-               "[ZALO-SEND] Start sending message | ConversationId={ConversationId} | StaffId={StaffId}",
-               newSupportMess.SupportConversationId,
-               newSupportMess.StaffId
-            );
-            // create new support Staff mess
-            var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
-
-            if (newStaffSupportMes == null)
+            return await _unitOfWork.ProcessInTransactionAsync(async () =>
             {
-                _logger.LogError(
-                       "[ZALO-SEND] Failed to create SupportStaffMessage | ConversationId={ConversationId}",
-                       newSupportMess.SupportConversationId
+                _logger.LogInformation(
+             "[ZALO-SEND] Start sending message | ConversationId={ConversationId} | StaffId={StaffId}",
+             newSupportMess.SupportConversationId,
+             newSupportMess.StaffId
+          );
+                // create new support Staff mess
+                var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
+
+                if (newStaffSupportMes == null)
+                {
+                    _logger.LogError(
+                           "[ZALO-SEND] Failed to create SupportStaffMessage | ConversationId={ConversationId}",
+                           newSupportMess.SupportConversationId
+                       );
+                    throw new Exception("Create fail");
+                }
+
+                // get exist conversation
+
+                var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
+
+                if (existConversation == null)
+                {
+                    _logger.LogError(
+                        "[ZALO-SEND] Conversation not found | ConversationId={ConversationId}",
+                        newStaffSupportMes.SupportConversationId
+                    );
+                    throw new NotFoundException("No SupportConversation Found");
+                }
+
+                // get customer profile 
+
+                var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
+
+                if (existCustomerProfile == null)
+                {
+                    _logger.LogError(
+                "[ZALO-SEND] CustomerProfile not found | CustomerId={CustomerId}",
+                existConversation.ActiveCustomerId
+            );
+                    throw new NotFoundException("No existCustomerProfile Found");
+                }
+                _logger.LogInformation(
+                    "[ZALO-SEND] Sending to Zalo | ZaloUserId={ZaloUserId} | ConversationId={ConversationId}",
+                    existCustomerProfile.ZaloSenderId,
+                    existConversation.Id
+                );
+
+                var accessToken = await _zaloOAuthService.GetAccessTokenAsync();
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("access_token", accessToken);
+
+                var payload = new
+                {
+                    recipient = new ZaloRecipient { UserId = long.Parse(existCustomerProfile.ZaloSenderId) },
+                    message = new { text = newSupportMess.Content }
+                };
+
+                _logger.LogInformation(
+                       "[ZALO-SEND] Payload prepared | ConversationId={ConversationId}",
+                       existConversation.Id
                    );
-                throw new Exception("Create fail");
-            }
 
-            // get exist conversation
-
-            var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
-
-            if (existConversation == null)
-            {
-                _logger.LogError(
-                    "[ZALO-SEND] Conversation not found | ConversationId={ConversationId}",
-                    newStaffSupportMes.SupportConversationId
+                var response = await client.PostAsJsonAsync(
+                    "https://openapi.zalo.me/v3.0/oa/message/cs",
+                    payload
                 );
-                throw new NotFoundException("No SupportConversation Found");
-            }
+                var result = await response.Content.ReadAsStringAsync();
 
-            // get customer profile 
-
-            var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
-
-            if (existCustomerProfile == null)
-            {
-                        _logger.LogError(
-                    "[ZALO-SEND] CustomerProfile not found | CustomerId={CustomerId}",
-                    existConversation.ActiveCustomerId
-                );
-                throw new NotFoundException("No existCustomerProfile Found");
-            }
-            _logger.LogInformation(
-                "[ZALO-SEND] Sending to Zalo | ZaloUserId={ZaloUserId} | ConversationId={ConversationId}",
-                existCustomerProfile.ZaloSenderId,
-                existConversation.Id
-            );
-
-            var accessToken = await _zaloOAuthService.GetAccessTokenAsync();
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("access_token", accessToken);
-
-            var payload = new
-            {
-                recipient = new ZaloRecipient { UserId = long.Parse(existCustomerProfile.ZaloSenderId) },
-                message = new { text = newSupportMess.Content }
-            };
-
-            _logger.LogInformation(
-                   "[ZALO-SEND] Payload prepared | ConversationId={ConversationId}",
+                _logger.LogInformation(
+                   "[ZALO-SEND] Zalo response | StatusCode={StatusCode} | Body={Body} | ConversationId={ConversationId}",
+                   response.StatusCode,
+                   result,
                    existConversation.Id
-               );
+                );
 
-            var response = await client.PostAsJsonAsync(
-                "https://openapi.zalo.me/v3.0/oa/message/cs",
-                payload
-            );
-            var result = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
 
-            _logger.LogInformation(
-               "[ZALO-SEND] Zalo response | StatusCode={StatusCode} | Body={Body} | ConversationId={ConversationId}",
-               response.StatusCode,
-               result,
-               existConversation.Id
-            );
+                    _logger.LogError(
+                         "[ZALO-SEND] Failed sending to Zalo | StatusCode={StatusCode} | Body={Body}",
+                         response.StatusCode,
+                         result
+                     );
 
-            if (!response.IsSuccessStatusCode) {
+                    throw new Exception(result);
+                }
 
-                _logger.LogError(
-                     "[ZALO-SEND] Failed sending to Zalo | StatusCode={StatusCode} | Body={Body}",
-                     response.StatusCode,
-                     result
-                 );
-
-                throw new Exception(result);
-            }
-
-            var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
+                var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
 
 
-            // update staff message status pending -> send
+                // update staff message status pending -> send
 
-            newStaffSupportMes.Status = SupportStaffMessageStatus.Sent;
+                newStaffSupportMes.Status = SupportStaffMessageStatus.Sent;
 
-            _logger.LogInformation(
-                "[ZALO-SEND] Message sent successfully | MessageId={MessageId}",
-                newStaffSupportMes.Id
-            );
+                _logger.LogInformation(
+                    "[ZALO-SEND] Message sent successfully | MessageId={MessageId}",
+                    newStaffSupportMes.Id
+                );
 
-            existConversation.UpdateDate = DateTime.UtcNow;
-            _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
+                existConversation.UpdateDate = DateTime.UtcNow;
+                _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
 
-            // Update Sidebar for Staff via SignalR (GROUP-BASED)
+                // Update Sidebar for Staff via SignalR (GROUP-BASED)
 
-            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-            {
-                ConversationId = existConversation.Id,
-                CustomerName = existConversation.CustomerName,
-                avartarUrl = existConversation.AvatarUrl,
-                providerName = provider.ProviderName,
-                LastMessage = newStaffSupportMes.Content
-            };
-             await _hubContext.Clients
-                .User(existConversation.ActiveStaffId.ToString())
-                .SendAsync("SidebarUpdated", sidebarUpdate);
+                var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+                {
+                    ConversationId = existConversation.Id,
+                    CustomerName = existConversation.CustomerName,
+                    avartarUrl = existConversation.AvatarUrl,
+                    providerName = provider.ProviderName,
+                    LastMessage = newStaffSupportMes.Content
+                };
+                await _hubContext.Clients
+                   .User(existConversation.ActiveStaffId.ToString())
+                   .SendAsync("SidebarUpdated", sidebarUpdate);
 
 
-            // Update conversationDetail for Staff via SignalR
+                // Update conversationDetail for Staff via SignalR
 
-            var supportConversationMessages = new SupportConversationMessagesResponse
-            {
-                SenderType = "Staff",
-                SenderId = newStaffSupportMes.StaffId,
-                Content = newStaffSupportMes.Content,
-                Timestamp = newStaffSupportMes.Timestamp
-            };
-                
-            await _hubContext.Clients.Group($"conversation:{existConversation.Id}")
-                .SendAsync("StaffReceiveMessage", supportConversationMessages);
+                var supportConversationMessages = new SupportConversationMessagesResponse
+                {
+                    SenderType = "Staff",
+                    SenderId = newStaffSupportMes.StaffId,
+                    Content = newStaffSupportMes.Content,
+                    Timestamp = newStaffSupportMes.Timestamp
+                };
 
-            return true;
+                await _hubContext.Clients.Group($"conversation:{existConversation.Id}")
+                    .SendAsync("StaffReceiveMessage", supportConversationMessages);
+
+                return true;
+            });
         }
 
 
