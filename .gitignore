@@ -361,3 +361,41 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Python virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Pytest / coverage
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/
+
+# VSCode Python settings (optional)
+.vscode/
+
+# Environment variables
+.env
+
+# Model files
+*.pt
+*.bin
+*.onnx
+*.safetensors
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
