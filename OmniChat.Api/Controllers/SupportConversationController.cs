@@ -79,5 +79,28 @@ namespace OmniChat.Api.Controllers
                 Data = conversations
             });
         }
+
+        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.CustomerCompleteConversationHistory)]
+        [ProducesResponseType(typeof(ApiResponse<List<CompleteSupportConversationHistoryResponse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Lấy lịch sử cuộc trò chuyện đã hoàn thành của khách hàng",
+            Description = "Lấy toàn bộ lịch sử cuộc trò chuyện support đã hoàn thành trước đó của khách hàng theo CustomerId"
+            )]
+        public async Task<IActionResult> GetCustomerCompleteConversationHistoryAsync([FromRoute] Guid customerId)
+        {
+            if (customerId == Guid.Empty)
+                return BadRequest("CustomerId is invalid");
+
+            var conversations = await _supportConversationService
+                .GetCustomerCompleteSupportConversationHistoryAsync(customerId);
+
+            return Ok(new ApiResponse<List<CompleteSupportConversationHistoryResponse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Customer Complete Conversation History Successfully",
+                IsSuccess = true,
+                Data = conversations
+            });
+        }
     }
 }

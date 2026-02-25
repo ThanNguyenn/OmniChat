@@ -267,5 +267,29 @@ namespace OmniChat.Application.Services.Implements
 
             return conversation;
         }
+
+        public async Task<List<CompleteSupportConversationHistoryResponse>>GetCustomerCompleteSupportConversationHistoryAsync(Guid customerId)
+        {
+            return await _unitOfWork.GetRepository<SupportConversation>()
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(sc => sc.ActiveCustomerId == customerId &&
+                             sc.Status == ConversationStatus.Complete)
+                .SelectMany(sc => sc.SupportTasks
+                    .Where(st => st.Status == SupportTaskStatus.Done)
+                    .Select(st => new CompleteSupportConversationHistoryResponse
+                    {
+                        ProviderName = sc.Providers.ProviderName,
+                        Status = sc.Status,
+                        CompleteDate = st.CompleteDate,
+                        KeywordType = st.KeywordType != null
+                                        ? st.KeywordType.TypeName
+                                        : null,
+                        StaffName = st.CurrentAssignedStaff != null
+                                        ? st.CurrentAssignedStaff.Name
+                                        : null
+                    }))
+                .ToListAsync();
+        }
     }
 }

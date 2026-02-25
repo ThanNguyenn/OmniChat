@@ -1,6 +1,7 @@
 ﻿using OmniChat.Infrastructure.Dtos.Requests.Staff;
 using OmniChat.Infrastructure.Dtos.Responses.Staff;
 using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,4 +18,5 @@ public interface IStaffService
     Task<bool> DeleteStaffAsync(Guid StaffId);
 
     Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(Guid deparmentId, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
+
 }
