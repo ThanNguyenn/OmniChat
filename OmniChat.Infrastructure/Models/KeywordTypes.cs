@@ -16,6 +16,8 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? IsActive { get; set; }
 
+        public int KeywordTypePiority { get; set; }
+
         public DateTime CreateDate { get; set; }
 
         public DateTime? UpdateDate { get; set; }
