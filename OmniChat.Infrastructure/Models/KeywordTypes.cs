@@ -20,8 +20,6 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? UpdateDate { get; set; }
 
-        public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();
-
         public virtual ICollection<Keyword> Keywords { get; set; } = new List<Keyword>();
 
         public virtual ICollection<MessageKeywordTypes> MessageKeywordTypes { get; set; } = new List<MessageKeywordTypes>();

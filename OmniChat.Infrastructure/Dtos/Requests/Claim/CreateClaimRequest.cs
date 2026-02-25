@@ -13,8 +13,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Claim
 
         public string Reason { get; set; }
 
-        public Guid KeywordTypeId { get; set; }
-
         public Guid StaffId { get; set; }
 
         public Guid ClaimTypeId { get; set; }

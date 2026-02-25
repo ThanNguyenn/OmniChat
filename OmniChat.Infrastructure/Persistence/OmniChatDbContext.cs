@@ -301,7 +301,6 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasIndex(a => a.Phone) // 1 Phone only for 1 staff
                 .IsUnique();
 
-            // ==== keywordTypes - Claim ( one to Many ) ====
             modelBuilder.Entity<Claim>()
                 .HasKey(c => c.Id);
 
@@ -310,13 +309,6 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(c => c.Id)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<KeywordTypes>()
-                .HasMany(d => d.Claims)
-                .WithOne(c => c.KeywordTypes)
-                .HasForeignKey(c => c.KeywordTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // ==== Staff - Claim ( one to Many ) ====
 
             modelBuilder.Entity<Staff>()
@@ -354,10 +346,6 @@ namespace OmniChat.Infrastructure.Persistence
             // index on CliamTypeId in Claim
             modelBuilder.Entity<Claim>()
                 .HasIndex(c => c.ClaimTypeId); // index scan claim by claim type faster
-
-            // index on KeywordTypeId in Claim
-            modelBuilder.Entity<Claim>()
-                .HasIndex(c => c.KeywordTypeId); // index scan claim by KeywordType faster
 
             // index on StaffId in Claim
             modelBuilder.Entity<Claim>()

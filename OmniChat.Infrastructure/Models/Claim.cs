@@ -18,10 +18,6 @@ namespace OmniChat.Infrastructure.Models
 
         public ClaimStatus Status { get; set; }
 
-        public Guid KeywordTypeId { get; set; }
-
-        public virtual KeywordTypes KeywordTypes { get; set; }
-
         public Guid StaffId { get; set; }
 
         public virtual Staff Staff { get; set; }

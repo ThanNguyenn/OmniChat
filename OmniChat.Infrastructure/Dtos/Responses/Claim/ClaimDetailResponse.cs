@@ -19,8 +19,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Claim
 
         public ClaimStatus Status { get; set; }
 
-        public Guid KeywordTypeId { get; set; }
-
         public Guid StaffId { get; set; }
 
         public Guid ClaimTypeId { get; set; }

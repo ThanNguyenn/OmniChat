@@ -27,8 +27,7 @@ namespace OmniChat.Infrastructure.Mappings
            .ForMember(dest => dest.Id, opt => opt.Ignore())
            .ForMember(dest => dest.Status, opt => opt.Ignore())
            .ForMember(dest => dest.SubmitDate, opt => opt.Ignore())
-           .ForMember(dest => dest.StaffId, opt => opt.Ignore())
-           .ForMember(dest => dest.KeywordTypeId, opt => opt.Ignore());
+           .ForMember(dest => dest.StaffId, opt => opt.Ignore());
 
             // Entity → Response
             CreateMap<Claim, ClaimDetailResponse>();
