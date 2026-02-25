@@ -2,36 +2,58 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.KeywordType;
+using OmniChat.Infrastructure.Dtos.Responses.KeywordType;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace OmniChat.Application.Services.Implements
+namespace OmniChat.Application.Services.Implements;
+
+public class KeywordTypeService : BaseService<KeywordTypeService>, IKeywordTypeService
 {
-    public class KeywordTypeService : BaseService<KeywordTypeService>, IKeywordTypeService
+
+    public KeywordTypeService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<KeywordTypeService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
-        public KeywordTypeService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<KeywordTypeService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+    }
+
+    public async Task<bool> CreateKeywordTypeAsync(CreateKeywordTypeResquest createKeywordTypeResquest)
+    {
+        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.TypeName == createKeywordTypeResquest.TypeName);
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-        }
+            var keywordType = _mapper.Map<KeywordTypes>(createKeywordTypeResquest);
+            await keywordTypeRepo.InsertAsync(keywordType);
+        });
+        return true;
+    }
 
-        public async Task<KeywordTypes> GetKeywordTypeByIdAsync(Guid keywordTypeId)
+    public async Task<bool> DeleteKeywordTypeAsync(Guid keywordTypeId)
+    {
+        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId) ?? throw new NotFoundException($"Keyword type {keywordTypeId} not found");
+        existingKeywordType.IsActive = false;
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var repo = _unitOfWork.GetRepository<KeywordTypes>();
+            keywordTypeRepo.Update(existingKeywordType);
+        });
+        return true;
+    }
 
-            var existKeywordType = await repo.SingleOrDefaultAsync(predicate: x => x.Id == keywordTypeId);
-
-            if(existKeywordType == null)
-            {
-                throw new NotFoundException("No KeywordType Found");
-            }
-
-            return existKeywordType;
-        }
+    public async Task<IEnumerable<GetKeywordTypesResponse>> GetAllKeywordTypesAsync()
+    {
+        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var response = _mapper.Map<IEnumerable<GetKeywordTypesResponse>>(await keywordTypeRepo.GetListAsync(predicate: kt => kt.IsActive != false));
+        return response;
+    }
+    public async Task<GetKeywordTypeResponse> GetKeywordTypeAsync(Guid keywordTypeId)
+    {
+        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId && kt.IsActive != false) ?? throw new NotFoundException($"Keyword type {keywordTypeId} not found");
+        var response = _mapper.Map<GetKeywordTypeResponse>( existingKeywordType);
+        return response;
     }
 }
