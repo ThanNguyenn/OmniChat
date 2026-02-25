@@ -126,8 +126,8 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IFacebookOAuthService, FacebookOAuthService>();
     builder.Services.AddScoped<IInstagramOAuthService, InstagramOAuthService>();
     builder.Services.AddScoped<IOrderService, OrderService>();
+    builder.Services.AddScoped<IKeywordService, KeywordService>();
     builder.Services.AddScoped<IKeywordTypeService, KeywordTypeService>();
-    builder.Services.AddScoped<ISupportTaskService, SupportTaskService>();
 }
 
 void RegisterBackgroundServices()
