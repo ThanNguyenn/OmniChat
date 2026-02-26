@@ -128,6 +128,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IOrderService, OrderService>();
     builder.Services.AddScoped<IKeywordService, KeywordService>();
     builder.Services.AddScoped<IKeywordTypeService, KeywordTypeService>();
+    builder.Services.AddScoped<IMessageKeywordFilterService, MessageKeywordFilterService>();
 }
 
 void RegisterBackgroundServices()

@@ -24,9 +24,12 @@ namespace OmniChat.Application.Services.Implements
     {
 
         private readonly ICustomerProfileService _customerProfileService;
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly IMessageKeywordFilterService _messageKeywordFilterService;
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IMessageKeywordFilterService messageKeywordFilterService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
+            _messageKeywordFilterService = messageKeywordFilterService;
         }
 
         public async Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId)
@@ -193,6 +196,14 @@ namespace OmniChat.Application.Services.Implements
                 )
             .OrderBy(m => m.Timestamp)
             .ToList();
+
+            var customerMessages = messages.Where(m => m.SenderType == "Customer").ToList();
+
+            await Task.WhenAll(customerMessages.Select(async m =>
+            {
+                var keywords = await _messageKeywordFilterService.ExtractKeywords(m.Content);
+                m.KeywordHightlight = keywords.Any() ? keywords : null;
+            }));
 
             return new SupportConversationDetailResponse
             {
