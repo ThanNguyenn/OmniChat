@@ -87,7 +87,9 @@ namespace OmniChat.Application.Services.Implements
                         )
                         .OrderByDescending(m => m.Timestamp)
                         .Select(m => m.Content)
-                        .FirstOrDefault() ?? string.Empty
+                        .FirstOrDefault() ?? string.Empty,
+
+                    UnreadMessageCount = c.CustomerMessages.Count(m => m.IsRead == false)
                 }
             );
             return conversations;
@@ -175,6 +177,8 @@ namespace OmniChat.Application.Services.Implements
 
             if (conversation == null)
                 throw new NotFoundException("No support conversation found");
+
+            await ReadAllCustomerMessageAsync(conversation.CustomerMessages.ToList());
 
             var customerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
 
@@ -301,6 +305,23 @@ namespace OmniChat.Application.Services.Implements
                                         : null
                     }))
                 .ToListAsync();
+        }
+
+        private async Task ReadAllCustomerMessageAsync(List<CustomerMessage> customerMessages)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerMessage>();
+
+            foreach (var message in customerMessages)
+            {
+                if (message.IsRead == false)
+                {
+                    message.IsRead = true;
+                }
+            }
+
+            repo.UpdateRange(customerMessages);
+
+            await _unitOfWork.CommitAsync();
         }
     }
 }

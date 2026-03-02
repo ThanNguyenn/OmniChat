@@ -174,8 +174,8 @@ namespace OmniChat.Application.Services.Implements
 
                     conversation = newComversation;
                 }
-                catch(DbUpdateException)
-{
+                catch (DbUpdateException)
+                {
                     var checkExistConversation =
                         await _supportConversationService
                             .GetSupportConversationHavePendingByCustomerIdAsync(
@@ -205,7 +205,7 @@ namespace OmniChat.Application.Services.Implements
 
                 Guid StaffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-               conversation =  await _supportConversationService.AsignForSupportConversationByIdAsync(conversation, StaffId);
+                conversation = await _supportConversationService.AsignForSupportConversationByIdAsync(conversation, StaffId);
 
                 _logger.LogInformation(
                   "[ZALO] Check Actvice Staff | ActiveStaff={ActiveStaffId}",
@@ -221,10 +221,12 @@ namespace OmniChat.Application.Services.Implements
                 result = true;
                 // After get new customer message Update Supportconversation UpdateDate -> now
                 var updatedConversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(conversation);
-
+                
                 if (updatedConversation.ActiveStaffId != null)
                 {
                     // Add SignalR Realtime for sidebar staff 
+
+                    var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
 
                     var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                     {
@@ -232,7 +234,8 @@ namespace OmniChat.Application.Services.Implements
                         CustomerName = updatedConversation.CustomerName,
                         avartarUrl = updatedConversation.AvatarUrl,
                         providerName = provider.ProviderName,
-                        LastMessage = newMessage.Content
+                        LastMessage = newMessage.Content,
+                        UnreadMessage = unreadCount,
                     };
                     await _hubContext.Clients
                        .User(updatedConversation.ActiveStaffId.ToString())
@@ -293,7 +296,7 @@ namespace OmniChat.Application.Services.Implements
             foreach (var entry in faceBookWebhookPayload.entry)
             {
 
-              
+
                 if (entry.messaging == null)
                 {
                     _logger.LogWarning("[FACEBOOK] Entry has no messages");
@@ -392,7 +395,7 @@ namespace OmniChat.Application.Services.Implements
 
                             conversation = checkExistConversation;
                         }
-                    
+
                     }
 
                     var newMessage =
@@ -407,8 +410,8 @@ namespace OmniChat.Application.Services.Implements
 
                             }
                         );
-              
-                   
+
+
                     if (conversation.ActiveStaffId == null)
                     {
 
@@ -437,13 +440,16 @@ namespace OmniChat.Application.Services.Implements
                         {
                             // Add SignalR Realtime for sidebar staff 
 
+                            var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
+
                             var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                             {
                                 ConversationId = updatedConversation.Id,
                                 CustomerName = updatedConversation.CustomerName,
                                 avartarUrl = updatedConversation.AvatarUrl,
                                 providerName = provider.ProviderName,
-                                LastMessage = newMessage.Content
+                                LastMessage = newMessage.Content,
+                                UnreadMessage = unreadCount,
                             };
                             await _hubContext.Clients
                                .User(updatedConversation.ActiveStaffId.ToString())
@@ -664,7 +670,7 @@ namespace OmniChat.Application.Services.Implements
                             conversation = checkExistConversation;
                         }
 
-                      
+
                     }
 
                     var newMessage =
@@ -710,13 +716,17 @@ namespace OmniChat.Application.Services.Implements
                         {
                             // Add SignalR Realtime for sidebar staff 
 
+                            var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
+
+
                             var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                             {
                                 ConversationId = updatedConversation.Id,
                                 CustomerName = updatedConversation.CustomerName,
                                 avartarUrl = updatedConversation.AvatarUrl,
                                 providerName = provider.ProviderName,
-                                LastMessage = newMessage.Content
+                                LastMessage = newMessage.Content,
+                                UnreadMessage = unreadCount,
                             };
                             await _hubContext.Clients
                                .User(updatedConversation.ActiveStaffId.ToString())
@@ -788,5 +798,12 @@ namespace OmniChat.Application.Services.Implements
             return true;
         }
 
+
+        private async Task<int> CountUnreadMessagesByConversationIdAsync(Guid conversationId)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerMessage>();
+
+            return await repo.CountAsync(predicate: m => m.ConversationId == conversationId && m.IsRead == false);
+        }
     }
 }
