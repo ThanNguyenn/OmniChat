@@ -491,6 +491,8 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<CustomerMessage>()
                 .HasIndex(cm => new { cm.ConversationId, cm.Timestamp }); // index scan customermessage by conversation faster
 
+            modelBuilder.Entity<CustomerMessage>()
+                .HasIndex(cm => new { cm.ConversationId, cm.IsRead }); // index scan customermessage by isread faster
 
             // ==== Provider - SupportConversation ( one to Many ) ====
             modelBuilder.Entity<Provider>()
