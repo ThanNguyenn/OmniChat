@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
@@ -60,23 +61,22 @@ namespace OmniChat.Api.Controllers
             });
         }
 
-        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.CustomerConversationHistory)]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<SupportConversationDetailResponse>>), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.GetCompletedConversationDetail)]
+        [ProducesResponseType(typeof(ApiResponse<SupportConversationDetailResponse>), StatusCodes.Status200OK)]
         [SwaggerOperation(
-      Summary = "Lấy lịch sử cuộc trò chuyện của khách hàng",
-      Description = "Lấy toàn bộ lịch sử cuộc trò chuyện support trước đó của khách hàng theo CustomerId"
+      Summary = "Lấy lịch sử cuộc trò chuyện hoàn thành của khách hàng",
+      Description = "Lấy lịch sử cuộc trò chuyện hoàn thành trước đó của khách hàng theo conversationId"
         )]
-        public async Task<IActionResult> GetCustomerConversationHistoryAsync([FromRoute] Guid customerId)
+        public async Task<IActionResult> GetCustomerConversationHistoryAsync([FromRoute] Guid conversationId)
         {
-            var conversations = await _supportConversationService
-                .GetCustomerConversationHistoryAsync(customerId);
+            var conversation = await _supportConversationService.GetCustomerConversationHistoryAsync(conversationId);
 
-            return Ok(new ApiResponse<IEnumerable<SupportConversationDetailResponse>>
+            return Ok(new ApiResponse<SupportConversationDetailResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Customer Conversation History Successfully",
+                Message = "Get Completed Conversation Detail Successfully",
                 IsSuccess = true,
-                Data = conversations
+                Data = conversation
             });
         }
 

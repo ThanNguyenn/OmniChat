@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Dtos.Responses.Keyword;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
 
         public long Timestamp { get; set; }
 
-        public List<string>? KeywordHightlight { get; set; }
+       public ExtractKeywordResponse? extractKeywordResponses { get; set; }
     }
 }

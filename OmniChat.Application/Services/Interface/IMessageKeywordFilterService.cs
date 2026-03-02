@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Dtos.Responses.Keyword;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface IMessageKeywordFilterService
     {
-        public  Task<List<string>> ExtractKeywords(string content, List<string>? productNames = null);
+        public  Task<ExtractKeywordResponse> ExtractKeywords(string content, List<string>? productNames = null);
     }
 }

@@ -48,6 +48,8 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly IConfiguration _configuration;
 
+        private readonly MessageKeywordFilterService _messageKeywordFilterService;
+
         private readonly IHubContext<SupportConversationHub> _hubContext;
         public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
@@ -243,12 +245,20 @@ namespace OmniChat.Application.Services.Implements
 
                     // Add SignalR realTime for chat detail if staff is viewing
 
+                    //Extract keyword + recommend
+                    var extractResult = await _messageKeywordFilterService.ExtractKeywords(newMessage.Content);
+
                     var supportConversationMessages = new SupportConversationMessagesResponse
                     {
                         SenderType = "Customer",
                         SenderId = customerProfile.Id,
                         Content = newMessage.Content,
-                        Timestamp = newMessage.Timestamp
+                        Timestamp = newMessage.Timestamp,
+                        extractKeywordResponses =
+                        (extractResult.Highlights.Count > 0 ||
+                         extractResult.Recommends.Count > 0)
+                            ? extractResult
+                            : null
                     };
 
                     await _hubContext.Clients.Group($"conversation:{updatedConversation.Id}")
@@ -457,12 +467,20 @@ namespace OmniChat.Application.Services.Implements
 
                             // Add SignalR realTime for chat detail if staff is viewing
 
+                            //Extract keyword + recommend
+                            var extractResult = await _messageKeywordFilterService.ExtractKeywords(newMessage.Content);
+
                             var supportConversationMessages = new SupportConversationMessagesResponse
                             {
                                 SenderType = "Customer",
                                 SenderId = customerProfile.Id,
                                 Content = newMessage.Content,
-                                Timestamp = newMessage.Timestamp
+                                Timestamp = newMessage.Timestamp,
+                                extractKeywordResponses =
+                                (extractResult.Highlights.Count > 0 ||
+                                 extractResult.Recommends.Count > 0)
+                                    ? extractResult
+                                    : null
                             };
 
                             await _hubContext.Clients.Group($"conversation:{updatedConversation.Id}")
@@ -734,12 +752,20 @@ namespace OmniChat.Application.Services.Implements
 
                             // Add SignalR realTime for chat detail if staff is viewing
 
+                            //Extract keyword + recommend
+                            var extractResult = await _messageKeywordFilterService.ExtractKeywords(newMessage.Content);
+
                             var supportConversationMessages = new SupportConversationMessagesResponse
                             {
                                 SenderType = "Customer",
                                 SenderId = customerProfile.Id,
                                 Content = newMessage.Content,
-                                Timestamp = newMessage.Timestamp
+                                Timestamp = newMessage.Timestamp,
+                                extractKeywordResponses =
+                                (extractResult.Highlights.Count > 0 ||
+                                 extractResult.Recommends.Count > 0)
+                                    ? extractResult
+                                    : null
                             };
 
                             await _hubContext.Clients.Group($"conversation:{updatedConversation.Id}")
