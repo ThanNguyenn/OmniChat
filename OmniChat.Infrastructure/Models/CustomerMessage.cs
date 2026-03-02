@@ -17,6 +17,8 @@ namespace OmniChat.Infrastructure.Models
 
         public Guid CustomerId { get; set; }
 
+        public bool? IsRead { get; set; } 
+
         public virtual CustomerProfile Customer { get; set; }
 
         public Guid ConversationId { get; set; }
