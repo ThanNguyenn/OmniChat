@@ -18,6 +18,8 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
 
         public string LastMessage { get; set; }
 
+        public int UnreadMessageCount { get; set; }
+
         public DateTime UpdateDate { get; set; }
     }
 }

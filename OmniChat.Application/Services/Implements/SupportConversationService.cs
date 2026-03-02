@@ -24,9 +24,12 @@ namespace OmniChat.Application.Services.Implements
     {
 
         private readonly ICustomerProfileService _customerProfileService;
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly IMessageKeywordFilterService _messageKeywordFilterService;
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IMessageKeywordFilterService messageKeywordFilterService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
+            _messageKeywordFilterService = messageKeywordFilterService;
         }
 
         public async Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId)
@@ -84,79 +87,86 @@ namespace OmniChat.Application.Services.Implements
                         )
                         .OrderByDescending(m => m.Timestamp)
                         .Select(m => m.Content)
-                        .FirstOrDefault() ?? string.Empty
+                        .FirstOrDefault() ?? string.Empty,
+
+                    UnreadMessageCount = c.CustomerMessages.Count(m => m.IsRead == false)
                 }
             );
             return conversations;
         }
 
-        public async Task<List<SupportConversationDetailResponse>> GetCustomerConversationHistoryAsync(Guid customerId)
+        public async Task<SupportConversationDetailResponse>GetCustomerConversationHistoryAsync(Guid conversationId)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
-            var conversations = await repo.GetListAsync(predicate: sc => sc.ActiveCustomerId == customerId,
+            var conversation = await repo.GetQueryable()
+                .AsNoTracking()
+                .Where(sc =>
+                    sc.Id == conversationId &&
+                    sc.Status == ConversationStatus.Complete &&
+                    sc.SupportTasks.Any(st => st.Status == SupportTaskStatus.Done)
+                )
+                .Include(sc => sc.CustomerMessages)
+                .Include(sc => sc.SupportStaffMessages)
+                .FirstOrDefaultAsync();
 
-                include: source => source
-                .Include(c => c.CustomerMessages)
-                .Include(c => c.SupportStaffMessages)
-                );
+            if (conversation == null)
+                throw new NotFoundException("Completed support conversation not found");
 
-            if (conversations == null)
-                throw new NotFoundException("No support conversation found");
+            var customerProfile = await _customerProfileService
+                .GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
 
-      
-            var result = conversations.Select( conversation =>
-            {
-                // sum all message 
-                var allMessages = new List<SupportConversationMessagesResponse>();
-
-                if (conversation.CustomerMessages != null)
+            var messages = conversation.CustomerMessages
+                .Select(cm => new SupportConversationMessagesResponse
                 {
-                    allMessages.AddRange(conversation.CustomerMessages.Select(m =>
-                    new SupportConversationMessagesResponse
-                    {
-                        SenderType = "Customer",
-                        SenderId = m.CustomerId,
-                        Content = m.Content,
-                        Timestamp = m.Timestamp
-                    }
-                    ));
-                }
-
-                if (conversation.SupportStaffMessages != null)
-                {
-                    allMessages.AddRange(conversation.SupportStaffMessages.Select(m =>
+                    SenderType = "Customer",
+                    SenderId = customerProfile.Id,
+                    Content = cm.Content,
+                    Timestamp = cm.Timestamp
+                })
+                .Concat(
+                    conversation.SupportStaffMessages.Select(sm =>
                         new SupportConversationMessagesResponse
                         {
                             SenderType = "Staff",
-                            SenderId = m.StaffId,
-                            Content = m.Content,
-                            Timestamp = m.Timestamp
-                        }));
-                }
-                allMessages = allMessages
-                 .OrderBy(m => m.Timestamp)
-                 .ToList();
+                            SenderId = sm.StaffId,
+                            Content = sm.Content,
+                            Timestamp = sm.Timestamp
+                        })
+                )
+                .OrderBy(m => m.Timestamp)
+                .ToList();
 
-                return new SupportConversationDetailResponse
-                {
-                    Id = conversation.Id,
-                    CreatedDate = conversation.CreatedDate,
-                    Status = conversation.Status,
-                    IsDistributed = conversation.IsDistributed,
-                    CustomerName = conversation.CustomerName,
-                    AvartarUrl = conversation.AvatarUrl,
-                    ActiveStaffId = conversation.ActiveStaffId,
-                    ActiveCustomerId = conversation.ActiveCustomerId,
-                    ProvidersId = conversation.ProvidersId,
-                    Messages = allMessages
-                };
+           
+            await Task.WhenAll(
+                messages
+                    .Where(m => m.SenderType == "Customer")
+                    .Select(async m =>
+                    {
+                        var extractResult =
+                            await _messageKeywordFilterService.ExtractKeywords(m.Content);
 
-            })
-            .OrderByDescending(c => c.Messages.LastOrDefault()?.Timestamp ?? 0)
-            .ToList();
+                        if (extractResult.Highlights.Count > 0 ||
+                            extractResult.Recommends.Count > 0)
+                        {
+                            m.extractKeywordResponses = extractResult;
+                        }
+                    })
+            );
 
-            return result;
+            return new SupportConversationDetailResponse
+            {
+                Id = conversation.Id,
+                CreatedDate = conversation.CreatedDate,
+                Status = conversation.Status,
+                IsDistributed = conversation.IsDistributed,
+                CustomerName = conversation.CustomerName,
+                AvartarUrl = conversation.AvatarUrl,
+                ActiveStaffId = conversation.ActiveStaffId,
+                ActiveCustomerId = conversation.ActiveCustomerId,
+                ProvidersId = conversation.ProvidersId,
+                Messages = messages
+            };
         }
 
         // conversattion detail
@@ -172,6 +182,8 @@ namespace OmniChat.Application.Services.Implements
 
             if (conversation == null)
                 throw new NotFoundException("No support conversation found");
+
+            await ReadAllCustomerMessageAsync(conversation.CustomerMessages.ToList());
 
             var customerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
 
@@ -193,6 +205,19 @@ namespace OmniChat.Application.Services.Implements
                 )
             .OrderBy(m => m.Timestamp)
             .ToList();
+
+            await Task.WhenAll(
+              messages
+                  .Where(m => m.SenderType == "Customer")
+                  .Select(async m =>
+                  {
+                      var extractResult =
+                          await _messageKeywordFilterService.ExtractKeywords(m.Content);
+
+                      if (extractResult.Highlights.Count > 0 || extractResult.Recommends.Count > 0)
+                          m.extractKeywordResponses = extractResult;
+                  })
+             );
 
             return new SupportConversationDetailResponse
             {
@@ -290,6 +315,23 @@ namespace OmniChat.Application.Services.Implements
                                         : null
                     }))
                 .ToListAsync();
+        }
+
+        private async Task ReadAllCustomerMessageAsync(List<CustomerMessage> customerMessages)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerMessage>();
+
+            foreach (var message in customerMessages)
+            {
+                if (message.IsRead == false)
+                {
+                    message.IsRead = true;
+                }
+            }
+
+            repo.UpdateRange(customerMessages);
+
+            await _unitOfWork.CommitAsync();
         }
     }
 }

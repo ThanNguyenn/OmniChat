@@ -79,7 +79,7 @@ public class ApiEndPointConstant
         public const string GetAllPagingByCustomerName = SupportConversation + "/paging";
         public const string StaffPendingSidebar = SupportConversations + "/staff/{staffId}/pending";
         public const string GetConversationDetail = SupportConversations + "/{conversationId}";
-        public const string CustomerConversationHistory = SupportConversations + "/customer/{customerId}/history";
+        public const string GetCompletedConversationDetail = SupportConversations + "/history/{conversationId}";
         public const string CustomerCompleteConversationHistory = SupportConversations + "/customer/{customerId}/complete-history";
     }
 
