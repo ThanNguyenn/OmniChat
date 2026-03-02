@@ -209,6 +209,11 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(x => x.IsDeleted)
             .HasDefaultValueSql("false");
 
+            // default vaule isRead = false
+            modelBuilder.Entity<CustomerMessage>()
+             .Property(x => x.IsRead)
+             .HasDefaultValueSql("false");
+
             //default createDate utc now 
             modelBuilder.Entity<RefreshToken>()
             .Property(x => x.CreateDate)
@@ -901,6 +906,17 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Order>()
                 .HasIndex(o => o.DeliveryStatus);
 
+            // define Order code auto generation example : OD000001
+            modelBuilder.HasSequence<int>("OrderCodeSeq")
+               .StartsAt(1)
+               .IncrementsBy(1);
+
+            modelBuilder.Entity<Order>()
+                .Property(o => o.Code)
+                .HasDefaultValueSql(
+                    "'OD' || LPAD(nextval('\"OrderCodeSeq\"')::text, 6, '0')")
+                .ValueGeneratedOnAdd();
+
             // ==== Order - OrderItem ( one to Many ) ====
 
             modelBuilder.Entity<OrderItem>()
@@ -968,6 +984,17 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<ProductBatch>()
                 .HasIndex(pb => pb.ProductId); // index scan productbatch by product faster
+
+            // define Product code auto generation example : SP000001
+            modelBuilder.HasSequence<int>("ProductCodeSeq")
+              .StartsAt(1)
+              .IncrementsBy(1);
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Code)
+                .HasDefaultValueSql(
+                    "'SP' || LPAD(nextval('\"ProductCodeSeq\"')::text, 6, '0')")
+                .ValueGeneratedOnAdd();
 
             // ==== CustomerProfile - Paymment( one - Many)
             modelBuilder.Entity<Payment>()
