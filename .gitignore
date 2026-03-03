@@ -401,5 +401,9 @@ htmlcov/
 ai-service/src/nlp/final_model/
 ai-service/src/nlp/results/
 
+# Specific NLP utility and test files
+ai-service/src/nlp/test_ai.py
+ai-service/src/nlp/util.py
+
 # Jupyter notebooks checkpoints
 .ipynb_checkpoints/
