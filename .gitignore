@@ -397,5 +397,9 @@ htmlcov/
 *.onnx
 *.safetensors
 
+# Ignore specific model and result folders
+ai-service/src/nlp/final_model/
+ai-service/src/nlp/results/
+
 # Jupyter notebooks checkpoints
 .ipynb_checkpoints/
