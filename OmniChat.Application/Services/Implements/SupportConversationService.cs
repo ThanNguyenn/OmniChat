@@ -137,22 +137,16 @@ namespace OmniChat.Application.Services.Implements
                 .OrderBy(m => m.Timestamp)
                 .ToList();
 
-           
-            await Task.WhenAll(
-                messages
-                    .Where(m => m.SenderType == "Customer")
-                    .Select(async m =>
-                    {
-                        var extractResult =
-                            await _messageKeywordFilterService.ExtractKeywords(m.Content);
 
-                        if (extractResult.Highlights.Count > 0 ||
-                            extractResult.Recommends.Count > 0)
-                        {
-                            m.extractKeywordResponses = extractResult;
-                        }
-                    })
-            );
+            var customerMessages = messages.Where(m => m.SenderType == "Customer");
+
+            foreach (var message in customerMessages)
+            {
+                var result = await _messageKeywordFilterService.ExtractKeywords(message.Content);
+
+                if (result.Highlights.Any() || result.Recommends.Any())
+                    message.extractKeywordResponses = result;
+            }
 
             return new SupportConversationDetailResponse
             {
@@ -206,18 +200,15 @@ namespace OmniChat.Application.Services.Implements
             .OrderBy(m => m.Timestamp)
             .ToList();
 
-            await Task.WhenAll(
-              messages
-                  .Where(m => m.SenderType == "Customer")
-                  .Select(async m =>
-                  {
-                      var extractResult =
-                          await _messageKeywordFilterService.ExtractKeywords(m.Content);
+            var customerMessages = messages.Where(m => m.SenderType == "Customer");
 
-                      if (extractResult.Highlights.Count > 0 || extractResult.Recommends.Count > 0)
-                          m.extractKeywordResponses = extractResult;
-                  })
-             );
+            foreach (var message in customerMessages)
+            {
+                var result = await _messageKeywordFilterService.ExtractKeywords(message.Content);
+
+                if (result.Highlights.Any() || result.Recommends.Any())
+                    message.extractKeywordResponses = result;
+            }
 
             return new SupportConversationDetailResponse
             {
