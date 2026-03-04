@@ -37,6 +37,7 @@ namespace OmniChat.Infrastructure.Models
         Completed = 1,
         Refunded = 2,
         PendingRefund = 3,
+        Cancel = 4,
     }
 
     public enum PaymentMethod
