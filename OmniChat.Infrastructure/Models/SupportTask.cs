@@ -35,7 +35,8 @@ namespace OmniChat.Infrastructure.Models
     {
         New = 0,
         InProgress = 1,
-        Blocked = 2,
+        PendingReassign = 2,
         Done = 3,
+        Cancelled =4,
     }
 }
