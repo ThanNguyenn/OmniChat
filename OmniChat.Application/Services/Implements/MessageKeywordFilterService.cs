@@ -72,7 +72,7 @@ namespace OmniChat.Application.Services.Implements
                         PhoneNumber = customerInfor.PhoneNumber,
                         CustomerAddress = customerInfor.Address
                     },
-                    RecommendType = RecommendType.searchCustomerInfo
+                    RecommendType = RecommendType.SearchCustomerInfo
                 });
             }
 
@@ -101,7 +101,7 @@ namespace OmniChat.Application.Services.Implements
                         CustomerEmail = customerInfor.Email,
                         CustomerAddress = customerInfor.Address
                     },
-                    RecommendType = RecommendType.searchCustomerInfo
+                    RecommendType = RecommendType.SearchCustomerInfo
                 });
             }
 
@@ -131,7 +131,7 @@ namespace OmniChat.Application.Services.Implements
                             ProductImageUrl = product.ImageUrl
                         },
 
-                        RecommendType = RecommendType.searchProduct
+                        RecommendType = RecommendType.SearchProduct
                     });
                 }
             }
