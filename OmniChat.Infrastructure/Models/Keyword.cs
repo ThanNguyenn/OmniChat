@@ -18,6 +18,8 @@ namespace OmniChat.Infrastructure.Models
 
         public string Code { get; set; }
         
+        public float Weight { get; set; }
+
         public Guid KeyWordTypeId { get; set; }
 
         public virtual KeywordTypes KeyWordType { get; set; }
