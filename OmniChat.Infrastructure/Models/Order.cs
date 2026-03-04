@@ -35,11 +35,13 @@ namespace OmniChat.Infrastructure.Models
 
     public enum OrderStatus
     {
-        Pending = 0,
-        Confirmed = 1,
-        Processing = 2,
+        Draft = 0,
+        Pending = 1,
+        Cancelled = 2,
         Shipped = 3,
-        Cancelled = 4,
+        PendingReturn = 4,
+        Returned = 5,
+        Completed = 6,
     }
 
     public enum DeliveryStatus
