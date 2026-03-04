@@ -52,6 +52,7 @@ namespace OmniChat.Infrastructure.Models
     {
         Pending = 0,
         Complete = 1,
-        Waiting = 2
+        Waiting = 2,
+        Warning = 3,
     }
 }
