@@ -17,7 +17,7 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
     public enum RecommendType
     {
         SearchOrderHistory = 0,
-        searchProduct = 1,
-        searchCustomerInfo = 2,
+        SearchProduct = 1,
+        SearchCustomerInfo = 2,
     }
 }
