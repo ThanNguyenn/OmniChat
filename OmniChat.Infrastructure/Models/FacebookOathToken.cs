@@ -17,5 +17,9 @@ namespace OmniChat.Infrastructure.Models
         public DateTime LastUpdateAt { get; set; }
 
         public bool? IsActive { get; set; }
+
+        public Guid? ProviderId { get; set; }
+
+        public virtual Provider? Provider { get; set; }
     }
 }

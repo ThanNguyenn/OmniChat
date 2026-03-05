@@ -15,5 +15,11 @@ namespace OmniChat.Infrastructure.Models
         public DateTime CreateDate { get; set; }
 
         public virtual ICollection<SupportConversation> SupportConversations { get; set; } = new List<SupportConversation>();
+
+        public virtual ICollection<FacebookOathToken> FacebookOathTokens { get; set; } = new List<FacebookOathToken>();
+
+        public virtual ICollection<InstagramOathToken> InstagramOathTokens { get; set; } = new List<InstagramOathToken>();
+
+        public virtual ICollection<ZaloOathToken> ZaloOathTokens { get; set; } = new List<ZaloOathToken>();
     }
 }

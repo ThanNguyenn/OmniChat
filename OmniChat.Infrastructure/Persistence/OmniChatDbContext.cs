@@ -75,6 +75,8 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<BillingItem> BillingItems { get; set; }
 
+        public DbSet<PostSaleRequest> PostSaleRequests { get; set; }
+
         public DbSet<ChatTemplate> ChatTemplates { get; set; }
 
         public DbSet<ZaloOathToken> ZaloOathTokens { get; set; }
@@ -149,6 +151,14 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(bi => bi.BillStatus)
                 .HasConversion<string>();
 
+            modelBuilder.Entity<PostSaleRequest>()
+                .Property(psr => psr.Type)
+                .HasConversion<string>();
+
+                modelBuilder.Entity<PostSaleRequest>()
+                .Property(psr => psr.Status)
+                .HasConversion<string>();
+
             // default value IsActive = true
 
             modelBuilder.Entity<Account>()
@@ -212,6 +222,12 @@ namespace OmniChat.Infrastructure.Persistence
             // default vaule isRead = false
             modelBuilder.Entity<CustomerMessage>()
              .Property(x => x.IsRead)
+             .HasDefaultValueSql("false");
+
+
+            // deafult value FraudFlag = false
+            modelBuilder.Entity<PostSaleRequest>()
+             .Property(x => x.FraudFlag)
              .HasDefaultValueSql("false");
 
             //default createDate utc now 
@@ -511,6 +527,26 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<SupportConversation>()
                 .HasIndex(sc => sc.ProvidersId); // index scan supportconversation by provider faster
+
+            // ==== Provider - OathToken ( one to Many ) ====
+
+                modelBuilder.Entity<Provider>()
+                    .HasMany(p => p.FacebookOathTokens)
+                    .WithOne(ot => ot.Provider)
+                    .HasForeignKey(ot => ot.ProviderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                modelBuilder.Entity<Provider>()
+                    .HasMany(p => p.InstagramOathTokens)
+                    .WithOne(ot => ot.Provider)
+                    .HasForeignKey(ot => ot.ProviderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                modelBuilder.Entity<Provider>()
+                    .HasMany(p => p.ZaloOathTokens)
+                    .WithOne(ot => ot.Provider)
+                    .HasForeignKey(ot => ot.ProviderId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
             // == CustomerMessage - SupportConversation ( many to one ) ==
             modelBuilder.Entity<SupportConversation>()
@@ -874,6 +910,19 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasIndex(tah => tah.SupportTaskId); // scan by SupportTaskId faster
 
 
+            // == Staff - TaskAssigmentHistory ( many to one ) ==
+            modelBuilder.Entity<TaskAssignmentHistory>()
+                .HasOne(x => x.ActionBy)
+                .WithMany(x => x.ActionsPerformed)
+                .HasForeignKey(x => x.ActionById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TaskAssignmentHistory>()
+                .HasOne(x => x.ActionTo)
+                .WithMany(x => x.ActionsReceived)
+                .HasForeignKey(x => x.ActionToId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ==== CustomerProfile - Order ( one to Many ) ====
 
             modelBuilder.Entity<Order>()
@@ -1044,6 +1093,56 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<BillingItem>()
                 .HasIndex(o => o.PaymentId); // index scan bill by payment Id faster
+
+
+            // ==== CustomerProfile - PostSaleRequest ( one to Many ) ====
+            modelBuilder.Entity<PostSaleRequest>()
+               .HasKey(psr => psr.Id);
+
+            modelBuilder.Entity<PostSaleRequest>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<CustomerProfile>()
+                .HasMany(cp => cp.PostSaleRequests)
+                .WithOne(psr => psr.Customer)
+                .HasForeignKey(psr => psr.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PostSaleRequest>()
+                .HasIndex(psr => psr.CustomerId); // index scan postsalerequest by customer faster
+
+            // ==== Staff - PostSaleRequest ( one to Many ) ====
+            modelBuilder.Entity<Staff>()
+                .HasMany(s => s.PostSaleRequestsPresented)
+                .WithOne(psr => psr.PresentByStaff)
+                .HasForeignKey(psr => psr.PresentByStaffId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<Staff>()
+                .HasMany(s => s.PostSaleRequestsResolved)
+                .WithOne(psr => psr.ResolveBy)
+                .HasForeignKey(psr => psr.ResolveById)
+                .OnDelete(DeleteBehavior.Restrict);
+        
+            modelBuilder.Entity<PostSaleRequest>()
+                .HasIndex(psr => psr.PresentByStaffId); // index scan postsalerequest by presentbystaff faster
+
+            modelBuilder.Entity<PostSaleRequest>()
+                .HasIndex(psr => psr.ResolveById); // index scan postsalerequest by resolvebystaff faster
+
+            // ==== Order - postsalerequest ( one to Many ) ====
+            modelBuilder.Entity<Order>()
+                .HasMany(o => o.PostSaleRequests)
+                .WithOne(psr => psr.Order)
+                .HasForeignKey(psr => psr.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PostSaleRequest>()
+                .HasIndex(psr => psr.OrderId); // index scan postsalerequest by order faster
+
 
             // ==== ZaloOathToken ====
 

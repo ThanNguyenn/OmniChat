@@ -37,5 +37,7 @@ namespace OmniChat.Infrastructure.Models
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
         public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+
+        public virtual ICollection<PostSaleRequest> PostSaleRequests { get; set; } = new List<PostSaleRequest>();
     }
 }

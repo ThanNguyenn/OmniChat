@@ -19,6 +19,14 @@ namespace OmniChat.Infrastructure.Models
         public string Reason { get; set; }
 
         public DateTime CreateDate { get; set; }
+
+        public Guid ActionById { get; set; }
+
+        public virtual Staff ActionBy { get; set; }
+
+        public Guid ActionToId { get; set; }
+
+        public virtual Staff ActionTo { get; set; }
     }
 
     public enum TaskAssignmentType

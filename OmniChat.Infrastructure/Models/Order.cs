@@ -31,6 +31,8 @@ namespace OmniChat.Infrastructure.Models
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
         public virtual ICollection<BillingItem> BillingItems { get; set; } = new List<BillingItem>();
+
+        public virtual ICollection<PostSaleRequest> PostSaleRequests { get; set; } = new List<PostSaleRequest>();
     }
 
     public enum OrderStatus
