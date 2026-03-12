@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Models
 {
-    public class MessageKeywordTypes
+    public class MessageIntentType
     {
         public Guid Id { get; set; }
 
@@ -14,10 +14,9 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual CustomerMessage CustomerMessage { get; set; }
 
-        public Guid KeywordTypeId { get; set; }
+        public Guid IntentTypeId { get; set; }
 
-        public virtual KeywordTypes KeywordTypes { get; set; }
-
-        public virtual ICollection<MessageKeyword> MessageKeywords { get; set; } = new List<MessageKeyword>();
+        public virtual IntentType IntentType { get; set; }
+    
     }
 }

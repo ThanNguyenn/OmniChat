@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Models
 {
-    public class KeywordTypes
+    public class IntentType
     {
         public Guid Id { get; set; }
         
@@ -16,7 +16,7 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? IsActive { get; set; }
 
-        public int KeywordTypePiority { get; set; }
+        public int IntentTypePiority { get; set; }
 
         public DateTime CreateDate { get; set; }
 
@@ -24,10 +24,12 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<Keyword> Keywords { get; set; } = new List<Keyword>();
 
-        public virtual ICollection<MessageKeywordTypes> MessageKeywordTypes { get; set; } = new List<MessageKeywordTypes>();
+        public virtual ICollection<MessageIntentType> MessageIntentTypes { get; set; } = new List<MessageIntentType>();
 
         public virtual ICollection<SupportTask> SupportTasks { get; set; } = new List<SupportTask>();
 
         public virtual ICollection<Staff> Staffs { get; set; } = new List<Staff>();
+
+        public virtual ICollection<StaffIntentType> StaffIntentTypes { get; set; } = new List<StaffIntentType>();
     }
 }

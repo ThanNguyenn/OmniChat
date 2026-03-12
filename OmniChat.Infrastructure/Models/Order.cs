@@ -14,6 +14,10 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual CustomerProfile CustomerProfile { get; set; }
 
+        public Guid InvoiceId { get; set; }
+
+        public virtual Invoice Invoice { get; set; }
+
         public DateTime OrderDate { get; set; }
 
         public string Name { get; set; }
@@ -28,9 +32,13 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? IsDeleted { get; set; }
 
+        public Guid? DriverId { get; set; }
+
+        public virtual Staff Driver { get; set; }
+
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
-        public virtual ICollection<BillingItem> BillingItems { get; set; } = new List<BillingItem>();
+        public virtual ICollection<CreditNote> CreditNotes { get; set; } = new List<CreditNote>();
 
         public virtual ICollection<PostSaleRequest> PostSaleRequests { get; set; } = new List<PostSaleRequest>();
     }

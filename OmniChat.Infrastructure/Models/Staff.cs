@@ -24,9 +24,9 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Account Account { get; set; }
 
-        public Guid? KeyWordTypeId { get; set; }
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
-        public virtual KeywordTypes? KeywordTypes { get; set; }
+        public virtual ICollection<StaffIntentType> StaffIntentTypes { get; set; } = new List<StaffIntentType>();
 
         public virtual ICollection<SupportConversation> SupportConversations { get; set; } = new List<SupportConversation>();
 
@@ -42,13 +42,15 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<SupportTask> SupportTasks { get; set; } = new List<SupportTask>();
 
-        public virtual ICollection<TaskAssignmentHistory> ActionsPerformed { get; set; } = new List<TaskAssignmentHistory>();
+        public virtual ICollection<TaskAction> ActionsPerformed { get; set; } = new List<TaskAction>();
 
-        public virtual ICollection<TaskAssignmentHistory> ActionsReceived { get; set; } = new List<TaskAssignmentHistory>();
+        public virtual ICollection<TaskAction> ActionsReceived { get; set; } = new List<TaskAction>();
 
         public virtual ICollection<PostSaleRequest> PostSaleRequestsPresented { get; set; } = new List<PostSaleRequest>();
 
         public virtual ICollection<PostSaleRequest> PostSaleRequestsResolved { get; set; } = new List<PostSaleRequest>();
+
+        public virtual ICollection<StaffPerformance> StaffPerformances { get; set; } = new List<StaffPerformance>();
     }
 
     public enum StaffStatus

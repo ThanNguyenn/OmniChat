@@ -14,9 +14,9 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual SupportConversation SupportConversation { get; set; }
 
-        public Guid KeywordTypeId { get; set; }
+        public Guid IntentTypeId { get; set; }
 
-        public virtual KeywordTypes KeywordType { get; set; }
+        public virtual IntentType IntentType { get; set; }
 
         public SupportTaskStatus Status { get; set; }
 
@@ -28,7 +28,11 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime CompleteDate { get; set; }
 
-        public virtual ICollection<TaskAssignmentHistory> TaskAssignmentHistories { get; set; } = new List<TaskAssignmentHistory>();
+        public int TaskPiority { get; set; }
+
+        public virtual ICollection<TaskAction> TaskActions { get; set; } = new List<TaskAction>();
+
+        public virtual ICollection<TaskCancelReason> TaskCancelReasons { get; set; } = new List<TaskCancelReason>();
     }
 
     public enum SupportTaskStatus
@@ -37,6 +41,7 @@ namespace OmniChat.Infrastructure.Models
         InProgress = 1,
         PendingReassign = 2,
         Done = 3,
-        Cancelled =4,
+        Cancelled = 4,
+        closed = 5,
     }
 }

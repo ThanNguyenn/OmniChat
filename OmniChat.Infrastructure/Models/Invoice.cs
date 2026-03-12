@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Models
 {
-    public class Payment
+    public class Invoice
     {
         public Guid Id { get; set; }
 
@@ -20,18 +20,24 @@ namespace OmniChat.Infrastructure.Models
 
         public double Total {  get; set; }
 
-        public PaymentStatus PayStatus { get; set; }
+        public InvoiceStatus InvoiceStatus { get; set; }
 
-        public PaymentMethod PayMethod { get; set; }
+        public InvoiceMethod InvoiceMethod { get; set; }
 
         public DateTime CompletedDate { get; set; }
 
         public DateTime CreateAt { get; set; }
 
-        public virtual ICollection<BillingItem> BillingItems { get; set; } = new List<BillingItem>();
+        public bool? IsDeleted { get; set; }
+
+        public virtual ICollection<CreditNote> CreditNotes { get; set; } = new List<CreditNote>();
+
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+        public virtual ICollection<Allocation> Allocations { get; set; } = new List<Allocation>();
     }
 
-    public enum PaymentStatus 
+    public enum InvoiceStatus
     {
         Pending = 0,
         Completed = 1,
@@ -41,7 +47,7 @@ namespace OmniChat.Infrastructure.Models
         PartialPaid = 5,
     }
 
-    public enum PaymentMethod
+    public enum InvoiceMethod
     {
         Cash = 0,
         BankTransfer = 1,

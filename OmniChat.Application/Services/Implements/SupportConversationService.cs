@@ -298,8 +298,8 @@ namespace OmniChat.Application.Services.Implements
                         ProviderName = sc.Providers.ProviderName,
                         Status = sc.Status,
                         CompleteDate = st.CompleteDate,
-                        KeywordType = st.KeywordType != null
-                                        ? st.KeywordType.TypeName
+                        KeywordType = st.IntentType != null
+                                        ? st.IntentType.TypeName
                                         : null,
                         StaffName = st.CurrentAssignedStaff != null
                                         ? st.CurrentAssignedStaff.Name

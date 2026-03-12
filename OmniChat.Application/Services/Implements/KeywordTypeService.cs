@@ -20,11 +20,11 @@ public class KeywordTypeService : BaseService<KeywordTypeService>, IKeywordTypeS
 
     public async Task<bool> CreateKeywordTypeAsync(CreateKeywordTypeResquest createKeywordTypeResquest)
     {
-        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var keywordTypeRepo = _unitOfWork.GetRepository<IntentType>();
         var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.TypeName == createKeywordTypeResquest.TypeName);
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var keywordType = _mapper.Map<KeywordTypes>(createKeywordTypeResquest);
+            var keywordType = _mapper.Map<IntentType>(createKeywordTypeResquest);
             await keywordTypeRepo.InsertAsync(keywordType);
         });
         return true;
@@ -32,7 +32,7 @@ public class KeywordTypeService : BaseService<KeywordTypeService>, IKeywordTypeS
 
     public async Task<bool> DeleteKeywordTypeAsync(Guid keywordTypeId)
     {
-        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var keywordTypeRepo = _unitOfWork.GetRepository<IntentType>();
         var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId) ?? throw new NotFoundException($"Keyword type {keywordTypeId} not found");
         existingKeywordType.IsActive = false;
 
@@ -45,13 +45,13 @@ public class KeywordTypeService : BaseService<KeywordTypeService>, IKeywordTypeS
 
     public async Task<IEnumerable<GetKeywordTypesResponse>> GetAllKeywordTypesAsync()
     {
-        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var keywordTypeRepo = _unitOfWork.GetRepository<IntentType>();
         var response = _mapper.Map<IEnumerable<GetKeywordTypesResponse>>(await keywordTypeRepo.GetListAsync(predicate: kt => kt.IsActive != false));
         return response;
     }
     public async Task<GetKeywordTypeResponse> GetKeywordTypeAsync(Guid keywordTypeId)
     {
-        var keywordTypeRepo = _unitOfWork.GetRepository<KeywordTypes>();
+        var keywordTypeRepo = _unitOfWork.GetRepository<IntentType>();
         var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId && kt.IsActive != false) ?? throw new NotFoundException($"Keyword type {keywordTypeId} not found");
         var response = _mapper.Map<GetKeywordTypeResponse>( existingKeywordType);
         return response;

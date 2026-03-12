@@ -25,7 +25,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual SupportConversation Conversation { get; set; }
 
-        public virtual ICollection<MessageKeywordTypes> MessageKeywordTypes { get; set; } = new List<MessageKeywordTypes>();
+        public virtual ICollection<MessageIntentType> MessageIntentTypes { get; set; } = new List<MessageIntentType>();
 
     }
 }

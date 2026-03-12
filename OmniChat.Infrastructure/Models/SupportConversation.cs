@@ -34,6 +34,12 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime UpdateDate { get; set; }
 
+        public DateTime FirstResponseAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime CloseAt { get; set; } = DateTime.UtcNow;
+
+
+
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
 
         public virtual FeedBack FeedBack { get; set; }

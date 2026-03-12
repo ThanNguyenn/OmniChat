@@ -26,7 +26,7 @@ namespace OmniChat.Infrastructure.Mappings
          )
          .ForMember(
              dest => dest.TotalPayment,
-             opt => opt.MapFrom(src => src.Payments.Sum(p => p.Total))
+             opt => opt.MapFrom(src => src.Invoices.Sum(p => p.Total))
          )
             .ForMember(
             dest => dest.CustomerDate,

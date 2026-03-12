@@ -19,9 +19,13 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<Staff> Staffs { get; set; }
 
-        public DbSet<KeywordTypes> KeywordTypes { get; set; }
+        public DbSet<StaffPerformance> StaffPerformances { get; set; }
 
-        public DbSet<MessageKeywordTypes> MessageKeywordTypes { get; set; }
+        public DbSet<StaffIntentType> StaffIntentTypes { get; set; }
+
+        public DbSet<IntentType> IntentTypes { get; set; }
+
+        public DbSet<MessageIntentType> MessageIntentTypes { get; set; }
 
         public DbSet<InternalConversationFile> InternalConversationFiles { get; set; }
 
@@ -33,6 +37,8 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<SupportTask> SupportTasks { get; set; }
 
+        public DbSet<TaskCancelReason> TaskCancelReasons { get; set; }
+
         public DbSet<InternalStaffMessage> InternalStaffMessages { get; set; }
 
         public DbSet<ClaimType> ClaimTypes { get; set; }
@@ -43,11 +49,11 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<CustomerProfile> CustomerProfiles { get; set; }
 
+        public DbSet<Wallet> Wallets { get; set; }
+
         public DbSet<Provider> Providers { get; set; }
 
         public DbSet<SupportConversation> SupportConversations { get; set; }
-
-        public DbSet<MessageKeyword> MessageKeywords { get; set; }
 
         public DbSet<FeedBack> FeedBacks { get; set; }
 
@@ -57,11 +63,13 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<ConversationFile> ConversationFiles { get; set; }
 
+        public DbSet<Transaction> Transactions { get; set; }
+
         public DbSet<SupportConversationFile> SupportConversationFiles { get; set; }
         
         public DbSet<InternalConversation> InternalConversations { get; set; }
 
-        public DbSet<TaskAssignmentHistory> TaskAssignmentHistories { get; set; }
+        public DbSet<TaskAction> TaskActions { get; set; }
 
         public DbSet<Order> Orders { get; set; }
 
@@ -71,9 +79,11 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<ProductBatch> ProductBatches { get; set; }
 
-        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
 
-        public DbSet<BillingItem> BillingItems { get; set; }
+        public DbSet<Allocation> Allocations { get; set; }
+
+        public DbSet<CreditNote> CreditNotes { get; set; }
 
         public DbSet<PostSaleRequest> PostSaleRequests { get; set; }
 
@@ -120,8 +130,13 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(st => st.Status)
                 .HasConversion<string>();
 
+            // Convert enum to string
+            modelBuilder.Entity<TaskCancelReason>()
+                .Property(tcr => tcr.ReasonType)
+                .HasConversion<string>();
+
             // convert enum to string
-            modelBuilder.Entity<TaskAssignmentHistory>()
+            modelBuilder.Entity<TaskAction>()
                 .Property(tah => tah.Action)
                 .HasConversion<string>();
 
@@ -139,16 +154,16 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(p => p.ProductPackagingType)
                 .HasConversion<string>();
 
-            modelBuilder.Entity<Payment>()
-                .Property(p => p.PayStatus)
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.InvoiceStatus)
                 .HasConversion<string>();
 
-            modelBuilder.Entity<Payment>()
-                .Property(p => p.PayMethod)
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.InvoiceMethod)
                 .HasConversion<string>();
 
-            modelBuilder.Entity<BillingItem>()
-                .Property(bi => bi.BillStatus)
+            modelBuilder.Entity<CreditNote>()
+                .Property(cn => cn.CreditNoteStatus)
                 .HasConversion<string>();
 
             modelBuilder.Entity<PostSaleRequest>()
@@ -157,6 +172,10 @@ namespace OmniChat.Infrastructure.Persistence
 
                 modelBuilder.Entity<PostSaleRequest>()
                 .Property(psr => psr.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.TransactionType)
                 .HasConversion<string>();
 
             // default value IsActive = true
@@ -173,7 +192,7 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(x => x.IsActive)
             .HasDefaultValueSql("true");
 
-            modelBuilder.Entity<KeywordTypes>()
+            modelBuilder.Entity<IntentType>()
              .Property(x => x.IsActive)
              .HasDefaultValueSql("true");
 
@@ -216,6 +235,10 @@ namespace OmniChat.Infrastructure.Persistence
             .HasDefaultValueSql("false");
 
             modelBuilder.Entity<Order>()
+            .Property(x => x.IsDeleted)
+            .HasDefaultValueSql("false");
+
+            modelBuilder.Entity<Invoice>()
             .Property(x => x.IsDeleted)
             .HasDefaultValueSql("false");
 
@@ -372,7 +395,7 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Claim>()
                 .HasIndex(c => c.StaffId); // index scan claim by staff faster
 
-            // ==== KeywordTypes - Keyword ( one to many ) ====
+            // ==== IntentType - Keyword ( one to many ) ====
             modelBuilder.Entity<Keyword>()
                 .HasKey(k => k.Id);
 
@@ -381,67 +404,38 @@ namespace OmniChat.Infrastructure.Persistence
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
 
-            modelBuilder.Entity<KeywordTypes>()
+            modelBuilder.Entity<IntentType>()
                 .HasMany(kt => kt.Keywords)
-                .WithOne(k => k.KeyWordType)
-                .HasForeignKey(k => k.KeyWordTypeId)
+                .WithOne(k => k.IntentType)
+                .HasForeignKey(k => k.IntentTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<KeywordTypes>()
-                .HasIndex(kt => kt.TypeName); // index scan keywordtypes by typename faster
+            modelBuilder.Entity<IntentType>()
+                .HasIndex(kt => kt.TypeName); // index scan IntentType by typename faster
 
             modelBuilder.Entity<Keyword>()
-                .HasIndex(k => k.KeyWordTypeId); // index scan keyword by keywordtype faster
+                .HasIndex(k => k.IntentTypeId); // index scan keyword by IntentType faster
+
+
+            modelBuilder.Entity<Keyword>()
+                .HasIndex(k => k.KeywordText);// index scan keyword by keywordtext faster
 
             // Unique constraint on Code in Keyword
             modelBuilder.Entity<Keyword>()
             .HasIndex(k => k.Code)
             .IsUnique();
 
-
-            // ==== MessageKeywordTypes - MessageKeyword ( one to Many ) ====
-            modelBuilder.Entity<MessageKeywordTypes>()
+            // ==== MessageIntentType ====
+            modelBuilder.Entity<MessageIntentType>()
                 .HasKey(mkt => mkt.Id);
 
-            //Auto gen Guid Id MessageKeywordTypes
-            modelBuilder.Entity<MessageKeywordTypes>()
+            //Auto gen Guid Id MessageIntentType
+            modelBuilder.Entity<MessageIntentType>()
                 .Property(mkt => mkt.Id)
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
 
-            modelBuilder.Entity<MessageKeywordTypes>()
-                .HasMany(mkt => mkt.MessageKeywords)
-                .WithOne(mk => mk.MessageKeywordTypes)
-                .HasForeignKey(mk => mk.MessageKeywordTypesId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-           modelBuilder.Entity<MessageKeyword>()
-                .HasIndex(mk => mk.MessageKeywordTypesId); // index scan messagekeyword by messagekeywordtypes faster
-
-
-            // ==== Keyword - MessageKeyword ( one to Many ) ====
-            modelBuilder.Entity<MessageKeyword>()
-                .HasKey(mk => mk.Id);
-
-            //Auto gen Guid Id MessageKeyword
-            modelBuilder.Entity<MessageKeyword>()
-            .Property(mk => mk.Id)
-            .ValueGeneratedOnAdd()
-            .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<Keyword>()
-                .HasMany(k => k.MessageKeywords)
-                .WithOne(mk => mk.Keyword)
-                .HasForeignKey(mk => mk.KeywordId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Keyword>()
-                .HasIndex(k => k.KeywordText); // index scan keyword by keywordtext faster
-
-            modelBuilder.Entity<MessageKeyword>()
-                .HasIndex(mk => mk.KeywordId); // index scan messagekeyword by keyword faster
-
-            // ==== CustomerMessage - MessageKeywordType ( one to Many ) ====
+            // ==== CustomerMessage - MessageIntentType ( one to Many ) ====
             modelBuilder.Entity<CustomerMessage>()
                 .HasKey(cm => cm.Id);
 
@@ -452,30 +446,30 @@ namespace OmniChat.Infrastructure.Persistence
             .HasDefaultValueSql("gen_random_uuid()");
              
             modelBuilder.Entity<CustomerMessage>()
-                .HasMany(cm => cm.MessageKeywordTypes)
+                .HasMany(cm => cm.MessageIntentTypes)
                 .WithOne(mkt => mkt.CustomerMessage)
                 .HasForeignKey(mkt => mkt.MessageId)
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-            // ==== KeywordTypes - MessageKeywordType ( one to Many ) ====
-            modelBuilder.Entity<KeywordTypes>()
+            // ==== IntentType - MessageIntentType ( one to Many ) ====
+            modelBuilder.Entity<IntentType>()
                 .HasKey(mkt => mkt.Id);
 
-            modelBuilder.Entity<KeywordTypes>()
+            modelBuilder.Entity<IntentType>()
                  .Property(kt => kt.Id)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
 
-            modelBuilder.Entity<KeywordTypes>()
-                .HasMany(kt => kt.MessageKeywordTypes)
-                .WithOne(mkt => mkt.KeywordTypes)
-                .HasForeignKey(mkt => mkt.KeywordTypeId)
+            modelBuilder.Entity<IntentType>()
+                .HasMany(kt => kt.MessageIntentTypes)
+                .WithOne(mkt => mkt.IntentType)
+                .HasForeignKey(mkt => mkt.IntentTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<MessageKeywordTypes>()
-                .HasIndex(mkt => mkt.KeywordTypeId); // index scan messagekeywordtypes by keywordtype faster
+            modelBuilder.Entity<MessageIntentType>()
+                .HasIndex(mkt => mkt.IntentTypeId); // index scan MessageIntentType by IntentType faster
 
             // ==== CustomerProfile - CustomerMessage ( one to Many ) ====
             modelBuilder.Entity<CustomerProfile>()
@@ -589,6 +583,67 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<SupportConversation>()
                 .HasIndex(cp => cp.ActiveCustomerId); // index scan supportconversation by customerprofile faster
+
+            // ==== CustomerProfile - Wallet (one to one)
+            modelBuilder.Entity<Wallet>()
+                .HasKey(w => w.Id);
+
+            modelBuilder.Entity<Wallet>()
+                .Property(w => w.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<CustomerProfile>()
+               .HasOne(cp => cp.Wallet)
+               .WithOne(w => w.CustomerProfile)
+               .HasForeignKey<Wallet>(w => w.CustomerId);
+
+            // ==== wallet - Transaction ( one to Many ) ====
+            modelBuilder.Entity<Transaction>()
+                .HasKey(t => t.Id);
+
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Wallet)
+                .WithMany(w => w.Transactions)
+                .HasForeignKey(t => t.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(t => t.WalletId); // index scan transaction by wallet faster
+
+            // ==== Wallet - Allocation ( one to Many ) ====
+            modelBuilder.Entity<Allocation>()
+                .HasKey(a => a.Id);
+
+            modelBuilder.Entity<Allocation>()
+                .Property(a => a.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<Allocation>()
+                .HasOne(a => a.Wallet)
+                .WithMany(w => w.Allocations)
+                .HasForeignKey(a => a.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Allocation>()
+                .HasIndex(a => a.Id); // index scan allocation by id faster
+
+
+            // ==== Invoice - Allocation ( one to Many ) ====
+            modelBuilder.Entity<Allocation>()
+                .HasOne(a => a.Invoice)
+                .WithMany(i => i.Allocations)
+                .HasForeignKey(a => a.InvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Allocation>()
+                .HasIndex(a => a.InvoiceId); // index scan allocation by invoice faster
 
             // ==== Staff - FeedBack ( one to Many ) ====
             modelBuilder.Entity<FeedBack>()
@@ -754,15 +809,51 @@ namespace OmniChat.Infrastructure.Persistence
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
 
-            // ==== staff - KeywordType (many - one)
-                modelBuilder.Entity<KeywordTypes>()
-                .HasMany(kt => kt.Staffs)
-                .WithOne(s => s.KeywordTypes)
-                .HasForeignKey(s => s.KeyWordTypeId)
+            // ==== staff - StaffIntentType (many - one)
+            modelBuilder.Entity<StaffIntentType>()
+                .HasKey(sit => sit.Id);
+
+            modelBuilder.Entity<StaffIntentType>()
+                 .Property(sit => sit.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<StaffIntentType>()
+                .HasOne(sit => sit.Staff)
+                .WithMany(s => s.StaffIntentTypes)
+                .HasForeignKey(s => s.StaffId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // ==== IntentType - StaffIntentType ( many - one ) ====
+            modelBuilder.Entity<StaffIntentType>()
+                .HasOne(sit => sit.IntentType)
+                .WithMany(it => it.StaffIntentTypes)
+                .HasForeignKey(sit => sit.IntentTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<StaffIntentType>()
+                .HasIndex(sit => new { sit.IntentTypeId, sit.StaffId });
+
+            // ==== Staff - StaffPerformance ( one to Many ) ====
+            modelBuilder.Entity<StaffPerformance>()
+                .HasKey(sp => sp.Id);
+
+            //Auto gen Guid Id StaffPerformance
+            modelBuilder.Entity<StaffPerformance>()
+                .Property(sp => sp.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
             modelBuilder.Entity<Staff>()
-                .HasIndex(s => s.KeyWordTypeId); // scan by keyword index faster
+                .HasMany(s => s.StaffPerformances)
+                .WithOne(sp => sp.Staff)
+                .HasForeignKey(sp => sp.StaffId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StaffPerformance>()
+                .HasIndex(sp => sp.StaffId); // scan by StaffId faster
+
 
             // ==== Staff - SupportTask ( one to Many ) ====
 
@@ -786,6 +877,7 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<SupportTask>()
                 .HasIndex(st => st.Status);
+
             // ==== SupportConversation - SupportTask ( one to Many ) ====
 
             modelBuilder.Entity<SupportConversation>()
@@ -797,16 +889,36 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<SupportTask>()
                 .HasIndex(st => st.SupportConversationId); // scan by SupportConversationId faster
 
-            // ==== KeywordTypes - SupportTask ( one to Many ) ====
+            // ==== supportTask - TaskCancelReason ( one to Many ) ====
 
-            modelBuilder.Entity<KeywordTypes>()
+            modelBuilder.Entity<TaskCancelReason>()
+                .HasKey(tcr => tcr.Id);
+
+            //Auto gen Guid Id TaskCancelReason
+            modelBuilder.Entity<TaskCancelReason>()
+                .Property(tcr => tcr.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<TaskCancelReason>()
+                .HasOne(tcr => tcr.SupportTask)
+                .WithMany(st => st.TaskCancelReasons)
+                .HasForeignKey(tcr => tcr.SupportTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskCancelReason>()
+                .HasIndex(tcr => tcr.SupportTaskId); // scan by SupportTaskId faster
+
+            // ==== IntentType - SupportTask ( one to Many ) ====
+
+            modelBuilder.Entity<IntentType>()
                 .HasMany(kt => kt.SupportTasks)
-                .WithOne(st => st.KeywordType)
-                .HasForeignKey(st => st.KeywordTypeId)
+                .WithOne(st => st.IntentType)
+                .HasForeignKey(st => st.IntentTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<SupportTask>()
-                .HasIndex(st => st.KeywordTypeId); // scan by KeywordTypeId faster
+                .HasIndex(st => st.IntentTypeId); // scan by KeywordTypeId faster
 
             // ==== ChatTemplate ====
             modelBuilder.Entity<ChatTemplate>()
@@ -888,36 +1000,36 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<InternalStaffMessage>()
                 .HasIndex(ism => ism.StaffId); // scan by StaffId faster
 
-            // == TaskAssignmentHistory - SupportTask ( many to one ) ==
+            // == TaskAction - SupportTask ( many to one ) ==
 
-            modelBuilder.Entity<TaskAssignmentHistory>()
+            modelBuilder.Entity<TaskAction>()
                 .HasKey(tah => tah.Id);
 
-            // Auto gen Guid Id TaskAssignmentHistory
-            modelBuilder.Entity<TaskAssignmentHistory>()
+            // Auto gen Guid Id TaskAction
+            modelBuilder.Entity<TaskAction>()
                 .Property(tah => tah.Id)
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
 
 
             modelBuilder.Entity<SupportTask>()
-                .HasMany(st => st.TaskAssignmentHistories)
+                .HasMany(st => st.TaskActions)
                 .WithOne(tah => tah.SupportTask)
                 .HasForeignKey(tah => tah.SupportTaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<TaskAssignmentHistory>()
+            modelBuilder.Entity<TaskAction>()
                 .HasIndex(tah => tah.SupportTaskId); // scan by SupportTaskId faster
 
 
-            // == Staff - TaskAssigmentHistory ( many to one ) ==
-            modelBuilder.Entity<TaskAssignmentHistory>()
+            // == Staff - TaskAction ( many to one ) ==
+            modelBuilder.Entity<TaskAction>()
                 .HasOne(x => x.ActionBy)
                 .WithMany(x => x.ActionsPerformed)
                 .HasForeignKey(x => x.ActionById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<TaskAssignmentHistory>()
+            modelBuilder.Entity<TaskAction>()
                 .HasOne(x => x.ActionTo)
                 .WithMany(x => x.ActionsReceived)
                 .HasForeignKey(x => x.ActionToId)
@@ -956,6 +1068,17 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<Order>()
                 .HasIndex(o => o.DeliveryStatus);
+
+            // ==== order - Drvider (Staff) (one to Many ) ====
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Driver)
+                .WithMany(s => s.Orders)
+                .HasForeignKey(o => o.DriverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.DriverId); // index scan order by driver faster
 
             // define Order code auto generation example : OD000001
             modelBuilder.HasSequence<int>("OrderCodeSeq")
@@ -1047,53 +1170,62 @@ namespace OmniChat.Infrastructure.Persistence
                     "'SP' || LPAD(nextval('\"ProductCodeSeq\"')::text, 6, '0')")
                 .ValueGeneratedOnAdd();
 
-            // ==== CustomerProfile - Paymment( one - Many)
-            modelBuilder.Entity<Payment>()
-                .HasKey(p => p.Id);
+            // ==== CustomerProfile - Invoice ( one - Many)
+            modelBuilder.Entity<Invoice>()
+                .HasKey(i => i.Id);
 
-            modelBuilder.Entity<Payment>()
-                .Property(p => p.Id)
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.Id)
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<CustomerProfile>()
-                .HasMany(cp => cp.Payments)
-                .WithOne(p => p.CustomerProfile)
-                .HasForeignKey(p => p.CustomerId)
+                .HasMany(cp => cp.Invoices)
+                .WithOne(i => i.CustomerProfile)
+                .HasForeignKey(i => i.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Payment>()
-                .HasIndex(p => p.CustomerId); // index scan payment by customer faster
+            modelBuilder.Entity<Invoice>()
+                .HasIndex(i => i.CustomerId); // index scan Invoice by customer faster
 
-            // ==== Order - BillingItem (one - Many)
+            // ==== Order - CreditNote (one - Many)
 
-            modelBuilder.Entity<BillingItem>()
-                .HasKey(p => p.Id);
+            modelBuilder.Entity<CreditNote>()
+                .HasKey(i => i.Id);
 
-            modelBuilder.Entity<BillingItem>()
-                .Property(p => p.Id)
+            modelBuilder.Entity<CreditNote>()
+                .Property(i => i.Id)
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Order>()
-                .HasMany(o => o.BillingItems)
+                .HasMany(o => o.CreditNotes)
                 .WithOne(o => o.Order)
                 .HasForeignKey(o => o.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<BillingItem>()
+            modelBuilder.Entity<CreditNote>()
                 .HasIndex(o => o.OrderId);   // index scan bill by order faster
 
-            // ==== Payment - billingItem (one - many)
-            modelBuilder.Entity<Payment>()
-                .HasMany(p => p.BillingItems)
-                .WithOne(bi => bi.Payment)
-                .HasForeignKey(p => p.PaymentId)
+            // ==== Invoice - CreditNotes (one - many)
+            modelBuilder.Entity<Invoice>()
+                .HasMany(i => i.CreditNotes)
+                .WithOne(cn => cn.Invoice)
+                .HasForeignKey(i => i.InvoiceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<BillingItem>()
-                .HasIndex(o => o.PaymentId); // index scan bill by payment Id faster
+            modelBuilder.Entity<CreditNote>()
+                .HasIndex(o => o.InvoiceId); // index scan bill by CreditNotes Id faster
 
+            // ==== Invoice - Order ( one to many ) ====
+            modelBuilder.Entity<Invoice>()
+                .HasMany(i => i.Orders)
+                .WithOne(o => o.Invoice)
+                .HasForeignKey(o => o.InvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.InvoiceId); // index scan order by InvoiceId faster
 
             // ==== CustomerProfile - PostSaleRequest ( one to Many ) ====
             modelBuilder.Entity<PostSaleRequest>()

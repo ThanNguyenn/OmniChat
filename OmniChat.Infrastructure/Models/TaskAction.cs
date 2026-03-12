@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Models
 {
-    public class TaskAssignmentHistory
+    public class TaskAction
     {
         public Guid Id { get; set; }
         
@@ -14,7 +14,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual SupportTask SupportTask { get; set; }
         
-        public TaskAssignmentType Action { get; set; }
+        public TaskActionType Action { get; set; }
 
         public string Reason { get; set; }
 
@@ -29,11 +29,14 @@ namespace OmniChat.Infrastructure.Models
         public virtual Staff ActionTo { get; set; }
     }
 
-    public enum TaskAssignmentType
+    public enum TaskActionType
     {
         Assigned = 0,
         Reassigned = 1,
         unassigned = 2,
-
+        Completed = 3,
+        Cancelled = 4,
     }
+
+
 }

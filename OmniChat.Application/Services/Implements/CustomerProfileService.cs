@@ -83,7 +83,7 @@ namespace OmniChat.Application.Services.Implements
                 || cp.ZaloSenderId == senderId ||
                 cp.InstagramSenderId == senderId,
                 include: cp => cp.Include(o => o.Orders)
-                .Include(p => p.Payments)
+                .Include(p => p.Invoices)
                 );
         }
 
@@ -94,7 +94,7 @@ namespace OmniChat.Application.Services.Implements
             var existCustomerProfile = await repo.SingleOrDefaultAsync(
                 predicate: x => x.Id == customerProfileId,
                  include: cp => cp.Include(o => o.Orders)
-                .Include(p => p.Payments)
+                .Include(p => p.Invoices)
                 );
 
             if(existCustomerProfile == null)
@@ -113,7 +113,7 @@ namespace OmniChat.Application.Services.Implements
             var existCustomProfile = await repo.SingleOrDefaultAsync(
                 predicate: x => x.Email.Equals(keyword) || x.PhoneNumber.Equals(keyword),
                  include: cp => cp.Include(o => o.Orders)
-                .Include(p => p.Payments)
+                .Include(p => p.Invoices)
                 );
 
             if (existCustomProfile == null)
@@ -133,7 +133,7 @@ namespace OmniChat.Application.Services.Implements
             var existCustomProfile = await repo.SingleOrDefaultAsync(
                predicate: x => x.Id == CustomerId,
                 include: cp => cp.Include(o => o.Orders)
-               .Include(p => p.Payments)
+               .Include(p => p.Invoices)
                );
 
             var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile);

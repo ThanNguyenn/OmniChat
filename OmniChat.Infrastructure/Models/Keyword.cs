@@ -20,10 +20,9 @@ namespace OmniChat.Infrastructure.Models
         
         public float Weight { get; set; }
 
-        public Guid KeyWordTypeId { get; set; }
+        public Guid IntentTypeId { get; set; }
 
-        public virtual KeywordTypes KeyWordType { get; set; }
+        public virtual IntentType IntentType { get; set; }
 
-        public virtual ICollection<MessageKeyword> MessageKeywords { get; set; } = new List<MessageKeyword>();
     }
 }
