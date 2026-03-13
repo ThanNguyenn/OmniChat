@@ -30,6 +30,8 @@ namespace OmniChat.Infrastructure.Models
 
         public string CreateDate { get; set; }
 
+        public double DebtLimit { get; set; }
+
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
 
         public virtual ICollection<SupportConversation> SupportConversations { get; set; } = new List<SupportConversation>();

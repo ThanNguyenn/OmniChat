@@ -77,6 +77,8 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<Product> Products { get; set; }
 
+        public DbSet<Brand> Brands { get; set; }
+
         public DbSet<ProductBatch> ProductBatches { get; set; }
 
         public DbSet<Invoice> Invoices { get; set; }
@@ -226,6 +228,10 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<CustomerProfile>()
                 .Property(x => x.IsNewCustomer)
+                .HasDefaultValueSql("true");
+
+            modelBuilder.Entity<Brand>()
+                .Property(x => x.IsActive)
                 .HasDefaultValueSql("true");
 
             // default vaule isDelete = false
@@ -1169,6 +1175,25 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasDefaultValueSql(
                     "'SP' || LPAD(nextval('\"ProductCodeSeq\"')::text, 6, '0')")
                 .ValueGeneratedOnAdd();
+
+            // ==== Brand - Product ( one to Many ) ====
+            modelBuilder.Entity<Brand>()
+                .HasKey(b => b.Id);
+
+            //Auto gen Guid Id Brand
+            modelBuilder.Entity<Brand>()
+                .Property(b => b.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");   
+
+            modelBuilder.Entity<Brand>()
+                .HasMany(b => b.Products)
+                .WithOne(p => p.Brand)
+                .HasForeignKey(p => p.BrandId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasIndex(p => p.BrandId); // index scan product by brand fasters
 
             // ==== CustomerProfile - Invoice ( one - Many)
             modelBuilder.Entity<Invoice>()

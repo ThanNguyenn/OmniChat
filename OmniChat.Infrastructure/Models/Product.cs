@@ -22,7 +22,9 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? IsActive { get; set; }
 
-        public string Brand { get; set; }
+        public Guid BrandId { get; set; }
+
+        public virtual Brand Brand { get; set; }
 
         public double Price { get; set; }
 

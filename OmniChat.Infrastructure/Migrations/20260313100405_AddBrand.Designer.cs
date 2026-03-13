@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OmniChat.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using OmniChat.Infrastructure.Persistence;
 namespace OmniChat.Infrastructure.Migrations
 {
     [DbContext(typeof(OmniChatDbContext))]
-    partial class OmniChatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313100405_AddBrand")]
+    partial class AddBrand
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1049,6 +1052,9 @@ namespace OmniChat.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("IntentTypeId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1075,6 +1081,8 @@ namespace OmniChat.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("Id");
+
+                    b.HasIndex("IntentTypeId");
 
                     b.HasIndex("Phone")
                         .IsUnique();
@@ -1815,6 +1823,10 @@ namespace OmniChat.Infrastructure.Migrations
                         .HasForeignKey("OmniChat.Infrastructure.Models.Staff", "AccountId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("OmniChat.Infrastructure.Models.IntentType", null)
+                        .WithMany("Staffs")
+                        .HasForeignKey("IntentTypeId");
+
                     b.Navigation("Account");
                 });
 
@@ -2060,6 +2072,8 @@ namespace OmniChat.Infrastructure.Migrations
                     b.Navigation("MessageIntentTypes");
 
                     b.Navigation("StaffIntentTypes");
+
+                    b.Navigation("Staffs");
 
                     b.Navigation("SupportTasks");
                 });
