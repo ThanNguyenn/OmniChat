@@ -175,5 +175,47 @@ namespace OmniChat.Application.Services.Implements
                 return response;
             });
         }
+
+        public async Task<CustomerDetailResponse> GetCustomerDetailByConversationIdAsync(Guid conversationId)
+        {
+            if (conversationId == Guid.Empty)
+                throw new BadRequestException("conversationId is required");
+
+            var supportConverRepo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
+
+            var providerRepo = _unitOfWork.GetRepository<Provider>();
+
+            var supportConversation = await  supportConverRepo.SingleOrDefaultAsync(
+                predicate: x => x.Id == conversationId,
+                include: sc => sc.Include(sc => sc.Providers)
+                );
+
+            if (supportConversation == null)
+                throw new NotFoundException("supportConversation is required");
+
+            var customer = await customerRepo
+                .SingleOrDefaultAsync(
+                predicate: x => x.Id == supportConversation.ActiveCustomerId,
+                 include: cp => cp.Include(o => o.Orders).Include(x => x.Invoices)
+                 );
+
+            if (customer == null)
+                throw new NotFoundException("customer is required");
+
+            var provider = await providerRepo.SingleOrDefaultAsync(
+                predicate: p => p.Id == supportConversation.ProvidersId
+                );
+
+
+            var result = _mapper.Map<CustomerDetailResponse>(customer);
+
+            result.ProviderName = provider?.ProviderName;
+            result.TimeStartSupport = supportConversation.CreatedDate;
+
+            return result;
+
+        }
     }
 }

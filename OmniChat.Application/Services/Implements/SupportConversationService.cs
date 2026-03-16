@@ -151,7 +151,7 @@ namespace OmniChat.Application.Services.Implements
             return new SupportConversationDetailResponse
             {
                 Id = conversation.Id,
-                CreatedDate = conversation.CreatedDate,
+                CreatedDate = conversation.CreatedDate ?? DateTime.UtcNow,
                 Status = conversation.Status,
                 IsDistributed = conversation.IsDistributed,
                 CustomerName = conversation.CustomerName,
@@ -213,7 +213,7 @@ namespace OmniChat.Application.Services.Implements
             return new SupportConversationDetailResponse
             {
                 Id = conversation.Id,
-                CreatedDate = conversation.CreatedDate,
+                CreatedDate = conversation.CreatedDate ?? DateTime.UtcNow,
                 Status = conversation.Status,
                 IsDistributed = conversation.IsDistributed,
                 CustomerName = conversation.CustomerName,
@@ -297,7 +297,7 @@ namespace OmniChat.Application.Services.Implements
                     {
                         ProviderName = sc.Providers.ProviderName,
                         Status = sc.Status,
-                        CompleteDate = st.CompleteDate,
+                        CompleteDate = st.CompleteDate ?? DateTime.UtcNow,
                         KeywordType = st.IntentType != null
                                         ? st.IntentType.TypeName
                                         : null,

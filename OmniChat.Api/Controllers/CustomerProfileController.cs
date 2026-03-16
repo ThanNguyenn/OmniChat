@@ -15,9 +15,11 @@ namespace OmniChat.Api.Controllers
     public class CustomerProfileController : BaseController<CustomerProfileController>
     {
         private readonly ICustomerProfileService _customerProfileService;
-        public CustomerProfileController(ILogger<CustomerProfileController> logger, ICustomerProfileService customerProfileService) : base(logger)
+        private readonly ICustomerMergeService _customerMergeService;
+        public CustomerProfileController(ILogger<CustomerProfileController> logger, ICustomerProfileService customerProfileService, ICustomerMergeService customerMergeService) : base(logger)
         {
             _customerProfileService = customerProfileService;
+            _customerMergeService = customerMergeService;
         }
 
         [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetAllCustomerProfileByCustomerName)]
@@ -47,6 +49,27 @@ namespace OmniChat.Api.Controllers
                 Data = result
             });
         }
+
+        [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetCustomerProfileByConversationId)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<CustomerDetailResponse>>),StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Lấy Profile của Customer có bằng conversationId",
+            Description = "Lấy Profile của Customer  customer Profile bằng conversationId cho staff"
+            )]
+
+        public async Task<IActionResult> GetCustomerProfileByConversationIdAsync([FromRoute] Guid conversationId)
+        {
+            var result = await _customerProfileService.GetCustomerDetailByConversationIdAsync(conversationId);
+
+            return Ok(new ApiResponse<CustomerDetailResponse> 
+            {
+                StatusCode = StatusCodes.Status200OK,
+                IsSuccess = true,
+                Message = "Get customer profile successfully",
+                Data = result
+            });
+        }
+
 
         [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetCustomerByEmailOrPhone)]
         [ProducesResponseType(typeof(ApiResponse<GetCustomerProfileResponse>),StatusCodes.Status200OK)]
@@ -90,6 +113,34 @@ namespace OmniChat.Api.Controllers
                 StatusCode = StatusCodes.Status200OK,
                 IsSuccess = true,
                 Message = "Customer profile updated successfully",
+                Data = result
+            });
+        }
+
+        [HttpPost(ApiEndPointConstant.CustomerProfileEndPoint.CustomerMerge)]
+        [ProducesResponseType(
+           typeof(ApiResponse<GetCustomerProfileResponse>),
+           StatusCodes.Status200OK)]
+        [SwaggerOperation(
+           Summary = "Gộp và xóa Customer Profile",
+           Description =
+               "Gộp profile mới tạo (Facebook/Instagram) vào profile đã tồn tại, " +
+               "update message & conversation, sau đó xóa profile nguồn"
+       )]
+        public async Task<IActionResult> MergeCustomerAsync(
+           [FromBody] MergeCustomerProfileRequest request)
+        {
+            var result =
+                await _customerMergeService.MergeAndDeleteAsync(
+                    request.SourceCustomerId,
+                    request.TargetCustomerId
+                );
+
+            return Ok(new ApiResponse<GetCustomerProfileResponse>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                IsSuccess = true,
+                Message = "Merge customer profile successfully",
                 Data = result
             });
         }

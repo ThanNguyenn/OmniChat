@@ -12,6 +12,7 @@ using OmniChat.Api.Middlewares;
 using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.Services.Resolver;
 using OmniChat.Application.SignalRHub;
 using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Extensions;
@@ -30,6 +31,7 @@ ConfigureDatabase();
 ConfigureAuthentication();
 ConfigureSwagger();
 ConfigureSignalRServices();
+RegisterResolver();
 var app = builder.Build();
 
 
@@ -142,6 +144,13 @@ void RegisterBackgroundServices()
 void ConfigureSignalRServices()
 {
     builder.Services.AddSignalR();
+}
+
+// add Resolver
+void RegisterResolver()
+{
+    builder.Services.AddScoped<FacebookResolver>();
+    builder.Services.AddScoped<ZaloResolver>();
 }
 
 // SignalR Endpoint

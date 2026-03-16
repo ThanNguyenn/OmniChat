@@ -14,7 +14,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string Reason { get; set; }
 
-        public DateTime SubmitDate { get; set; }
+        public DateTime? SubmitDate { get; set; } = DateTime.UtcNow;
 
         public ClaimStatus Status { get; set; }
 

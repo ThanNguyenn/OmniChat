@@ -14,9 +14,9 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Product Product { get; set; }
 
-        public DateTime ManuFactureDate { get; set; }
+        public DateTime? ManuFactureDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime ExpiryDate { get; set; }
+        public DateTime? ExpiryDate { get; set; } = DateTime.UtcNow;
 
         public int Quantity { get; set; }
 

@@ -12,7 +12,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string ProviderName { get; set; }
 
-        public DateTime CreateDate { get; set; }
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
         public virtual ICollection<SupportConversation> SupportConversations { get; set; } = new List<SupportConversation>();
 

@@ -27,5 +27,6 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task<GetCustomerProfileResponse> UpdateCustomerProfileByIdAsync(Guid customerId, UpdateCustomerProfileRequest newInfor);
 
+        public  Task<CustomerDetailResponse> GetCustomerDetailByConversationIdAsync(Guid conversationId);
     }
 }

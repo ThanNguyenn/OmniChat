@@ -17,8 +17,8 @@ namespace OmniChat.Application.Services.Interface
 
         public Task<bool> VerifyFacebookWebhook(string mode, string token);
 
-        public  Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload);
+        //public  Task<bool> InstagramWebhookAsync(InstagramWebhookPayload payload);
 
-        public  Task<bool> VerifyInstagramWebhook(string mode, string token);
+        //public  Task<bool> VerifyInstagramWebhook(string mode, string token);
     }
 }

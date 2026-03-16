@@ -22,7 +22,7 @@ namespace OmniChat.Infrastructure.Models
 
         public CreditNoteStatus CreditNoteStatus { get; set; }
 
-        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
     }
 

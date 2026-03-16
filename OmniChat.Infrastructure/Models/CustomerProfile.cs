@@ -28,7 +28,7 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? IsNewCustomer { get; set; }
 
-        public string CreateDate { get; set; }
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
         public double DebtLimit { get; set; }
 

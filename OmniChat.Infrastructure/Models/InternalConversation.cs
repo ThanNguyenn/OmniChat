@@ -16,7 +16,7 @@ namespace OmniChat.Infrastructure.Models
 
         public InternalConversationStatus Status { get; set; }
 
-        public DateTime CreateDate { get; set; }
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
         public virtual ICollection<InternalConversationFile> InternalConversationFiles { get; set; } = new List<InternalConversationFile>();
         

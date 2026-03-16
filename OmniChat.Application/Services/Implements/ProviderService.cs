@@ -62,7 +62,7 @@ namespace OmniChat.Application.Services.Implements
                 {
                     Id = x.Id,
                     ProviderName = x.ProviderName,
-                    CreateDate = x.CreateDate,
+                    CreateDate = x.CreateDate ?? DateTime.UtcNow,
                 },
                 predicate: string.IsNullOrWhiteSpace(providerName) ? null : x => x.ProviderName.Contains(providerName),
                 orderBy: q => q.OrderByDescending(x => x.CreateDate),

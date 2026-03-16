@@ -14,7 +14,7 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? IsActive { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CreatedDate { get; set; } = DateTime.UtcNow;
 
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }

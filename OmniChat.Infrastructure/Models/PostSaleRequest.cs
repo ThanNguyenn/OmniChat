@@ -32,11 +32,11 @@ namespace OmniChat.Infrastructure.Models
 
         public PostSaleRequestStatus Status { get; set; }
 
-        public DateTime RequestedTime { get; set; }
+        public DateTime? RequestedTime { get; set; } = DateTime.UtcNow;
 
-        public DateTime? ResolvedTime { get; set; }
+        public DateTime? ResolvedTime { get; set; } = DateTime.UtcNow;
 
-        public DateTime CreateTime { get; set; }
+        public DateTime? CreateTime { get; set; } = DateTime.UtcNow; 
 
 
     }

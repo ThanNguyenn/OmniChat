@@ -164,8 +164,12 @@ public class ProductService : BaseService<ProductService>, IProductService
 
                 var batchDict = existingBatches.ToDictionary(
                     b => (
-                        DateOnly.FromDateTime(b.ManuFactureDate),
-                        DateOnly.FromDateTime(b.ExpiryDate)
+                       b.ManuFactureDate.HasValue
+                            ? DateOnly.FromDateTime(b.ManuFactureDate.Value)
+                            : (DateOnly?)null,
+                        b.ExpiryDate.HasValue
+                            ? DateOnly.FromDateTime(b.ExpiryDate.Value)
+                            : (DateOnly?)null
                     )
                 );
 
