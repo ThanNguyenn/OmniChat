@@ -20,7 +20,7 @@ namespace OmniChat.Infrastructure.Models
 
         public Guid CancelledByStaffId { get; set; }
 
-        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
     }
 
     public enum ReasonType

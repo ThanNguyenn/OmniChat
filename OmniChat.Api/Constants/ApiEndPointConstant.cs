@@ -54,13 +54,12 @@ public class ApiEndPointConstant
 
         public const string UpdateCustomerProfile =
            CustomerProfile + "/{customerId}";
+
+        public const string GetCustomerProfileByConversationId = CustomerProfile + "/{conversationId}";
+
+        public const string CustomerMerge =ApiV1 + "/customer-profile/merge";
     }
 
-    public static class CustomerServiceMergeEndpoint
-    {
-        public const string CustomerMerge =
-        ApiV1 + "/customer-profile/merge";
-    }
     public static class SupportStaffMessageEndPoint
     {
         public const string SupportStaffMessage = ApiV1 + "/support-staff-message";

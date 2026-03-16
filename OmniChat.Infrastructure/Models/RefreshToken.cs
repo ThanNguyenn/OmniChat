@@ -12,9 +12,9 @@ namespace OmniChat.Infrastructure.Models
 
         public string Token { get; set; }
 
-        public DateTime CreateDate { get; set; }
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime ExpireDate { get; set; }
+        public DateTime? ExpireDate { get; set; } = DateTime.UtcNow;
 
         public Guid AccountId { get; set; }
 

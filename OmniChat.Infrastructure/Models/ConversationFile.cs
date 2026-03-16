@@ -14,7 +14,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string FileName { get; set; }
 
-        public DateTime TimeStamp { get; set; }
+        public DateTime? TimeStamp { get; set; } = DateTime.UtcNow;
 
         public string Type { get; set; }
 

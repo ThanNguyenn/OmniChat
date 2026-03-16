@@ -12,13 +12,13 @@ namespace OmniChat.Infrastructure.Models
 
         public string AccessToken { get; set; }
 
-        public DateTime AccessTokenExpiredDate { get; set; }
+        public DateTime? AccessTokenExpiredDate { get; set; } = DateTime.UtcNow;
 
         public string RefreshToken { get; set; }
 
-        public DateTime RefreshTokenExpiredDate { get; set; }
+        public DateTime? RefreshTokenExpiredDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime LastRefreshTokenAt { get; set; }
+        public DateTime? LastRefreshTokenAt { get; set; } = DateTime.UtcNow;
 
         public bool? IsActive { get; set; }
 

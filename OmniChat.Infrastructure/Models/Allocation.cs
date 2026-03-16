@@ -20,6 +20,6 @@ namespace OmniChat.Infrastructure.Models
 
         public double Amount { get; set; }
 
-        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
     }
 }

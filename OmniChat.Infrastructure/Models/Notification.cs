@@ -20,7 +20,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual SupportConversation SupportConversation { get; set; }
 
-        public DateTime CreatedDate { get; set; }
+        public DateTime? CreatedDate { get; set; } = DateTime.UtcNow;
 
         public bool IsRead { get; set; }
     }

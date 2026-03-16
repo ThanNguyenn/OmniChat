@@ -26,12 +26,12 @@ namespace OmniChat.Infrastructure.Models
 
         public int CancelledCount { get; set; }
 
-        public DateTime FromTime { get; set; } = DateTime.UtcNow;
+        public DateTime? FromTime { get; set; } = DateTime.UtcNow;
 
-        public DateTime ToTime { get; set; } = DateTime.UtcNow;
+        public DateTime? ToTime { get; set; } = DateTime.UtcNow;
 
-        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime UpdateDate { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdateDate { get; set; } = DateTime.UtcNow;
     }
 }

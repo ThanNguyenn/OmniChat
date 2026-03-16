@@ -24,9 +24,9 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Staff? CurrentAssignedStaff { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime CompleteDate { get; set; }
+        public DateTime? CompleteDate { get; set; } = DateTime.UtcNow;
 
         public int TaskPiority { get; set; }
 

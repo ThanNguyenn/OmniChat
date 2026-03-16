@@ -10,7 +10,7 @@ namespace OmniChat.Infrastructure.Models
     {
         public Guid Id { get; set; }
 
-        public DateTime CreatedDate { get; set; }
+        public DateTime? CreatedDate { get; set; } = DateTime.UtcNow;
 
         public ConversationStatus Status { get; set; }
 
@@ -32,11 +32,11 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Provider Providers { get; set; }
 
-        public DateTime UpdateDate { get; set; }
+        public DateTime? UpdateDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime FirstResponseAt { get; set; } = DateTime.UtcNow;
+        public DateTime? FirstResponseAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime CloseAt { get; set; } = DateTime.UtcNow;
+        public DateTime? CloseAt { get; set; } = DateTime.UtcNow;
 
 
 

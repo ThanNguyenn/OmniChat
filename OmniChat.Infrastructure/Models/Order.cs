@@ -18,7 +18,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Invoice Invoice { get; set; }
 
-        public DateTime OrderDate { get; set; }
+        public DateTime? OrderDate { get; set; } = DateTime.UtcNow;
 
         public string Name { get; set; }
 

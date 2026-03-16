@@ -18,7 +18,7 @@ namespace OmniChat.Infrastructure.Models
 
         public string Reason { get; set; }
 
-        public DateTime CreateDate { get; set; }
+        public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
         public Guid ActionById { get; set; }
 
