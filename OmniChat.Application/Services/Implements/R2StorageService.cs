@@ -1,0 +1,190 @@
+﻿using Amazon.S3;
+using Amazon.S3.Model;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
+using OmniChat.Infrastructure.Persistence;
+using OmniChat.Infrastructure.Repositories.Interfaces;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Webp;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace OmniChat.Application.Services.Implements;
+
+public class R2StorageService : BaseService<R2StorageService>, IR2StorageService
+{
+    private readonly string _bucketName;
+    private readonly string _publicUrl;
+    private readonly IAmazonS3 _s3Client;
+
+    private readonly Dictionary<string, string> _defaultImages = new()
+    {
+        { "products", "/images/default-product.png" },
+    };
+
+    public R2StorageService(
+    IUnitOfWork<OmniChatDbContext> unitOfWork,
+    ILogger<R2StorageService> logger,
+    IMapper mapper,
+    IHttpContextAccessor httpContextAccessor,
+    IAmazonS3 s3Client,
+    R2Settings settings
+    ) : base(unitOfWork, logger, mapper, httpContextAccessor)
+    {
+        _s3Client = s3Client;
+        _bucketName = settings.BucketName;
+        _publicUrl = settings.PublicUrl.TrimEnd('/');
+    }
+
+    private static readonly Configuration CustomImageConfiguration = CreateCustomConfiguration();
+
+    private static Configuration CreateCustomConfiguration()
+    {
+        var config = Configuration.Default.Clone();
+        config.Configure(new HeyRed.ImageSharp.Heif.Formats.Heif.HeifConfigurationModule());
+        return config;
+    }
+
+    public async Task<bool> DeleteImageByRelatedIdAsync(string category, Guid relatedId)
+    {
+        if (string.IsNullOrWhiteSpace(category))
+            throw new ArgumentException("Category is required.", nameof(category));
+
+        category = category.ToLowerInvariant().Trim('/');
+        string? fileUrl = null;
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            switch (category)
+            {
+                case "products":
+                    var productRepo = _unitOfWork.GetRepository<Product>();
+                    var product = await productRepo.GetByIdAsync(relatedId);
+                    if (product == null) throw new InvalidOperationException("Product not found.");
+
+                    fileUrl = product.ImageUrl;
+                    product.ImageUrl = _defaultImages["products"];
+                    productRepo.Update(product);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported category '{category}'.");
+            }
+        });
+
+        if (!string.IsNullOrWhiteSpace(fileUrl) && fileUrl.StartsWith(_publicUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            var objectKey = fileUrl.Replace($"{_publicUrl}/", "", StringComparison.OrdinalIgnoreCase);
+
+            try
+            {
+                await _s3Client.DeleteObjectAsync(new DeleteObjectRequest
+                {
+                    BucketName = _bucketName,
+                    Key = objectKey
+                });
+
+                _logger.LogInformation("Deleted file from R2: {Key}", objectKey);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete file from R2: {Key}", objectKey);
+            }
+        }
+        return true;
+    }
+
+    public async Task<bool> UploadImageAsync(Stream fileStream, string fileName, string category, Guid? relatedId = null)
+    {
+        if (fileStream == null || string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("Invalid file upload parameters.");
+
+        category = category.ToLowerInvariant().Trim('/');
+
+        await using var optimizedStream = await OptimizeImageAsync(fileStream);
+
+        string newFileName = Path.GetFileNameWithoutExtension(fileName) + ".webp";
+        string objectKey = $"{category}/{relatedId}_{newFileName}";
+
+        string fileUrl = $"{_publicUrl}/{objectKey}";
+
+        await _s3Client.PutObjectAsync(new PutObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = objectKey,
+            InputStream = optimizedStream,
+            ContentType = "image/webp",
+            DisablePayloadSigning = true,
+            DisableDefaultChecksumValidation = true,
+        });
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            try
+            {
+                switch (category)
+                {
+                    case "products" when relatedId.HasValue:
+                        var productRepo = _unitOfWork.GetRepository<Product>();
+                        var product = await productRepo.GetByIdAsync(relatedId.Value);
+
+                        if (product is null)
+                            throw new InvalidOperationException("Product not found");
+
+                        product.ImageUrl = fileUrl;
+                        productRepo.Update(product);
+                        break;
+
+                    default:
+                        throw new InvalidOperationException($"Unsupported or missing category: {category}");
+                }
+            }
+            catch
+            {
+                await _s3Client.DeleteObjectAsync(new DeleteObjectRequest
+                {
+                    BucketName = _bucketName,
+                    Key = objectKey
+                });
+
+                throw;
+            }
+        });
+
+        return true;
+    }
+
+    private static async Task<Stream> OptimizeImageAsync(Stream inputStream)
+    {
+        inputStream.Position = 0;
+
+        var options = new DecoderOptions
+        {
+            Configuration = CustomImageConfiguration
+        };
+
+        using var image = await Image.LoadAsync(options, inputStream);
+
+        image.Metadata.ExifProfile = null;
+        image.Metadata.IccProfile = null;
+        image.Metadata.XmpProfile = null;
+
+        var ms = new MemoryStream();
+
+        await image.SaveAsync(ms, new WebpEncoder
+        {
+            Quality = 80
+        });
+
+        ms.Position = 0;
+        return ms;
+    }
+}

@@ -1,3 +1,5 @@
+using Amazon.Runtime;
+using Amazon.S3;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OmniChat.Api.Middlewares;
@@ -15,11 +18,13 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Services.Resolver;
 using OmniChat.Application.SignalRHub;
 using OmniChat.Application.Utils;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Extensions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Implements;
 using OmniChat.Infrastructure.Repositories.Interfaces;
+using SwaggerThemes;
 using System;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -64,6 +69,8 @@ void ConfigureServices()
             );
         });
 
+    ConfigureR2Storage();
+
     builder.Services.Configure<ApiBehaviorOptions>(options =>
     {
         options.InvalidModelStateResponseFactory = context =>
@@ -83,10 +90,35 @@ void ConfigureServices()
             });
         };
     });
+    void ConfigureR2Storage()
+    {
+        // Configure typed settings
+        builder.Services.Configure<R2Settings>(builder.Configuration.GetSection("R2"));
+        builder.Services.AddSingleton(sp =>
+            sp.GetRequiredService<IOptions<R2Settings>>().Value
+        );
+
+        // Register AmazonS3 client
+        builder.Services.AddSingleton<IAmazonS3>(sp =>
+        {
+            var settings = sp.GetRequiredService<R2Settings>();
+
+            if (string.IsNullOrWhiteSpace(settings.AccessKeyId) ||
+                string.IsNullOrWhiteSpace(settings.SecretAccessKey) ||
+                string.IsNullOrWhiteSpace(settings.Endpoint))
+                throw new BusinessException("Missing R2 configuration");
+
+            var credentials = new BasicAWSCredentials(settings.AccessKeyId, settings.SecretAccessKey);
+            var config = new AmazonS3Config { ServiceURL = settings.Endpoint };
+
+            return new AmazonS3Client(credentials, config);
+        });
+    }
 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+    var licenseKey = builder.Configuration["AutoMapper:LicenseKey"];
+    builder.Services.AddAutoMapper(cfg => { cfg.LicenseKey = licenseKey; }, AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddHttpClient("ZaloOAuth", client =>
     {
@@ -131,6 +163,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IKeywordService, KeywordService>();
     builder.Services.AddScoped<IKeywordTypeService, KeywordTypeService>();
     builder.Services.AddScoped<IMessageKeywordFilterService, MessageKeywordFilterService>();
+    builder.Services.AddScoped<IR2StorageService, R2StorageService>();
 }
 
 void RegisterBackgroundServices()
@@ -312,6 +345,8 @@ void ConfigureMiddleware()
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "OmniChat API v1");
+        var css = SwaggerTheme.GetSwaggerThemeCss(Theme.XCodeLight);
+        c.HeadContent = $"<style id='custom-dark-mode'>{css}</style>";
     });
     var logger = app.Services
     .GetRequiredService<ILoggerFactory>()
@@ -319,19 +354,20 @@ void ConfigureMiddleware()
 
     app.Use(async (context, next) =>
     {
-        context.Request.EnableBuffering();
+        if (context.Request.ContentType?.Contains("application/json") == true)
+        {
+            context.Request.EnableBuffering();
 
-        using var reader = new StreamReader(
-            context.Request.Body,
-            Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: false,
-            leaveOpen: true);
+            using var reader = new StreamReader(
+                context.Request.Body,
+                Encoding.UTF8,
+                leaveOpen: true);
 
-        var rawBody = await reader.ReadToEndAsync();
+            var body = await reader.ReadToEndAsync();
+            context.Request.Body.Position = 0;
 
-        context.Request.Body.Position = 0;
-
-        logger.LogError("RAW REQUEST BODY:\n{Body}", rawBody);
+            logger.LogInformation("RAW BODY: {Body}", body);
+        }
 
         await next();
     });
