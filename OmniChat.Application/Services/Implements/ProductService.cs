@@ -22,47 +22,43 @@ namespace OmniChat.Application.Services.Implements;
 
 public class ProductService : BaseService<ProductService>, IProductService
 {
-    public ProductService(IUnitOfWork<OmniChatDbContext> unitOfWork,
+    private readonly IR2StorageService _storageService;
+    public ProductService(
+        IUnitOfWork<OmniChatDbContext> unitOfWork,
         ILogger<ProductService> logger,
         IMapper mapper,
-        IHttpContextAccessor httpContextAccessor)
-        : base(unitOfWork, logger, mapper, httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IR2StorageService storageService)
+    : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
+        _storageService = storageService;
     }
 
     public async Task<bool> CreateProductAsync(CreateProductRequest createProductRequest)
     {
         var productRepo = _unitOfWork.GetRepository<Product>();
+
+        Product newProduct = null;
+
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var lastProduct = await productRepo
-            .GetQueryable()
-            .OrderByDescending(p => p.Code)
-            .FirstOrDefaultAsync();
-            int lastCode =
-                lastProduct != null &&
-                int.TryParse(lastProduct.Code.AsSpan(3), out var codeValue)
-                    ? codeValue
-                    : 0;
-            var newCode = GenerateProductCode(lastCode);
+            newProduct = _mapper.Map<Product>(createProductRequest);
 
-            var imageUrl = "https://via.placeholder.com";
-            //imagelogic
+            newProduct.ImageUrl = "https://pub-28eb3560d5b74d478da589a1c3dd7e34.r2.dev/products/default_product.webp";
 
-            //end
-
-
-            var newProduct = _mapper.Map<Product>(createProductRequest);
-            newProduct.Code = newCode;
-            newProduct.ImageUrl = imageUrl;
             await productRepo.InsertAsync(newProduct);
         });
-        return true;
-    }
 
-    private string GenerateProductCode(int lastCode)
-    {
-        return (lastCode + 1).ToString("D6");
+        if (createProductRequest.Image != null && createProductRequest.Image.Length > 0)
+        {
+            await _storageService.UploadImageAsync(
+                createProductRequest.Image.OpenReadStream(),
+                createProductRequest.Image.FileName,
+                "products",
+                newProduct.Id
+            );
+        }
+        return true;
     }
 
     public async Task<bool> DeleteProductAsync(Guid ProductId)
@@ -95,6 +91,24 @@ public class ProductService : BaseService<ProductService>, IProductService
             productRepo.Update(existingProduct);
         });
         return true;
+    }
+
+    public async Task<bool> UpdateProductImageAsync(Guid productId, UpdateProductImageRequest request)
+    {
+        if (request?.Image == null || request.Image.Length == 0)
+            throw new BusinessException("Invalid image file.");
+
+        var stream = request.Image.OpenReadStream();
+        var fileName = request.Image.FileName;
+
+        var result = await _storageService.UploadUpdatedImageAsync(
+            stream,
+            fileName,
+            "products",
+            productId
+        );
+
+        return result;
     }
 
     public async Task<PagingResponse<GetAllProductsResponse>> GetProductsAsync(string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
@@ -205,7 +219,6 @@ public class ProductService : BaseService<ProductService>, IProductService
 
                     product.Quantity += batchRequest.Quantity;
                 }
-
                 productRepo.Update(product);
             }
         });
@@ -245,4 +258,5 @@ public class ProductService : BaseService<ProductService>, IProductService
 
         throw new BadRequestException("Either ManufactureDate or ExpiryDate must be provided");
     }
+
 }

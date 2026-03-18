@@ -10,4 +10,6 @@ public interface IR2StorageService
 {
     Task<bool> UploadImageAsync(Stream fileStream, string fileName, string category, Guid? relatedId = null);
     Task<bool> DeleteImageByRelatedIdAsync(string category, Guid relatedId);
+
+    Task<bool> UploadUpdatedImageAsync(Stream fileStream, string fileName, string category, Guid? relatedId = null);
 }

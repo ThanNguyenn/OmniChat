@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Models;
+﻿using Microsoft.AspNetCore.Http;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,4 +17,5 @@ public class UpdateProductRequest
     public string? Brand { get; set; }
 
     public double? Price { get; set; }
+
 }
