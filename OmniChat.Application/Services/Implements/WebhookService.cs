@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using OmniChat.Application.Services.Interface;
@@ -41,24 +42,32 @@ namespace OmniChat.Application.Services.Implements
         private readonly FacebookResolver _facebookResolver;
 
         private readonly IConfiguration _configuration;
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ZaloResolver zaloResolver, FacebookResolver facebookResolver, IConfiguration configuration, IBackgroundTaskQueue queue) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly IServiceScopeFactory _scopeFactory;
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ZaloResolver zaloResolver, FacebookResolver facebookResolver, IConfiguration configuration, IBackgroundTaskQueue queue, IServiceScopeFactory scopeFactory) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _zaloResolver = zaloResolver;
             _facebookResolver = facebookResolver;
             _configuration = configuration;
             _queue = queue;
+            _scopeFactory = scopeFactory;
         }
 
 
 
         //========== Zalo //==========
         public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
-        {           
+        {
             await _queue.QueueAsync(async token =>
-            {             
-                    await _zaloResolver.ZaloWebhookLogic(zaloEvent);
+            {
+                using var scope = _scopeFactory.CreateScope();
+
+                var resolver = scope.ServiceProvider.GetRequiredService<ZaloResolver>();
+
+                await resolver.ZaloWebhookLogic(zaloEvent);
             });
-            return true; 
+
+            return true;
         }
 
         //========== Facebook //==========
@@ -66,8 +75,12 @@ namespace OmniChat.Application.Services.Implements
         public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
         {
             await _queue.QueueAsync(async token =>
-            {               
-                    await _facebookResolver.FacebookWebhookLogic(faceBookWebhookPayload);
+            {
+                using var scope = _scopeFactory.CreateScope();
+
+                var resolver = scope.ServiceProvider.GetRequiredService<FacebookResolver>();
+
+                await resolver.FacebookWebhookLogic(faceBookWebhookPayload);
             });
 
             return true;

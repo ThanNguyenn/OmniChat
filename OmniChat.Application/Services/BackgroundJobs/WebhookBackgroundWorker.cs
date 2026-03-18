@@ -28,14 +28,37 @@ namespace OmniChat.Application.Services.BackgroundJobs
             {
                 var workItem = await _queue.DequeueAsync(stoppingToken);
 
-                try
+                _ = Task.Run(async () =>
                 {
-                    await workItem(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Background job failed");
-                }
+                    int retry = 0;
+                    const int maxRetry = 3;
+
+                    while (true)
+                    {
+                        try
+                        {
+                            await workItem(stoppingToken);
+                            break; // success → thoát
+                        }
+                        catch (Exception ex)
+                        {
+                            retry++;
+
+                            _logger.LogError(ex,
+                                "Background job failed (retry {Retry}/{Max})",
+                                retry, maxRetry);
+
+                            if (retry >= maxRetry)
+                            {
+                                _logger.LogError("Job failed permanently ❌");
+                                break;
+                            }
+
+                            // exponential backoff
+                            await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retry)));
+                        }
+                    }
+                }, stoppingToken);
             }
         }
     }
