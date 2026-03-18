@@ -22,6 +22,8 @@ public class CreateProductRequest
 
     public double Price { get; set; }
 
-    public IFormFile Image { get; set; }
+    public int LifeSpan { get; set; }
+
+    public IFormFile? Image { get; set; }
 }
 
