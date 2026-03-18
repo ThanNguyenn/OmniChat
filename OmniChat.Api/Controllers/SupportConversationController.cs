@@ -10,14 +10,16 @@ using static OmniChat.Api.Constants.ApiEndPointConstant;
 namespace OmniChat.Api.Controllers
 {
     [ApiController]
-    public class SupportConversationController : Controller
+    public class SupportConversationController : BaseController<SupportConversationController>
     {
         private readonly ISupportConversationService _supportConversationService;
 
-        public SupportConversationController(ISupportConversationService supportConversationService)
+        public SupportConversationController(ILogger<SupportConversationController> logger, ISupportConversationService supportConversationService) : base(logger)
         {
             _supportConversationService = supportConversationService;
         }
+
+
 
 
         // Get support conversation detail by ID
