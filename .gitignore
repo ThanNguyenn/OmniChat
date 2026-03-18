@@ -407,3 +407,6 @@ ai-service/src/nlp/util.py
 
 # Jupyter notebooks checkpoints
 .ipynb_checkpoints/
+OmniChat.Api/.config/dotnet-tools.json
+OmniChat.Api/Properties/ServiceDependencies/OmniChatOA - Web Deploy/profile.arm.json
+OmniChat.Api/Properties/ServiceDependencies/OmniChatOA - Zip Deploy/profile.arm.json

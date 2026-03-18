@@ -31,4 +31,8 @@
     <ProjectReference Include="..\OmniChat.Application\OmniChat.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+
 </Project>
