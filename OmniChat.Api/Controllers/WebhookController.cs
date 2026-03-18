@@ -11,16 +11,16 @@ using System.Diagnostics;
 namespace OmniChat.Api.Controllers
 {
     [ApiController]
-    public class WebhookController : ControllerBase
+    public class WebhookController : BaseController<WebhookController>
     {
         private readonly IWebhookService _webhookService;
-        private readonly ILogger _logger;
 
-        public WebhookController(IWebhookService webhookService, ILogger logger)
+        public WebhookController(ILogger<WebhookController> logger,IWebhookService webhookService) : base(logger)
         {
             _webhookService = webhookService;
-            _logger = logger;
         }
+
+
 
         //POST /api/v1/webhooks/zalo
         [HttpPost(ApiEndPointConstant.Webhooks.ZaloWebhook)]
@@ -37,10 +37,10 @@ namespace OmniChat.Api.Controllers
             var sw = Stopwatch.StartNew();
 
             await _webhookService.ZaloWebhookAsync(zaloEvent);
-
+            _logger.LogInformation("zalo webhook returned in {ElapsedMilliseconds} ms",
+               sw.ElapsedMilliseconds);
             sw.Stop();
-              _logger.LogInformation("Zalo webhook returned in {ElapsedMilliseconds} ms",
-                 sw.ElapsedMilliseconds);
+            
 
             return Ok(new ApiResponse<object>
             {

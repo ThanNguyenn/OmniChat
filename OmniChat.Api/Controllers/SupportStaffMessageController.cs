@@ -9,14 +9,16 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace OmniChat.Api.Controllers
 {
     [ApiController]
-    public class SupportStaffMessageController : Controller
+    public class SupportStaffMessageController : BaseController<SupportStaffMessageController>
     {
         private readonly ISupportStaffMessageService _supportStaffMessageService;
-        public SupportStaffMessageController(ISupportStaffMessageService supportStaffMessageService)
+
+        public SupportStaffMessageController(ILogger<SupportStaffMessageController> logger, ISupportStaffMessageService supportStaffMessageService) : base(logger)
         {
             _supportStaffMessageService = supportStaffMessageService;
         }
-       
+
+
         /// Get all support staff messages with pagination
         [HttpGet(ApiEndPointConstant.SupportStaffMessageEndPoint.GetAllPagingByStaffId)]
         [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetAllSupportStaffMessageResponse>>), StatusCodes.Status200OK)]
