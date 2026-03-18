@@ -52,6 +52,7 @@ namespace OmniChat.Infrastructure.Models
         PendingReturn = 4,
         Returned = 5,
         Completed = 6,
+        DisEnterCave = 7,
     }
 
     public enum DeliveryStatus

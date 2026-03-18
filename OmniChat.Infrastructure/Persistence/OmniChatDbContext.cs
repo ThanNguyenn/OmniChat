@@ -1176,6 +1176,12 @@ namespace OmniChat.Infrastructure.Persistence
                     "'SP' || LPAD(nextval('\"ProductCodeSeq\"')::text, 6, '0')")
                 .ValueGeneratedOnAdd();
 
+            // define ProductBatch code auto generation example : LOT + ExpiryDate
+            modelBuilder.Entity<ProductBatch>()
+               .Property(e => e.Code)
+               .ValueGeneratedOnAdd();
+
+
             // ==== Brand - Product ( one to Many ) ====
             modelBuilder.Entity<Brand>()
                 .HasKey(b => b.Id);
