@@ -4,6 +4,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
@@ -28,7 +29,7 @@ public class R2StorageService : BaseService<R2StorageService>, IR2StorageService
 
     private readonly Dictionary<string, string> _defaultImages = new()
     {
-        { "products", "/images/default-product.png" },
+        { "products", "https://pub-28eb3560d5b74d478da589a1c3dd7e34.r2.dev/products/default_product.webp" },
     };
 
     public R2StorageService(
@@ -57,7 +58,7 @@ public class R2StorageService : BaseService<R2StorageService>, IR2StorageService
     public async Task<bool> DeleteImageByRelatedIdAsync(string category, Guid relatedId)
     {
         if (string.IsNullOrWhiteSpace(category))
-            throw new ArgumentException("Category is required.", nameof(category));
+            throw new BusinessException($"Unsupported category '{category}'.");
 
         category = category.ToLowerInvariant().Trim('/');
         string? fileUrl = null;
@@ -69,14 +70,14 @@ public class R2StorageService : BaseService<R2StorageService>, IR2StorageService
                 case "products":
                     var productRepo = _unitOfWork.GetRepository<Product>();
                     var product = await productRepo.GetByIdAsync(relatedId);
-                    if (product == null) throw new InvalidOperationException("Product not found.");
+                    if (product == null) throw new BusinessException("Product not found.");
 
                     fileUrl = product.ImageUrl;
                     product.ImageUrl = _defaultImages["products"];
                     productRepo.Update(product);
                     break;
                 default:
-                    throw new InvalidOperationException($"Unsupported category '{category}'.");
+                    throw new BusinessException($"Unsupported category '{category}'.");
             }
         });
 
@@ -105,7 +106,7 @@ public class R2StorageService : BaseService<R2StorageService>, IR2StorageService
     public async Task<bool> UploadImageAsync(Stream fileStream, string fileName, string category, Guid? relatedId = null)
     {
         if (fileStream == null || string.IsNullOrWhiteSpace(fileName))
-            throw new ArgumentException("Invalid file upload parameters.");
+            throw new BusinessException("Invalid file upload parameters.");
 
         category = category.ToLowerInvariant().Trim('/');
 
@@ -137,14 +138,14 @@ public class R2StorageService : BaseService<R2StorageService>, IR2StorageService
                         var product = await productRepo.GetByIdAsync(relatedId.Value);
 
                         if (product is null)
-                            throw new InvalidOperationException("Product not found");
+                            throw new BusinessException("Product not found");
 
                         product.ImageUrl = fileUrl;
                         productRepo.Update(product);
                         break;
 
                     default:
-                        throw new InvalidOperationException($"Unsupported or missing category: {category}");
+                        throw new BusinessException($"Unsupported or missing category: {category}");
                 }
             }
             catch
@@ -186,5 +187,40 @@ public class R2StorageService : BaseService<R2StorageService>, IR2StorageService
 
         ms.Position = 0;
         return ms;
+    }
+
+    public async Task<bool> UploadUpdatedImageAsync(Stream fileStream, string fileName, string category, Guid? relatedId = null)
+    {
+        if (relatedId == null) throw new ArgumentNullException(nameof(relatedId));
+
+        category = category.ToLowerInvariant().Trim('/');
+        string? oldFileUrl = null;
+
+        switch (category)
+        {
+            case "products":
+                var product = await _unitOfWork.GetRepository<Product>().GetByIdAsync(relatedId.Value);
+                if (product == null) throw new NotFoundException("Product not found.");
+                oldFileUrl = product.ImageUrl;
+                break;
+            default:
+                throw new BusinessException($"Unsupported category '{category}'.");
+        }
+
+        var uploadSuccess = await UploadImageAsync(fileStream, fileName, category, relatedId);
+
+        if (uploadSuccess && !string.IsNullOrWhiteSpace(oldFileUrl) &&
+            oldFileUrl.StartsWith(_publicUrl, StringComparison.OrdinalIgnoreCase) &&
+            !_defaultImages.ContainsValue(oldFileUrl))
+        {
+            var objectKey = oldFileUrl.Replace($"{_publicUrl}/", "", StringComparison.OrdinalIgnoreCase);
+            await _s3Client.DeleteObjectAsync(new DeleteObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = objectKey
+            });
+        }
+
+        return uploadSuccess;
     }
 }

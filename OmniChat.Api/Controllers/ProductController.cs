@@ -9,7 +9,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace OmniChat.Api.Controllers;
 
 [ApiController]
-[Route(ApiEndPointConstant.Auth.Base)]
+[Route(ApiEndPointConstant.Product.Base)]
 public class ProductController : BaseController<ProductController>
 {
     private readonly IProductService _productService;
@@ -20,6 +20,7 @@ public class ProductController : BaseController<ProductController>
     }
 
     [HttpPost(ApiEndPointConstant.Product.Create)]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
@@ -27,7 +28,7 @@ public class ProductController : BaseController<ProductController>
     [SwaggerOperation(
     Summary = "Tạo mới product",
     Description = "Tạo mới product")]
-    public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequest createProductRequest)
+    public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProductRequest)
     {
         var result = await _productService.CreateProductAsync(createProductRequest);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Product created successfully", result);
@@ -47,6 +48,24 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> UpdateProduct([FromRoute]Guid id,[FromBody] UpdateProductRequest updateProductRequest)
     {
         var result = await _productService.UpdateProductAsync(id, updateProductRequest);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product updated successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpPut(ApiEndPointConstant.Product.UpdateImage)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Cập nhật product",
+        Description = "Cập nhật hình ảnh của product theo id."
+    )]
+
+    public async Task<IActionResult> UpdateProductImage([FromRoute] Guid id, [FromForm] UpdateProductImageRequest updateProductRequest)
+    {
+        var result = await _productService.UpdateProductImageAsync(id, updateProductRequest);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product updated successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }

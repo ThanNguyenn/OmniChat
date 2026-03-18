@@ -353,7 +353,7 @@ void ConfigureMiddleware()
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "OmniChat API v1");
-        var css = SwaggerTheme.GetSwaggerThemeCss(Theme.XCodeLight);
+        var css = SwaggerTheme.GetSwaggerThemeCss(Theme.UniversalDark);
         c.HeadContent = $"<style id='custom-dark-mode'>{css}</style>";
     });
     var logger = app.Services

@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Models;
+﻿using Microsoft.AspNetCore.Http;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,10 @@ public class CreateProductRequest
 
     public string Description { get; set; }
 
-    public string Brand { get; set; }
+    public Guid BrandId { get; set; }
 
     public double Price { get; set; }
+
+    public IFormFile Image { get; set; }
 }
+

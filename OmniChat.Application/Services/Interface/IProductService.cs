@@ -13,11 +13,9 @@ public interface IProductService
 {
     Task<bool> CreateProductAsync (CreateProductRequest createProductRequest);
     Task<bool> UpdateProductAsync (Guid ProductId, UpdateProductRequest updateProductRequest);
+    Task<bool> UpdateProductImageAsync(Guid ProductId, UpdateProductImageRequest updateProductImageRequest);
     Task<bool> DeleteProductAsync (Guid ProductId);
-
     Task<PagingResponse<GetAllProductsResponse>> GetProductsAsync(string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
-
     Task<GetProductResponse> GetProductByIdAsync(Guid ProductId);
-
     Task AddStockAsync(IEnumerable<AddProductStockRequest> addProductStockRequests);
 } 
