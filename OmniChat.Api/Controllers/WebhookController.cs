@@ -6,6 +6,7 @@ using OmniChat.Application.Webhooks.Instagram.InstagramMessage;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Diagnostics;
 
 namespace OmniChat.Api.Controllers
 {
@@ -13,14 +14,16 @@ namespace OmniChat.Api.Controllers
     public class WebhookController : ControllerBase
     {
         private readonly IWebhookService _webhookService;
+        private readonly ILogger _logger;
 
-        public WebhookController(IWebhookService webhookService)
+        public WebhookController(IWebhookService webhookService, ILogger logger)
         {
             _webhookService = webhookService;
+            _logger = logger;
         }
 
         //POST /api/v1/webhooks/zalo
-       [HttpPost(ApiEndPointConstant.Webhooks.ZaloWebhook)]
+        [HttpPost(ApiEndPointConstant.Webhooks.ZaloWebhook)]
        [ProducesResponseType(StatusCodes.Status200OK)]
        [ProducesResponseType(StatusCodes.Status400BadRequest)]
 
@@ -31,8 +34,11 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> ZaloWebhookAsync(
             [FromBody] ZaloWebhookEvent zaloEvent)
         {
+            var sw = Stopwatch.StartNew();
             await _webhookService.ZaloWebhookAsync(zaloEvent);
-
+            sw.Stop();
+              _logger.LogInformation("Zalo webhook returned in {ElapsedMilliseconds} ms",
+                 sw.ElapsedMilliseconds);
             return Ok(new ApiResponse<object>
             {
                 StatusCode = StatusCodes.Status200OK,
@@ -52,9 +58,11 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> FacebookWebhookAsync(
             [FromBody] FaceBookWebhookPayload payload)
         {
-
+            var sw = Stopwatch.StartNew();
             await _webhookService.FacebookWebhookAsync(payload);
-
+            sw.Stop();
+            _logger.LogInformation("Facebook webhook returned in {ElapsedMilliseconds} ms",
+               sw.ElapsedMilliseconds);
             return Ok(new ApiResponse<object>
             {
                 StatusCode = StatusCodes.Status200OK,
