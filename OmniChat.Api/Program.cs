@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OmniChat.Api.Middlewares;
 using OmniChat.Application.Services.BackgroundJobs;
+using OmniChat.Application.Services.Channels;
 using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Services.Resolver;
@@ -37,6 +38,7 @@ ConfigureAuthentication();
 ConfigureSwagger();
 ConfigureSignalRServices();
 RegisterResolver();
+BackgoudTaskQueue();
 var app = builder.Build();
 
 
@@ -171,6 +173,7 @@ void RegisterBackgroundServices()
     // Register background services here
     builder.Services.AddHostedService<ZaloTokenRefreshWorker>();
     builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
+    builder.Services.AddHostedService<WebhookBackgroundWorker>();
 }
 
 // add signalR
@@ -205,6 +208,11 @@ void ConfigureDatabase()
             }
         )
     );
+}
+
+ void BackgoudTaskQueue()
+{
+    builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 }
 
 void ConfigureAuthentication()

@@ -22,6 +22,7 @@ using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -33,33 +34,43 @@ namespace OmniChat.Application.Services.Implements
 {
     public class WebhookService : BaseService<WebhookService>, IWebhookService
     {
+        private readonly IBackgroundTaskQueue _queue;
+
         private readonly ZaloResolver _zaloResolver;
 
         private readonly FacebookResolver _facebookResolver;
 
         private readonly IConfiguration _configuration;
-        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ZaloResolver zaloResolver, FacebookResolver facebookResolver, IConfiguration configuration) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public WebhookService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<WebhookService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ZaloResolver zaloResolver, FacebookResolver facebookResolver, IConfiguration configuration, IBackgroundTaskQueue queue) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _zaloResolver = zaloResolver;
             _facebookResolver = facebookResolver;
             _configuration = configuration;
+            _queue = queue;
         }
 
 
 
         //========== Zalo //==========
-        public Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
-        {
-            _ = _zaloResolver.ZaloWebhookLogic(zaloEvent);
-            return Task.FromResult(true);
+        public async Task<bool> ZaloWebhookAsync(ZaloWebhookEvent zaloEvent)
+        {           
+            await _queue.QueueAsync(async token =>
+            {             
+                    await _zaloResolver.ZaloWebhookLogic(zaloEvent);
+            });
+            return true; 
         }
 
         //========== Facebook //==========
 
-        public Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
+        public async Task<bool> FacebookWebhookAsync(FaceBookWebhookPayload faceBookWebhookPayload)
         {
-            _ = _facebookResolver.FacebookWebhookLogic(faceBookWebhookPayload);
-            return Task.FromResult(true);
+            await _queue.QueueAsync(async token =>
+            {               
+                    await _facebookResolver.FacebookWebhookLogic(faceBookWebhookPayload);
+            });
+
+            return true;
         }
 
         public async Task<bool> VerifyFacebookWebhook(string mode, string token)
