@@ -35,10 +35,13 @@ namespace OmniChat.Api.Controllers
             [FromBody] ZaloWebhookEvent zaloEvent)
         {
             var sw = Stopwatch.StartNew();
+
             await _webhookService.ZaloWebhookAsync(zaloEvent);
+
             sw.Stop();
               _logger.LogInformation("Zalo webhook returned in {ElapsedMilliseconds} ms",
                  sw.ElapsedMilliseconds);
+
             return Ok(new ApiResponse<object>
             {
                 StatusCode = StatusCodes.Status200OK,
@@ -59,10 +62,13 @@ namespace OmniChat.Api.Controllers
             [FromBody] FaceBookWebhookPayload payload)
         {
             var sw = Stopwatch.StartNew();
+
             await _webhookService.FacebookWebhookAsync(payload);
+           
             sw.Stop();
             _logger.LogInformation("Facebook webhook returned in {ElapsedMilliseconds} ms",
                sw.ElapsedMilliseconds);
+
             return Ok(new ApiResponse<object>
             {
                 StatusCode = StatusCodes.Status200OK,
