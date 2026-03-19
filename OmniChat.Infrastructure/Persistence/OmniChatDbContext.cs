@@ -156,6 +156,10 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(p => p.ProductPackagingType)
                 .HasConversion<string>();
 
+            modelBuilder.Entity<Product>()
+                .Property(p => p.ProductKind)
+                .HasConversion<string>();   
+
             modelBuilder.Entity<Invoice>()
                 .Property(i => i.InvoiceStatus)
                 .HasConversion<string>();

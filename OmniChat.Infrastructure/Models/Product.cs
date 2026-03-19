@@ -16,6 +16,8 @@ namespace OmniChat.Infrastructure.Models
 
         public PackagingType ProductPackagingType { get; set; }
 
+        public ProductKind ProductKind { get; set; }
+
         public double VolumeMl { get; set; }
 
         public string Description { get; set; }
@@ -43,5 +45,12 @@ namespace OmniChat.Infrastructure.Models
     {
         Bottle = 0,
         Carton = 1,
+    }
+
+    public enum ProductKind
+    {
+        Sugar = 0,
+        OutSugar = 1,
+        Yogurt = 2, 
     }
 }
