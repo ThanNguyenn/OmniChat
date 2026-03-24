@@ -12,8 +12,6 @@ public class GetOrderItemResponse
 
     public int Quantity { get; set; }
 
-    public double Price { get; set; }
-
-    public Guid ProductBatchId { get; set; }
+    public string ProductName { get; set; }
 
 }

@@ -10,8 +10,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Order;
 
 public class CreateOrderRequest
 {
-    public Guid Id { get; set; }
-
     public Guid CustomerId { get; set; }
 
     public string Name { get; set; }

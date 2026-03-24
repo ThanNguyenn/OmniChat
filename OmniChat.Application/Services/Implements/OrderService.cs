@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
@@ -37,19 +38,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var lastOrder = await orderRepo
-              .GetQueryable()
-              .OrderByDescending(p => p.Code)
-              .FirstOrDefaultAsync();
-            int lastCode =
-                lastOrder != null &&
-                int.TryParse(lastOrder.Code.AsSpan(3), out var codeValue)
-                    ? codeValue
-                    : 0;
-            var newCode = GenerateOrderCode(lastCode);
-
             var order = _mapper.Map<Order>(request);
-            order.Code = newCode;
 
             var batchIds = request.OrderItems
                 .Select(x => x.ProductBatchId)
@@ -89,11 +78,6 @@ public class OrderService : BaseService<OrderService>, IOrderService
         return true;
     }
 
-    private string GenerateOrderCode(int lastCode)
-    {
-        return (lastCode + 1).ToString("D6");
-    }
-
     public async Task<bool> DeleteOrderAsync(Guid orderId)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
@@ -130,6 +114,10 @@ public class OrderService : BaseService<OrderService>, IOrderService
             predicate: o => o.CustomerId == customerId &&
                             (string.IsNullOrEmpty(search) || o.Code.Contains(search)),
             orderBy: q => OrderBy(q, sortBy, descending),
+            include: q => q
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductBatch)
+                        .ThenInclude(pb => pb.Product),
             selector: e => _mapper.Map<GetOrderResponse>(e),
             page: pageNumber,
             size: pageSize);
@@ -147,6 +135,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             "totalamount" => s => s.TotalAmount,
             "status" => s => s.Status,
             "deliverystatus" => s => s.DeliveryStatus,
+            "orderdate" => s => s.OrderDate,
             _ => s => s.Id
         };
 
@@ -154,20 +143,34 @@ public class OrderService : BaseService<OrderService>, IOrderService
             ? query.OrderByDescending(keySelector)
             : query.OrderBy(keySelector);
     }
-
-    public Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId)
+    private async Task<TResponse> GetOrderByIdAsync<TResponse>(Guid orderId)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
-        return _unitOfWork.ProcessInTransactionAsync(async () =>
+
+        return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var order = await orderRepo.GetByIdAsync(orderId);
+            var order = await orderRepo.GetQueryable()
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductBatch)
+                        .ThenInclude(pb => pb.Product)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
             if (order == null)
             {
                 throw new NotFoundException("Order not found");
             }
-            var response = _mapper.Map<GetOrderResponse>(order);
-            return response;
+
+            return _mapper.Map<TResponse>(order);
         });
+    }
+    public Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId)
+    {
+        return GetOrderByIdAsync<GetOrderResponse>(orderId);
+    }
+
+    public Task<GetPostSaleOrderResponse> GetPostSaleOrderByIdAsync(Guid orderId)
+    {
+        return GetOrderByIdAsync<GetPostSaleOrderResponse>(orderId);
     }
 
     public async Task<bool> UpdateOrderAsync(Guid orderId, UpdateOrderRequest updateOrderRequest)
@@ -186,20 +189,45 @@ public class OrderService : BaseService<OrderService>, IOrderService
         return true;
     }
 
-    public Task<bool> CancelOrderAsync(Guid orderId, OrderStatus newStatus)
+    public async Task<bool> CancelOrderAsync(Guid orderId, OrderStatus newStatus)
     {
+        if (newStatus != OrderStatus.Cancelled)
+            throw new BusinessException("Invalid cancel status: the target status must be 'Cancelled'.");
         var orderRepo = _unitOfWork.GetRepository<Order>();
-        return _unitOfWork.ProcessInTransactionAsync(async () =>
+        var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+        return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var order = await orderRepo.GetByIdAsync(orderId);
+            var order = await orderRepo.SingleOrDefaultAsync(
+                predicate: o => o.Id == orderId,
+                include: q => q.Include(o => o.OrderItems));
             if (order == null)
-            {
                 throw new NotFoundException("Order not found");
-            }
+            if (order.Status == OrderStatus.Cancelled)
+                throw new BusinessException("Order already cancelled");
+            if (order.Status != OrderStatus.Pending)
+                throw new BusinessException("Only pending orders can be cancelled");
+            await HandleBatchRestockAsync(order.OrderItems, batchRepo);
             order.Status = newStatus;
             orderRepo.Update(order);
             return true;
         });
+    }
+
+    private async Task HandleBatchRestockAsync(IEnumerable<OrderItem> orderItems, IGenericRepository<ProductBatch> batchRepo)
+    {
+        var batchIds = orderItems.Select(i => i.ProductBatchId).Distinct().ToList();
+        var batches = (await batchRepo.GetListAsync(predicate: b => batchIds.Contains(b.Id))).ToList();
+        if (batches.Count != batchIds.Count)
+            throw new NotFoundException("One or more product batches associated with this order are missing.");
+        var batchDict = batches.ToDictionary(b => b.Id);
+        foreach (var item in orderItems)
+        {
+            if (!batchDict.TryGetValue(item.ProductBatchId, out var batch))
+                throw new NotFoundException("Product batch not found");
+
+            batch.Quantity += item.Quantity;
+        }
+        batchRepo.UpdateRange(batches);
     }
 
     public Task<bool> CompleteDeliverdOrderAsync(Guid orderId, DeliveryStatus newDeliveredStatus)
@@ -213,6 +241,22 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 throw new NotFoundException("Order not found");
             }
             order.DeliveryStatus = newDeliveredStatus;
+            orderRepo.Update(order);
+            return true;
+        });
+    }
+
+    public Task<bool> ReturnOrderAsync(Guid orderId, OrderStatus returnedStatus)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        return _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var order = await orderRepo.GetByIdAsync(orderId);
+            if (order == null)
+            {
+                throw new NotFoundException("Order not found");
+            }
+            order.Status = returnedStatus;
             orderRepo.Update(order);
             return true;
         });

@@ -17,8 +17,9 @@ public interface IOrderService
     Task<bool> UpdateOrderAsync(Guid orderId, UpdateOrderRequest updateOrderRequest);
     Task<PagingResponse<GetOrderResponse>> GetOrdersByCustomerIdAsync(Guid customerId, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
     Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId);
+    Task<GetPostSaleOrderResponse> GetPostSaleOrderByIdAsync(Guid orderId);
     Task<PagingResponse<GetAllOrdersResponse>> GetAllOrdersAsync(string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
-
     Task<bool> CancelOrderAsync(Guid orderId, OrderStatus newStatus);
-    Task<bool> CompleteDeliverdOrderAsync(Guid orderId,  DeliveryStatus newDeliveryStatus);
+    Task<bool> CompleteDeliverdOrderAsync(Guid orderId, DeliveryStatus newDeliveryStatus);
+    Task<bool> ReturnOrderAsync(Guid orderId, OrderStatus returnedStatus);
 }
