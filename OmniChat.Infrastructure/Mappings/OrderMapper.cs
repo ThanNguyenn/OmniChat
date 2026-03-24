@@ -16,10 +16,12 @@ public class OrderMapper : Profile
 {
     public OrderMapper()
     {
-        CreateMap<CreateOrderRequest, Order>();
+        CreateMap<CreateOrderRequest, Order>()
+            .ForMember(dest => dest.OrderItems, opt => opt.Ignore());
         CreateMap<UpdateOrderRequest, Order>().ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
         CreateMap<Order, GetAllOrdersResponse>();
         CreateMap<Order, GetOrderResponse>();
+        CreateMap<Order, GetPostSaleOrderResponse>();
     }
 }

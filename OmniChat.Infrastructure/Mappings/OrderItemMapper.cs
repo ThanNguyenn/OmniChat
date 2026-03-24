@@ -16,6 +16,7 @@ public class OrderItemMapper : Profile
     {
         CreateMap<AddOrderItemRequest, OrderItem>();
 
-        CreateMap<OrderItem, GetOrderItemResponse>();
+        CreateMap<OrderItem, GetOrderItemResponse>().ForMember(dest => dest.ProductName,
+                 opt => opt.MapFrom(src => src.ProductBatch.Product.Name));
     }
 }
