@@ -126,8 +126,10 @@ public class ApiEndPointConstant
         public const string UpdateImage = "update/{id}/image";
         public const string Delete = "delete/{id}";
         public const string GetAll = "get";
+        public const string GetForCreateOrder = "get/create-order";
         public const string GetById = "get/{id}";
         public const string AddStock = "add-stock";
+        public const string GetProductBatches = "{id}/batches";
     }
 
     public static class ClaimEndPoint
@@ -149,6 +151,8 @@ public class ApiEndPointConstant
         public const string Delete = "delete/{id}";
         public const string GetAll = "get";
         public const string GetById = "get/{id}";
+        public const string GetByIdForPostSale = "get/{id}/post-sale";
+        public const string GetForCreateOrder = "get/create-order";
         public const string GetByCustomerId = "customer/{customerId}/get";
         public const string CancelOrder = "{id}/cancel";
         public const string CompleteDeliveredOrder = "{id}/complete-delivery";
@@ -169,6 +173,12 @@ public class ApiEndPointConstant
         public const string Create = Base;
         public const string Update = Base + "/{id}";
         public const string Delete = Base + "/{id}";
+    }
+
+    public static class Brand
+    {
+        public const string Base = ApiV1 + "/brands";
+        public const string GetAll = "get";
     }
 
 }

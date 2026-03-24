@@ -3,6 +3,7 @@ using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Product;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
+using OmniChat.Infrastructure.Dtos.Responses.ProductBatch;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -109,6 +110,22 @@ public class ProductController : BaseController<ProductController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [HttpGet(ApiEndPointConstant.Product.GetForCreateOrder)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetAllProductsResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+    Summary = "Lấy danh sách product cho trang create order.",
+    Description = "Lấy danh sách product cho trang create order đã gồm các chức năng filter."
+    )]
+    public async Task<IActionResult> GetAllProductsCreateOrder([FromQuery] GetAllProductsCreateOrderQueryRequest getAllProductsCreateOrderQueryRequest)
+    {
+        var result = await _productService.GetProductForCreateOrderByIdAsync(getAllProductsCreateOrderQueryRequest);      
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get all products successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
     [HttpGet(ApiEndPointConstant.Product.GetById)]
     [ProducesResponseType(typeof(ApiResponse<GetProductResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -138,6 +155,22 @@ public class ProductController : BaseController<ProductController>
     {
         await _productService.AddStockAsync(addProductStockRequests);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Stock added successfully", true);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpGet(ApiEndPointConstant.Product.GetProductBatches)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetProductBatchesResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy danh sách product batch",
+        Description = "Lấy danh sách product batch có phân trang, có filter lấy batch mới nhất."
+    )]
+    public async Task<IActionResult> GetProductBatches([FromRoute] Guid productId, [FromQuery]int? pageNumber, int? pageSize, bool? isNewest)
+    {
+        var result = await _productService.GetProductBatchesAsync(productId, isNewest, pageNumber ?? 1, pageSize ?? 20);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get product batches successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 }

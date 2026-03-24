@@ -30,6 +30,7 @@ public class GetProductResponse
 
     public int Quantity { get; set; }
 
-    public IEnumerable<GetProductBatchesResponse> ProductBatches { get; set; }
+    public int LifeSpan { get; set; }
 
+    public IEnumerable<GetProductBatchesResponse> ProductBatches { get; set; }
 }
