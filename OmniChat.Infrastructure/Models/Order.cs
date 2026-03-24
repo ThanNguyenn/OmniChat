@@ -14,7 +14,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual CustomerProfile CustomerProfile { get; set; }
 
-        public Guid InvoiceId { get; set; }
+        public Guid? InvoiceId { get; set; }
 
         public virtual Invoice Invoice { get; set; }
 
@@ -26,7 +26,7 @@ namespace OmniChat.Infrastructure.Models
 
         public double TotalAmount { get; set; }
 
-        public DeliveryStatus DeliveryStatus { get; set; }
+        public DeliveryStatus? DeliveryStatus { get; set; }
 
         public string Code { get; set; }
 
