@@ -166,6 +166,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IKeywordTypeService, KeywordTypeService>();
     builder.Services.AddScoped<IMessageKeywordFilterService, MessageKeywordFilterService>();
     builder.Services.AddScoped<IR2StorageService, R2StorageService>();
+    builder.Services.AddScoped<IProductBrandService, ProductBrandService>();
 }
 
 void RegisterBackgroundServices()
