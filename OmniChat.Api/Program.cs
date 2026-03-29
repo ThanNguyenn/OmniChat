@@ -73,20 +73,20 @@ void ConfigureServices()
         });
 
     // define redis
-    var options = ConfigurationOptions.Parse(
-    Environment.GetEnvironmentVariable("REDIS") ?? "redis:6379"
-);
+    var redisHost = builder.Environment.IsDevelopment()
+      ? "localhost:6379"
+      : Environment.GetEnvironmentVariable("REDIS") ?? "redis:6379";
+
+    var options = ConfigurationOptions.Parse(redisHost);
 
     options.AbortOnConnectFail = false;
     options.ConnectRetry = 5;
     options.ConnectTimeout = 10000;
     options.SyncTimeout = 10000;
-
     options.ReconnectRetryPolicy = new ExponentialRetry(5000);
 
     var redis = ConnectionMultiplexer.Connect(options);
     builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
-
     ConfigureR2Storage();
 
     builder.Services.Configure<ApiBehaviorOptions>(options =>
