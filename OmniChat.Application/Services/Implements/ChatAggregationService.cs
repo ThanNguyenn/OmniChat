@@ -23,12 +23,11 @@ namespace OmniChat.Application.Services.Implements
             var db = _redis.GetDatabase();
             var key = $"chat:{providerId}:{customerId}";
 
-
-            // 1. save message on redis
             await db.ListRightPushAsync(key, message);
-
-            // 2. reset time last message (60s)
             await db.KeyExpireAsync(key, TimeSpan.FromSeconds(60));
+
+          
+            await db.SetAddAsync("chat_keys", key);
         }
     }
 }

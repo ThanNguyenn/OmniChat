@@ -20,24 +20,19 @@ namespace OmniChat.Application.Services.BackgroundJobs
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ChatAggregationWorker> _logger;
         private readonly IHubContext<SupportConversationHub> _hubContext;
-        private readonly ISupportConversationService _supportConversationService;
-        private readonly ITaskAssignmentService _taskAssignmentService;
+
         public ChatAggregationWorker(
-        IConnectionMultiplexer redis,
-        IServiceScopeFactory scopeFactory,
-        ILogger<ChatAggregationWorker> logger,ISupportConversationService supportConversationService,
-        ITaskAssignmentService taskAssignmentService,
-         IHubContext<SupportConversationHub> hubContext
+            IConnectionMultiplexer redis,
+            IServiceScopeFactory scopeFactory,
+            ILogger<ChatAggregationWorker> logger,
+            IHubContext<SupportConversationHub> hubContext
         )
         {
             _redis = redis;
             _scopeFactory = scopeFactory;
             _logger = logger;
-            _supportConversationService = supportConversationService;
-            _taskAssignmentService = taskAssignmentService;
             _hubContext = hubContext;
         }
-
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -47,16 +42,28 @@ namespace OmniChat.Application.Services.BackgroundJobs
             {
                 try
                 {
-                    var server = _redis.GetServer(_redis.GetEndPoints().First());
+                    
+                    var keys = await db.SetMembersAsync("chat_keys");
 
-                    foreach (var key in server.Keys(pattern: "chat:*"))
+                    foreach (var keyValue in keys)
                     {
+                        if (!keyValue.HasValue) continue;
+
+                        RedisKey key = keyValue.ToString();
+
                         var ttl = await db.KeyTimeToLiveAsync(key);
 
                         if (ttl.HasValue && ttl.Value <= TimeSpan.Zero)
                         {
                             var lockKey = $"lock:{key}";
-                            var isLocked = await db.StringSetAsync(lockKey, "1", TimeSpan.FromSeconds(5), When.NotExists);
+
+                          
+                            var isLocked = await db.StringSetAsync(
+                                lockKey,
+                                "1",
+                                TimeSpan.FromSeconds(5),
+                                When.NotExists
+                            );
 
                             if (!isLocked)
                                 continue;
@@ -66,7 +73,11 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                 var messages = await db.ListRangeAsync(key);
 
                                 if (messages.Length == 0)
+                                {
+                                    await db.KeyDeleteAsync(key);
+                                    await db.SetRemoveAsync("chat_keys", key.ToString());
                                     continue;
+                                }
 
                                 var keyStr = key.ToString();
                                 var parts = keyStr.Split(':');
@@ -74,6 +85,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                 if (parts.Length != 3)
                                 {
                                     await db.KeyDeleteAsync(key);
+                                    await db.SetRemoveAsync("chat_keys", key.ToString());
                                     continue;
                                 }
 
@@ -81,6 +93,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                     !Guid.TryParse(parts[2], out var customerId))
                                 {
                                     await db.KeyDeleteAsync(key);
+                                    await db.SetRemoveAsync("chat_keys", key.ToString());
                                     continue;
                                 }
 
@@ -89,12 +102,16 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                 var conversationService = scope.ServiceProvider
                                     .GetRequiredService<ISupportConversationService>();
 
+                                var taskService = scope.ServiceProvider
+                                    .GetRequiredService<ITaskAssignmentService>();
+
                                 var conversation = await conversationService
                                     .GetSupportConversationHavePendingByCustomerIdAsync(customerId, providerId);
 
                                 if (conversation == null || conversation.IsDistributed)
                                 {
                                     await db.KeyDeleteAsync(key);
+                                    await db.SetRemoveAsync("chat_keys", key.ToString());
                                     continue;
                                 }
 
@@ -102,16 +119,17 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                                 _logger.LogInformation($"[AGGREGATION] Processing {key}");
 
-                                //  call AI
+                              
                                 var predictReqet = new PredictRequest
                                 {
                                     Message = text,
                                 };
 
-                                await _taskAssignmentService.ProcessTask(predictReqet, conversation.Id);
+                                await taskService.ProcessTask(predictReqet, conversation.Id);
 
-
+                              
                                 await db.KeyDeleteAsync(key);
+                                await db.SetRemoveAsync("chat_keys", key.ToString());
                             }
                             finally
                             {
@@ -125,7 +143,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     _logger.LogError(ex, "[AGGREGATION] Error");
                 }
 
-                await Task.Delay(500, stoppingToken);
+                
+                await Task.Delay(1000, stoppingToken);
             }
         }
     }

@@ -73,10 +73,18 @@ void ConfigureServices()
         });
 
     // define redis
-    var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
-    var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
+    var options = ConfigurationOptions.Parse(
+    Environment.GetEnvironmentVariable("REDIS") ?? "redis:6379"
+);
 
-    var redis = ConnectionMultiplexer.Connect($"{redisHost}:{redisPort}");
+    options.AbortOnConnectFail = false;
+    options.ConnectRetry = 5;
+    options.ConnectTimeout = 10000;
+    options.SyncTimeout = 10000;
+
+    options.ReconnectRetryPolicy = new ExponentialRetry(5000);
+
+    var redis = ConnectionMultiplexer.Connect(options);
     builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
 
     ConfigureR2Storage();
@@ -158,6 +166,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IInstagramUserService, InstagramUserService>();
     builder.Services.AddScoped<ISupportStaffMessageService, SupportStaffMessageService>();
     builder.Services.AddScoped<ISupportConversationService, SupportConversationService>();
+    builder.Services.AddScoped<ITaskAssignmentService,TaskAssignmentService>();
     builder.Services.AddScoped<IClaimTypeService, ClaimTypeService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
