@@ -1,20 +1,29 @@
-# BUILD
+# ========================
+# BUILD STAGE
+# ========================
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# copy solution
 COPY OmniChat.sln .
+
+# copy csproj 
 COPY OmniChat.Api/OmniChat.Api.csproj OmniChat.Api/
 COPY OmniChat.Application/OmniChat.Application.csproj OmniChat.Application/
 COPY OmniChat.Infrastructure/OmniChat.Infrastructure.csproj OmniChat.Infrastructure/
 
-RUN dotnet restore
+# restore  project
+RUN dotnet restore OmniChat.Api/OmniChat.Api.csproj
 
+# copy full source
 COPY . .
 
-WORKDIR /src/OmniChat.Api
-RUN dotnet publish -c Release -o /app/publish
+# publish
+RUN dotnet publish OmniChat.Api/OmniChat.Api.csproj -c Release -o /app/publish
 
-# RUN
+# ========================
+# RUNTIME STAGE
+# ========================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
