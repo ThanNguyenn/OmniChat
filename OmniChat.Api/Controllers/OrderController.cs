@@ -6,6 +6,7 @@ using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers;
 
@@ -26,6 +27,9 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+    Summary = "Tạo mới order",
+    Description = "Tạo mới order")]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest createOrderRequest)
     {
         var result = await _orderService.CreateOrderAsync(createOrderRequest);
@@ -33,26 +37,34 @@ public class OrderController : BaseController<OrderController>
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
-    [HttpPost(ApiEndPointConstant.Order.Update)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateOrder([FromRoute] Guid id, [FromBody] UpdateOrderRequest updateOrderRequest)
-    {
-        var result = await _orderService.UpdateOrderAsync(id, updateOrderRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order updated successfully", result);
-        return StatusCode(StatusCodes.Status200OK, response);
-    }
+    //[HttpPost(ApiEndPointConstant.Order.Update)]
+    //[ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    //[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    //[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    //[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    //[SwaggerOperation(
+    //    Summary = "Cập nhật order",
+    //    Description = "Cập nhật thông tin cơ bản của order theo id. Chỉ những field khác null trong request mới được cập nhật."
+    //)]
+    //public async Task<IActionResult> UpdateOrder([FromRoute] Guid id, [FromBody] UpdateOrderRequest updateOrderRequest)
+    //{
+    //    var result = await _orderService.UpdateOrderAsync(id, updateOrderRequest);
+    //    var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order updated successfully", result);
+    //    return StatusCode(StatusCodes.Status200OK, response);
+    //}
 
     [HttpPatch(ApiEndPointConstant.Order.CancelOrder)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CancelOrder([FromRoute] Guid id, [FromBody] UpdateOrderStatusRequest request)
+    [SwaggerOperation(
+        Summary = "Hủy order",
+        Description = "Hủy order theo id đang delivery status pending và trả lại sản phẩm vào kho."
+    )]
+    public async Task<IActionResult> CancelOrder([FromRoute] Guid id)
     {
-        var result = await _orderService.CancelOrderAsync(id, request.NewStatus);
+        var result = await _orderService.CancelOrderAsync(id, OrderStatus.Cancelled);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order cancelled successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -62,9 +74,9 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CompleteDeliveredOrder([FromRoute] Guid id, [FromBody] UpdateOrderDeliveryStatusRequest request)
+    public async Task<IActionResult> CompleteDeliveredOrder([FromRoute] Guid id)
     {
-        var result = await _orderService.CompleteDeliverdOrderAsync(id, request.NewDeliveryStatus);
+        var result = await _orderService.CompleteDeliverdOrderAsync(id, DeliveryStatus.Completed);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order delivery status updated successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -74,6 +86,10 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Xóa order",
+        Description = "Xóa order theo id. Sau khi xóa, order sẽ không còn hiển thị trong danh sách."
+    )]
     public async Task<IActionResult> DeleteOrder([FromRoute] Guid id)
     {
         var result = await _orderService.DeleteOrderAsync(id);
@@ -86,9 +102,29 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy order theo id",
+        Description = "Lấy thông tin chi tiết của order dựa trên id."
+    )]
     public async Task<IActionResult> GetOrderById([FromRoute] Guid id)
     {
         var result = await _orderService.GetOrderByIdAsync(id);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order retrieved successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpGet(ApiEndPointConstant.Order.GetByIdForPostSale)]
+    [ProducesResponseType(typeof(ApiResponse<GetOrderResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy order theo id cho ui refund",
+        Description = "Lấy thông tin chi tiết của order cho ui refund dựa trên id."
+    )]
+    public async Task<IActionResult> GetOrderByIdForPostSale([FromRoute] Guid id)
+    {
+        var result = await _orderService.GetPostSaleOrderByIdAsync(id);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order retrieved successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -110,9 +146,13 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetOrdersByCustomerId([FromRoute] Guid customerId, [FromQuery] string? search, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "id", [FromQuery] bool descending = false)
+    [SwaggerOperation(
+        Summary = "Lấy order theo customer id",
+        Description = "Lấy thông tin chi tiết của order dựa trên customer id."
+    )]
+    public async Task<IActionResult> GetOrdersByCustomerId([FromRoute] Guid customerId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "orderdate", [FromQuery] bool descending = true)
     {
-        var result = await _orderService.GetOrdersByCustomerIdAsync(customerId, search, pageNumber, pageSize, sortBy, descending);
+        var result = await _orderService.GetOrdersByCustomerIdAsync(customerId, null, pageNumber, pageSize, sortBy, descending);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders retrieved successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }

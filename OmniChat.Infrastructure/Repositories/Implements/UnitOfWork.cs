@@ -37,12 +37,20 @@ public class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : OmniC
     #endregion
 
     #region Packed Transaction Management
-    public async Task<TOperation> ProcessInTransactionAsync<TOperation>(Func<Task<TOperation>> operation)
+    public async Task<TOperation> ProcessInTransactionAsync<TOperation>(
+    Func<Task<TOperation>> operation)
     {
         var executionStrategy = Context.Database.CreateExecutionStrategy();
+
         return await executionStrategy.ExecuteAsync(async () =>
         {
+            if (Context.Database.CurrentTransaction != null)
+            {
+                return await operation();
+            }
+
             await using var transaction = await Context.Database.BeginTransactionAsync();
+
             try
             {
                 var result = await operation();

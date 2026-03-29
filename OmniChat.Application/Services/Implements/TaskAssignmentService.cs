@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Amazon.Runtime.Internal;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -208,9 +209,19 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
     private async Task<PredictResponse?> AnalyzeAsync(PredictRequest predictRequest)
     {
         var apiUrl = _config["AIService:BaseUrl"];
-        var response = await _httpClient.PostAsJsonAsync(
-            apiUrl,
-            new { predictRequest.Message });
+        var apiKey = _config["AIService:ApiKey"];
+        var apiName = _config["AIService:ApiName"];
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+        {
+            Content = JsonContent.Create(predictRequest)
+        };
+
+        request.Headers.Add(apiName ?? "omni-chat-api-key", apiKey);
+
+        request.Headers.Add("ngrok-skip-browser-warning", "true");
+
+        var response = await _httpClient.SendAsync(request);
 
         response.EnsureSuccessStatusCode();
 

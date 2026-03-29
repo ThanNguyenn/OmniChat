@@ -6,6 +6,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Product;
 using OmniChat.Infrastructure.Dtos.Requests.ProductBatch;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
+using OmniChat.Infrastructure.Dtos.Responses.ProductBatch;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
@@ -13,6 +14,7 @@ using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -122,27 +124,50 @@ public class ProductService : BaseService<ProductService>, IProductService
                 size: pageSize
                 );
         return response;
-
     }
+
+    public async Task<IEnumerable<GetAllProductsCreateOrderResponse>> GetProductForCreateOrderByIdAsync(GetAllProductsCreateOrderQueryRequest? getAllProductsCreateOrderQueryRequest)
+    {
+        var productRepo = _unitOfWork.GetRepository<Product>();
+
+        var request = getAllProductsCreateOrderQueryRequest ?? new GetAllProductsCreateOrderQueryRequest();
+
+        var response = await productRepo.GetListAsync<GetAllProductsCreateOrderResponse>(
+            predicate: p =>
+                p.IsActive != false &&
+                (!request.PackagingType.HasValue || p.ProductPackagingType == request.PackagingType) &&
+                (!request.ProductKind.HasValue || p.ProductKind == request.ProductKind) &&
+                (!request.VolumeMl.HasValue || p.VolumeMl == request.VolumeMl) &&
+                (!request.BrandId.HasValue || p.BrandId == request.BrandId),
+            orderBy: q => q.OrderBy(p => p.ProductKind),
+            selector: e => _mapper.Map<GetAllProductsCreateOrderResponse>(e)
+        );
+        return response;
+    }
+
     private static IOrderedQueryable<Product> OrderBy(IQueryable<Product> query, string sortBy, bool descending)
     {
         sortBy = sortBy?.Trim().ToLower() ?? "id";
 
-        Expression<Func<Product, object>> keySelector = sortBy switch
+        return (sortBy, descending) switch
         {
-            "name" => s => s.Name,
-            "code" => s => s.Code,
-            "quantity" => s => s.Quantity,
-            "volumeml" => s => s.VolumeMl,
-            "price" => s => s.Price,
-            "brand" => s => s.Brand,
-            _ => s => s.Id
+            ("name", false) => query.OrderBy(s => s.Name),
+            ("name", true) => query.OrderByDescending(s => s.Name),
+            ("code", false) => query.OrderBy(s => s.Code),
+            ("code", true) => query.OrderByDescending(s => s.Code),
+            ("quantity", false) => query.OrderBy(s => s.Quantity),
+            ("quantity", true) => query.OrderByDescending(s => s.Quantity),
+            ("volumeml", false) => query.OrderBy(s => s.VolumeMl),
+            ("volumeml", true) => query.OrderByDescending(s => s.VolumeMl),
+            ("price", false) => query.OrderBy(s => s.Price),
+            ("price", true) => query.OrderByDescending(s => s.Price),
+            ("brand", false) => query.OrderBy(s => s.Brand),
+            ("brand", true) => query.OrderByDescending(s => s.Brand),
+            (_, false) => query.OrderBy(s => s.Id),
+            (_, true) => query.OrderByDescending(s => s.Id)
         };
-
-        return descending
-            ? query.OrderByDescending(keySelector)
-            : query.OrderBy(keySelector);
     }
+
     public async Task<GetProductResponse> GetProductByIdAsync(Guid productId)
     {
         var productRepo = _unitOfWork.GetRepository<Product>();
@@ -207,8 +232,13 @@ public class ProductService : BaseService<ProductService>, IProductService
                         var newBatch = new ProductBatch
                         {
                             ProductId = product.Id,
-                            ManuFactureDate = manufactureDate.ToDateTime(TimeOnly.MinValue),
-                            ExpiryDate = expiryDate.ToDateTime(TimeOnly.MinValue),
+                            ManuFactureDate = DateTime.SpecifyKind(
+                            manufactureDate.ToDateTime(TimeOnly.MinValue),
+                            DateTimeKind.Utc),
+
+                            ExpiryDate = DateTime.SpecifyKind(
+                            expiryDate.ToDateTime(TimeOnly.MinValue),
+                            DateTimeKind.Utc),
                             Quantity = batchRequest.Quantity
                         };
 
@@ -259,4 +289,61 @@ public class ProductService : BaseService<ProductService>, IProductService
         throw new BadRequestException("Either ManufactureDate or ExpiryDate must be provided");
     }
 
+    public async Task<PagingResponse<GetProductBatchesResponse>> GetProductBatchesAsync(
+        Guid productId,
+        bool? isNewest,
+        int pageNumber = 1,
+        int pageSize = 20)
+    {
+        var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+
+        Expression<Func<ProductBatch, bool>> predicate =
+            p => p.ProductId == productId && p.IsActive != false;
+
+        if (isNewest == true)
+        {
+            return await batchRepo.GetPagingListAsync<GetProductBatchesResponse>(
+                predicate: predicate,
+                orderBy: q => q.OrderByDescending(p => p.ManuFactureDate),
+                selector: e => _mapper.Map<GetProductBatchesResponse>(e),
+                page: 1,
+                size: 1
+            );
+        }
+
+        return await batchRepo.GetPagingListAsync<GetProductBatchesResponse>(
+            predicate: predicate,
+            orderBy: q => q.OrderBy(p => p.ExpiryDate),
+            selector: e => _mapper.Map<GetProductBatchesResponse>(e),
+            page: pageNumber,
+            size: pageSize
+        );
+    }
+
+    //public async Task<IEnumerable<GetProductBatchesResponse>> GetProductBatchesAsync(Guid productId, bool? isNewest)
+    //{
+    //    var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+
+    //    if (isNewest == true)
+    //    {
+    //        var entity = await batchRepo.SingleOrDefaultAsync(
+    //            predicate: p => p.ProductId == productId && p.IsActive != false,
+    //            orderBy: q => q.OrderByDescending(p => p.ManuFactureDate)
+    //        );
+
+    //        if (entity == null)
+    //            return Enumerable.Empty<GetProductBatchesResponse>();
+
+    //        return new[]
+    //        {
+    //        _mapper.Map<GetProductBatchesResponse>(entity)
+    //        };
+    //    }
+
+    //    return await batchRepo.GetListAsync(
+    //        predicate: p => p.ProductId == productId && p.IsActive != false,
+    //        orderBy: q => q.OrderBy(p => p.ExpiryDate),
+    //        selector: e => _mapper.Map<GetProductBatchesResponse>(e)
+    //    );
+    //}
 }
