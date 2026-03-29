@@ -39,9 +39,11 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly IMessageKeywordFilterService _messageKeywordFilterService;
 
+        private readonly IChatAggregationService _chatAggregationService;
+
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService,IMessageKeywordFilterService messageKeywordFilterService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService,IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
@@ -51,6 +53,7 @@ namespace OmniChat.Application.Services.Resolver
             _facebookUserService = facebookUserService;
             _hubContext = hubContext;
             _supportConversationService = supportConversationService;
+            _chatAggregationService = chatAggregationService;
         }
 
         public async Task FacebookWebhookLogic(FaceBookWebhookPayload faceBookWebhookPayload)
@@ -147,7 +150,7 @@ namespace OmniChat.Application.Services.Resolver
                             ActiveStaffId = null,
                             AvatarUrl = customerProfile.AvatarUrl,
                             CustomerName = customerProfile.CustomerName,
-                            IsDistributed = true,
+                            IsDistributed = false,
                             ProvidersId = provider.Id,
                             Status = ConversationStatus.Pending,
                         };
@@ -182,18 +185,21 @@ namespace OmniChat.Application.Services.Resolver
                         }
                     );
 
-                    if (conversation.ActiveStaffId == null)
-                    {
-                        Guid staffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
+                    // add to redis to sum message into string ,backgroud call AI service
+                    await _chatAggregationService.AddMessageRedisAsync(customerProfile.Id, newMessage.Content, provider.Id);
 
-                        conversation = await _supportConversationService
-                            .AsignForSupportConversationByIdAsync(conversation, staffId);
+                    //if (conversation.ActiveStaffId == null)
+                    //{
+                    //    Guid staffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-                        _logger.LogInformation(
-                            "[FACEBOOK] Check Active Staff | ActiveStaff={ActiveStaffId}",
-                            conversation.ActiveStaffId
-                        );
-                    }
+                    //    conversation = await _supportConversationService
+                    //        .AsignForSupportConversationByIdAsync(conversation, staffId);
+
+                    //    _logger.LogInformation(
+                    //        "[FACEBOOK] Check Active Staff | ActiveStaff={ActiveStaffId}",
+                    //        conversation.ActiveStaffId
+                    //    );
+                    //}
 
                     if (newMessage != null)
                     {
@@ -203,7 +209,7 @@ namespace OmniChat.Application.Services.Resolver
                         );
 
                         var updatedConversation = await _supportConversationService
-                            .UpdateSupportConversationUpdateDateAsync(conversation);
+                            .UpdateSupportConversationUpdateDateAsync(conversation.Id);
 
                         if (updatedConversation.ActiveStaffId != null)
                         {
