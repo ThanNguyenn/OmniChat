@@ -39,6 +39,8 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly IMessageKeywordFilterService _messageKeywordFilterService;
 
+        private readonly IChatAggregationService _chatAggregationService;
+
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
         public ZaloResolver(
@@ -53,6 +55,7 @@ namespace OmniChat.Application.Services.Resolver
             ISupportConversationService supportConversationService,
             IConfiguration configuration,
             IMessageKeywordFilterService messageKeywordFilterService,
+            IChatAggregationService chatAggregationService,
              IHubContext<SupportConversationHub> hubContext
             ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
@@ -62,6 +65,7 @@ namespace OmniChat.Application.Services.Resolver
             _supportConversationService = supportConversationService;
             _zaloUserService = zaloUserService;
             _supportConversationService = supportConversationService;
+            _chatAggregationService = chatAggregationService;
             _hubContext = hubContext;
             _messageKeywordFilterService = messageKeywordFilterService;
         }
@@ -163,7 +167,7 @@ namespace OmniChat.Application.Services.Resolver
                     ActiveStaffId = null,
                     AvatarUrl = customerProfile.AvatarUrl,
                     CustomerName = customerProfile.CustomerName,
-                    IsDistributed = true,
+                    IsDistributed = false,
                     ProvidersId = provider.Id,
                     Status = ConversationStatus.Pending,
                 };
@@ -198,18 +202,21 @@ namespace OmniChat.Application.Services.Resolver
                 }
             );
 
-            if (conversation.ActiveStaffId == null)
-            {
-                Guid staffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
+            // add to redis to sum message into string ,backgroud call AI service , assign
+            await _chatAggregationService.AddMessageRedisAsync(customerProfile.Id, newMessage.Content,provider.Id);
 
-                conversation = await _supportConversationService
-                    .AsignForSupportConversationByIdAsync(conversation, staffId);
+            //if (conversation.ActiveStaffId == null)
+            //{
+            //    Guid staffId = Guid.Parse("89ceebe8-4ee8-4bf0-8893-977978dbc9e6");
 
-                _logger.LogInformation(
-                    "[ZALO] Check Active Staff | ActiveStaff={ActiveStaffId}",
-                    conversation.ActiveStaffId
-                );
-            }
+            //    conversation = await _supportConversationService
+            //        .AsignForSupportConversationByIdAsync(conversation, staffId);
+
+            //    _logger.LogInformation(
+            //        "[ZALO] Check Active Staff | ActiveStaff={ActiveStaffId}",
+            //        conversation.ActiveStaffId
+            //    );
+            //}
 
             if (newMessage != null)
             {
@@ -219,7 +226,7 @@ namespace OmniChat.Application.Services.Resolver
                 );
 
                 var updatedConversation = await _supportConversationService
-                    .UpdateSupportConversationUpdateDateAsync(conversation);
+                    .UpdateSupportConversationUpdateDateAsync(conversation.Id);
 
                 if (updatedConversation.ActiveStaffId != null)
                 {

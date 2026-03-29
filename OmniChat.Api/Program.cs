@@ -28,6 +28,7 @@ using OmniChat.Infrastructure.Repositories.Interfaces;
 using SwaggerThemes;
 using System;
 using System.Text;
+using StackExchange.Redis;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -70,6 +71,13 @@ void ConfigureServices()
                 new NullableUtcDateTimeJsonConverter()
             );
         });
+
+    // define redis
+    var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
+    var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
+
+    var redis = ConnectionMultiplexer.Connect($"{redisHost}:{redisPort}");
+    builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
 
     ConfigureR2Storage();
 
@@ -160,6 +168,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IProductService, ProductService>();
     builder.Services.AddScoped<IClaimService, ClaimService>();
     builder.Services.AddScoped<IFacebookOAuthService, FacebookOAuthService>();
+    builder.Services.AddScoped<IChatAggregationService, ChatAggregationService>();
     builder.Services.AddScoped<IInstagramOAuthService, InstagramOAuthService>();
     builder.Services.AddScoped<IOrderService, OrderService>();
     builder.Services.AddScoped<IKeywordService, KeywordService>();
@@ -175,6 +184,7 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<ZaloTokenRefreshWorker>();
     builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
     builder.Services.AddHostedService<WebhookBackgroundWorker>();
+    builder.Services.AddHostedService<ChatAggregationWorker>();
 }
 
 // add signalR

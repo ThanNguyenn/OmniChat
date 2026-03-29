@@ -58,6 +58,26 @@ namespace OmniChat.Application.Services.Implements
            
         }
 
+
+        public async Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(Guid conversationId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var conversation = await repo.GetByIdAsync(conversationId);
+
+            if (conversation == null)
+                throw new Exception("Conversation not found");
+
+            conversation.UpdateDate = DateTime.UtcNow;
+
+            repo.Update(conversation);
+
+            await _unitOfWork.CommitAsync();
+
+            return conversation;
+        }
+
+
         // Staff Pending SupportConversation side bar
         public async Task<IEnumerable<StaffConversationSideBarResponse>>GetStaffConversationSideBarAsync(Guid staffId, string providerName)
         {
@@ -271,11 +291,17 @@ namespace OmniChat.Application.Services.Implements
             if (conversation.Status == ConversationStatus.Complete)
                 throw new BusinessException("Cannot assign completed conversation");
 
-           if(conversation.ActiveStaffId == null)
+            if (conversation.IsDistributed)
             {
-                // Assign staff when no have staff support
+                return conversation;
+            }
+
+            if (conversation.ActiveStaffId == null)
+            {
                 conversation.ActiveStaffId = staffAsignId;
             }
+
+           conversation.IsDistributed = true;
 
             repo.Update(conversation);
 
