@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace OmniChat.Application.Webhooks.Zalo.ZaloProflie
     public class ZaloSharedInfo
     {
         [JsonPropertyName("phone")]
+        [JsonConverter(typeof(StringOrNumberConverter))]
         public string Phone { get; set; }
 
         [JsonPropertyName("name")]

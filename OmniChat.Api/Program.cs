@@ -70,6 +70,11 @@ void ConfigureServices()
             options.JsonSerializerOptions.Converters.Add(
                 new NullableUtcDateTimeJsonConverter()
             );
+
+            // zalo Phone field can be string or number, we need to handle both cases
+            options.JsonSerializerOptions.Converters.Add(
+                new StringOrNumberConverter()
+            );
         });
 
     // define redis
