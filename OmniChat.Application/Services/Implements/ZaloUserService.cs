@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -33,19 +34,27 @@ namespace OmniChat.Application.Services.Implements
         {
             try
             {
-                
                 var accessToken = await _zaloOAuthService.GetAccessTokenAsync();
+
+                
+                var dataObj = new
+                {
+                    user_id = zaloUserId
+                };
+
+                var dataJson = JsonSerializer.Serialize(dataObj);
+                var encodedData = Uri.EscapeDataString(dataJson);
 
                 var request = new HttpRequestMessage(
                     HttpMethod.Get,
-                    $"https://openapi.zalo.me/v2.0/oa/getprofile?user_id={zaloUserId}"
+                    $"https://openapi.zalo.me/v3.0/oa/user/detail?data={encodedData}"
                 );
 
-                request.Headers.Add("access_token", accessToken);
+              
+                request.Headers.Authorization =
+                    new AuthenticationHeaderValue("Bearer", accessToken);
 
                 var response = await _httpClient.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-
                 var json = await response.Content.ReadAsStringAsync();
 
                 var result = JsonSerializer.Deserialize<ZaloUserProfileResponse>(
@@ -57,19 +66,15 @@ namespace OmniChat.Application.Services.Implements
 
                 if (result?.Error != 0)
                 {
-                    _logger.LogWarning(
-                        "Zalo getprofile failed: {Message}",
-                        result?.Message);
+                    _logger.LogWarning("Zalo V3 getprofile failed: {Message}", result?.Message);
                     return null;
                 }
 
-                return result.Data;
+                return result?.Data;
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Error calling Zalo getprofile API");
+                _logger.LogError(ex, "Error calling Zalo V3 user/detail API");
                 throw;
             }
         }

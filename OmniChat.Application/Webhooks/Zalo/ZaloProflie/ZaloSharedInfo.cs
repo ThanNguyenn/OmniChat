@@ -11,5 +11,11 @@ namespace OmniChat.Application.Webhooks.Zalo.ZaloProflie
     {
         [JsonPropertyName("phone")]
         public string Phone { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("address")]
+        public string Address { get; set; }
     }
 }

@@ -18,11 +18,11 @@ namespace OmniChat.Application.Webhooks.Zalo.ZaloProflie
         [JsonPropertyName("avatar")]
         public string Avatar { get; set; }
 
-        [JsonPropertyName("gender")]
-        public int? Gender { get; set; }
+        [JsonPropertyName("user_is_follower")]
+        public bool UserIsFollower { get; set; }
 
-        [JsonPropertyName("birth_date")]
-        public string BirthDate { get; set; }
+        [JsonPropertyName("user_last_interaction_date")]
+        public string LastInteractionDate { get; set; }
 
         [JsonPropertyName("shared_info")]
         public ZaloSharedInfo SharedInfo { get; set; }
