@@ -39,7 +39,7 @@ namespace OmniChat.Application.Services.Implements
                 
                 var dataObj = new
                 {
-                    user_id = zaloUserId
+                    user_id = zaloUserId.ToString()
                 };
 
                 var dataJson = JsonSerializer.Serialize(dataObj);
@@ -50,9 +50,8 @@ namespace OmniChat.Application.Services.Implements
                     $"https://openapi.zalo.me/v3.0/oa/user/detail?data={encodedData}"
                 );
 
-              
-                request.Headers.Authorization =
-                    new AuthenticationHeaderValue("Bearer", accessToken);
+
+                request.Headers.Add("access_token", accessToken);
 
                 var response = await _httpClient.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
