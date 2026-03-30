@@ -56,6 +56,8 @@ namespace OmniChat.Application.Services.Implements
                 var response = await _httpClient.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
 
+                _logger.LogInformation("Zalo raw response: {Json}", json);
+
                 var result = JsonSerializer.Deserialize<ZaloUserProfileResponse>(
                     json,
                     new JsonSerializerOptions
