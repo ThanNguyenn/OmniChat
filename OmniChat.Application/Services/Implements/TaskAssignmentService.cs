@@ -28,12 +28,13 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
     public async Task ProcessTask(PredictRequest predictRequest, Guid conversationId)
     {
         var predict = await AnalyzeAsync(predictRequest);
+
         if (predict == null)
         {
             _logger.LogWarning("Intent analysis failed for conversation {ConversationId}", conversationId);
             return;
         }
-
+        _logger.LogInformation("Intent analysis success for conversation {ConversationId}", conversationId);
         var isSuccessfullyCreatingTask = await CreateTaskAsync(predict, conversationId);
         if (!isSuccessfullyCreatingTask) return;
 
