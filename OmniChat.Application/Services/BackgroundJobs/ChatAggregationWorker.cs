@@ -38,15 +38,11 @@ namespace OmniChat.Application.Services.BackgroundJobs
         {
             var db = _redis.GetDatabase();
 
-            _logger.LogInformation("[AGGREGATION] Worker started");
-
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
                     var keys = await db.SetMembersAsync("chat_keys");
-
-                    _logger.LogInformation($"[REDIS] Scan {keys.Length} keys");
 
                     foreach (var keyValue in keys)
                     {
@@ -59,26 +55,20 @@ namespace OmniChat.Application.Services.BackgroundJobs
                         RedisKey key = keyValue.ToString();
                         var lastKey = $"last:{key}";
 
-                        _logger.LogInformation($"[REDIS] Checking key={key}");
-
                         
                         var lastValue = await db.StringGetAsync(lastKey);
 
                         if (!lastValue.HasValue)
                         {
-                            _logger.LogWarning($"[REDIS] Missing lastKey={lastKey} → skip");
                             continue;
                         }
 
                         var lastTime = new DateTime((long)lastValue);
                         var diff = DateTime.UtcNow - lastTime;
 
-                        _logger.LogInformation($"[DEBOUNCE] key={key} idle={diff.TotalSeconds}s");
-
                         // debounce 60s
                         if (diff < TimeSpan.FromSeconds(60))
                         {
-                            _logger.LogInformation($"[DEBOUNCE] Still active → skip key={key}");
                             continue;
                         }
 
@@ -93,17 +83,13 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                         if (!isLocked)
                         {
-                            _logger.LogInformation($"[LOCK] Already locked → skip key={key}");
                             continue;
                         }
-
-                        _logger.LogInformation($"[LOCK] Acquired {lockKey}");
 
                         try
                         {
                             var messages = await db.ListRangeAsync(key);
 
-                            _logger.LogInformation($"[REDIS] Read {messages.Length} messages from key={key}");
 
                             if (messages.Length == 0)
                             {
@@ -120,7 +106,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                             if (parts.Length != 3)
                             {
-                                _logger.LogWarning($"[REDIS] Invalid key format → delete key={key}");
 
                                 await db.KeyDeleteAsync(key);
                                 await db.KeyDeleteAsync(lastKey);
@@ -131,7 +116,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             if (!Guid.TryParse(parts[1], out var providerId) ||
                                 !Guid.TryParse(parts[2], out var customerId))
                             {
-                                _logger.LogWarning($"[REDIS] Invalid GUID → delete key={key}");
 
                                 await db.KeyDeleteAsync(key);
                                 await db.KeyDeleteAsync(lastKey);
@@ -152,7 +136,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                             if (conversation == null)
                             {
-                                _logger.LogWarning($"[BUSINESS] Conversation null → cleanup key={key}");
 
                                 await db.KeyDeleteAsync(key);
                                 await db.KeyDeleteAsync(lastKey);
@@ -162,7 +145,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                             if (conversation.IsDistributed)
                             {
-                                _logger.LogInformation($"[BUSINESS] Already distributed → cleanup key={key}");
 
                                 await db.KeyDeleteAsync(key);
                                 await db.KeyDeleteAsync(lastKey);
@@ -171,8 +153,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             }
 
                             var text = string.Join(" ", messages.Select(x => x.ToString()));
-
-                            _logger.LogInformation($"[AGGREGATION] Processing key={key} | length={text.Length}");
 
                             _logger.LogInformation($"[AGGREGATION] TEXT = {text}");
 
@@ -191,11 +171,9 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             await db.KeyDeleteAsync(lastKey);
                             await db.SetRemoveAsync("chat_keys", key.ToString());
 
-                            _logger.LogInformation($"[REDIS] Deleted key + lastKey={key}");
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, $"[AGGREGATION] Error processing key={key}");
                             await db.KeyDeleteAsync(key);
                             await db.KeyDeleteAsync(lastKey);
                             await db.SetRemoveAsync("chat_keys", key.ToString());
@@ -203,7 +181,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
                         finally
                         {
                             await db.KeyDeleteAsync(lockKey);
-                            _logger.LogInformation($"[LOCK] Released {lockKey}");
                         }
                     }
                 }

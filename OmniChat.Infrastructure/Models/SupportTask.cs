@@ -26,7 +26,7 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime? CompleteDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CompleteDate { get; set; }
 
         public int TaskPiority { get; set; }
 
