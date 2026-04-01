@@ -1,6 +1,6 @@
 services:
     backend:
-        image: khoanam/omnichat:V1
+        image: khoanam/omnichat:V3
         container_name: omnichat-backend
         ports:
             - "5000:80"
