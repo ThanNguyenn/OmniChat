@@ -82,6 +82,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     convo.Status = ConversationStatus.Complete;
                     convo.CloseAt = now;
                     needUpdate = true;
+
+                    // not performace yet
                 }
 
                 if (needUpdate)
