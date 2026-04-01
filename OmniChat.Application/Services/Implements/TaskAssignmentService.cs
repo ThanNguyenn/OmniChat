@@ -112,6 +112,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
                         Status = SupportTaskStatus.New,
                         CreatedAt = DateTime.UtcNow,
                         TaskPiority = (int)(label.Confidence * 10)
+                        
                     })
                 .ToList();
 
@@ -209,6 +210,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
             {
                 conversation.ActiveStaffId = selectedStaff.Id;
                 conversation.IsDistributed = true;
+                conversation.Staff = null;
                 conversationRepo.Update(conversation);
             }
         });
