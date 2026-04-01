@@ -184,6 +184,10 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(t => t.TransactionType)
                 .HasConversion<string>();
 
+            modelBuilder.Entity<CreditNote>()
+                .Property(cn => cn.CreditNoteType)
+                .HasConversion<string>();
+
             // default value IsActive = true
 
             modelBuilder.Entity<Account>()

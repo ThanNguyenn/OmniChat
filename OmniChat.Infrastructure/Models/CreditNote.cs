@@ -24,6 +24,13 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
+        public CreditNoteType CreditNoteType { get; set; }
+    }
+
+    public enum CreditNoteType
+    {
+        Refund = 0,
+        Adjustment = 1,
     }
 
     public enum CreditNoteStatus
