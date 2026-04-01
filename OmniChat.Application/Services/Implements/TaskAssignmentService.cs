@@ -196,6 +196,8 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
                 task.CurrentAssignedStaffId = selectedStaff.Id;
                 task.Status = SupportTaskStatus.InProgress;
                 task.IntentType = null;
+                task.SupportConversation = null;
+
             }
 
             taskRepo.UpdateRange(tasks);
