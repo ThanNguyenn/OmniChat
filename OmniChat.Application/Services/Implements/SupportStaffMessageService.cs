@@ -152,8 +152,13 @@ namespace OmniChat.Application.Services.Implements
                     newStaffSupportMes.Id
                 );
 
-                existConversation.UpdateDate = DateTime.UtcNow;
-                _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
+                var now = DateTime.UtcNow;
+
+                existConversation.UpdateDate = now;
+                existConversation.LastStaffMessageAt = now;
+                existConversation.ReminderSent = false;
+
+                await _supportConversationService.UpdateConversationAsync(existConversation);
 
                 // Update Sidebar for Staff via SignalR (GROUP-BASED)
 
@@ -248,8 +253,13 @@ namespace OmniChat.Application.Services.Implements
                 // After create new staff message Update Supportconversation UpdateDate -> now
 
                 //var conversation = await _supportConversationService.UpdateSupportConversationUpdateDateAsync(newSupportMess.SupportConversationId);
-                existConversation.UpdateDate = DateTime.UtcNow;
-                _unitOfWork.GetRepository<SupportConversation>().Update(existConversation);
+                var now = DateTime.UtcNow;
+
+                existConversation.UpdateDate = now;
+                existConversation.LastStaffMessageAt = now;
+                existConversation.ReminderSent = false;
+
+                await _supportConversationService.UpdateConversationAsync(existConversation);
 
                 var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
 
