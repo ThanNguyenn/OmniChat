@@ -8,5 +8,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Intent;
 
 public class PredictRequest
 {
+    [JsonPropertyName("text")]
     public string Message { get; set; }
 }
