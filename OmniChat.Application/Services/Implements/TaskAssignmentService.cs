@@ -211,6 +211,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
                 conversation.ActiveStaffId = selectedStaff.Id;
                 conversation.IsDistributed = true;
                 conversation.Staff = null;
+                conversation.SupportTasks = null;
                 conversationRepo.Update(conversation);
             }
         });
