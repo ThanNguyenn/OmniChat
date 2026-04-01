@@ -29,14 +29,13 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
     {
         var predict = await AnalyzeAsync(predictRequest);
 
-        if (predict == null)
+        if (predict == null) return;
+        var isSuccessfullyCreatingTask = await CreateTaskAsync(predict, conversationId);
+        if (!isSuccessfullyCreatingTask)
         {
-            _logger.LogWarning("Intent analysis failed for conversation {ConversationId}", conversationId);
+            _logger.LogWarning("No tasks created for conversation {ConversationId} after intent analysis", conversationId);
             return;
         }
-        _logger.LogInformation("Intent analysis success for conversation {ConversationId}", conversationId);
-        var isSuccessfullyCreatingTask = await CreateTaskAsync(predict, conversationId);
-        if (!isSuccessfullyCreatingTask) return;
 
         var assigned = await AssignStaffToConversationAsync(conversationId);
 
@@ -83,9 +82,12 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
             .Where(x => x.Predicted)
             .ToList();
 
-        if (!predictedLabels.Any())
+        if (!predictedLabels.Any()) 
+        {  
+            _logger.LogWarning("No predicted intents for conversation {ConversationId}", conversationId);
             return false;
-
+        }
+      
         var intentTypesRepo = _unitOfWork.GetRepository<IntentType>();
         var taskRepo = _unitOfWork.GetRepository<SupportTask>();
 
