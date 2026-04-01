@@ -174,6 +174,9 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                             _logger.LogInformation($"[AGGREGATION] Processing key={key} | length={text.Length}");
 
+                            _logger.LogInformation($"[AGGREGATION] TEXT = {text}");
+
+
                             var predictReqet = new PredictRequest
                             {
                                 Message = text,
