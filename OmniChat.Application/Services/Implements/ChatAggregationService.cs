@@ -22,11 +22,19 @@ namespace OmniChat.Application.Services.Implements
         {
             var db = _redis.GetDatabase();
             var key = $"chat:{providerId}:{customerId}";
+            var lastKey = $"last:{key}";
 
+            // push message
             await db.ListRightPushAsync(key, message);
-            await db.KeyExpireAsync(key, TimeSpan.FromSeconds(60));
 
-          
+            // set timestamp last message 
+            await db.StringSetAsync(lastKey, DateTime.UtcNow.Ticks);
+
+            // TTL  cleanup 
+            await db.KeyExpireAsync(key, TimeSpan.FromMinutes(5));
+            await db.KeyExpireAsync(lastKey, TimeSpan.FromMinutes(5));
+
+            // track key
             await db.SetAddAsync("chat_keys", key);
         }
     }
