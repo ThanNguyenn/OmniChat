@@ -58,6 +58,29 @@ namespace OmniChat.Application.Services.Implements
            
         }
 
+        public async Task<List<SupportConversation>> GetConversationsForReminderAsync()
+        {
+           var repo = _unitOfWork.GetRepository<SupportConversation>();
+            var conversations = await repo.GetQueryable()
+                .Where(sc =>
+                    sc.Status != ConversationStatus.Complete &&
+                    sc.LastStaffMessageAt != null
+                  ).Include(sc => sc.Staff)
+                  .Include(sc => sc.Providers)
+                .ToListAsync();
+            return conversations;
+        }
+
+        public async Task UpdateConversationAsync(SupportConversation conversion)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+            repo.Update(conversion);
+
+            await _unitOfWork.CommitAsync();
+
+        }
+
 
         public async Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(Guid conversationId)
         {

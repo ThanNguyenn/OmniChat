@@ -199,6 +199,7 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
     builder.Services.AddHostedService<WebhookBackgroundWorker>();
     builder.Services.AddHostedService<ChatAggregationWorker>();
+    builder.Services.AddHostedService<ConversationReminderWorker>();
 }
 
 // add signalR
