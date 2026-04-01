@@ -34,11 +34,15 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? UpdateDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime? FirstResponseAt { get; set; } = DateTime.UtcNow;
+        public DateTime? FirstResponseAt { get; set; }
 
-        public DateTime? CloseAt { get; set; } = DateTime.UtcNow;
+        public DateTime? CloseAt { get; set; } 
 
+        public bool ReminderSent { get; set; } // no spam remider message 
 
+        public DateTime? LastStaffMessageAt { get; set; } // last staff message time, used for reminder message
+
+        public DateTime? LastCustomerMessageAt { get; set; } // last customer message time, used for reminder message
 
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
 

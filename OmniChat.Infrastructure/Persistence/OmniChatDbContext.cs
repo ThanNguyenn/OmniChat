@@ -267,6 +267,11 @@ namespace OmniChat.Infrastructure.Persistence
              .Property(x => x.FraudFlag)
              .HasDefaultValueSql("false");
 
+            // deafult value ReminderSent = false
+            modelBuilder.Entity<SupportConversation>()
+             .Property(x => x.ReminderSent)
+             .HasDefaultValueSql("false");
+
             //default createDate utc now 
             modelBuilder.Entity<RefreshToken>()
             .Property(x => x.CreateDate)
