@@ -11,6 +11,7 @@ using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace OmniChat.Application.Services.Implements;
 
@@ -226,13 +227,18 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
         };
 
         request.Headers.Add(apiName ?? "omni-chat-api-key", apiKey);
-
         request.Headers.Add("ngrok-skip-browser-warning", "true");
 
         var response = await _httpClient.SendAsync(request);
 
+        var rawResponse = await response.Content.ReadAsStringAsync();
+
+        _logger.LogInformation("Response Status: {StatusCode}", response.StatusCode);
+        _logger.LogInformation("Response Headers: {Headers}", response.Headers);
+        _logger.LogInformation("Response Body: {Body}", rawResponse);
+
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<PredictResponse>();
+        return JsonSerializer.Deserialize<PredictResponse>(rawResponse);
     }
 }
