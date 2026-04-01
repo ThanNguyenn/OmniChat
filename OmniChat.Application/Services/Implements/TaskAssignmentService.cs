@@ -191,6 +191,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
+            _unitOfWork.Context.ChangeTracker.Clear();
             foreach (var task in tasks)
             {
                 task.CurrentAssignedStaffId = selectedStaff.Id;
