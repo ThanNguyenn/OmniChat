@@ -185,6 +185,12 @@ namespace OmniChat.Application.Services.Resolver
                         }
                     );
 
+                    conversation.LastCustomerMessageAt = DateTime.UtcNow;
+                    conversation.ReminderSent = false;
+
+                    await _supportConversationService.UpdateConversationAsync(conversation);
+
+
                     // add to redis to sum message into string ,backgroud call AI service
                     await _chatAggregationService.AddMessageRedisAsync(customerProfile.Id, newMessage.Content, provider.Id);
 
