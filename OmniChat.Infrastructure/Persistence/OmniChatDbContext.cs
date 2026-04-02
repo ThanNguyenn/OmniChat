@@ -89,6 +89,8 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<PostSaleRequest> PostSaleRequests { get; set; }
 
+        public DbSet<PostSaleItem> PostSaleItems { get; set; }
+
         public DbSet<ChatTemplate> ChatTemplates { get; set; }
 
         public DbSet<ZaloOathToken> ZaloOathTokens { get; set; }
@@ -1129,6 +1131,29 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<OrderItem>()
                 .HasIndex(oi => oi.OrderId); // index scan orderitem by order faster
+
+
+            // ==== OrderItem - PostSaleItem ( one to one ) ====
+            modelBuilder.Entity<PostSaleItem>()
+               .Property(oi => oi.Id)
+               .ValueGeneratedOnAdd()
+               .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.PostSaleItem)
+                .WithOne(psi => psi.OrderItem)
+                .HasForeignKey<PostSaleItem>(psi => psi.OrderItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ==== PostSaleRequest - PostSaleItem  ( one to Many ) ====
+            modelBuilder.Entity<PostSaleRequest>()
+                .HasMany(psr => psr.PostSaleItems)
+                .WithOne(psi => psi.PostSaleRequest)
+                .HasForeignKey(psi => psi.PostSaleRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PostSaleItem>()
+                .HasIndex(psi => psi.PostSaleRequestId); // index scan post sale item by post sale request faster
 
             // ==== ProductBatch - OrderItem ( one to Many ) ====
 

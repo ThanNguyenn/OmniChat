@@ -42,6 +42,7 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? CreateTime { get; set; } = DateTime.UtcNow; 
 
+        public virtual ICollection<PostSaleItem>? PostSaleItems { get; set; }
 
     }
 

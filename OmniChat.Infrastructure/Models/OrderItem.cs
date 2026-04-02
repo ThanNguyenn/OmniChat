@@ -21,5 +21,7 @@ namespace OmniChat.Infrastructure.Models
         public Guid ProductBatchId { get; set; }
 
         public virtual ProductBatch ProductBatch { get; set; }
+
+        public virtual PostSaleItem? PostSaleItem { get; set; }
     }
 }
