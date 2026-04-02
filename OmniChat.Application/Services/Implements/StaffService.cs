@@ -131,4 +131,65 @@ public class StaffService : BaseService<StaffService>, IStaffService
             : query.OrderBy(keySelector);
     }
 
+    public async Task<bool> AssignIntentToStaffAsync(Guid staffId, IEnumerable<AssignStaffToIntentTypeRequest> requests)
+    {
+        var staffIntentTypeRepo = _unitOfWork.GetRepository<StaffIntentType>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
+        var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();
+
+        var existingStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == staffId && s.IsActive != false)
+            ?? throw new NotFoundException($"Staff {staffId} not found or inactive");
+
+        var intentIds = requests.Select(r => r.IntentId).Distinct().ToList();
+
+        var activeIntents = await intentTypeRepo.GetListAsync(predicate: it => intentIds.Contains(it.Id) && it.IsActive != false);
+
+        if (activeIntents.Count != intentIds.Count)
+        {
+            throw new NotFoundException("One or more intent types not found or inactive.");
+        }
+
+        var existingAssignmentIds = (await staffIntentTypeRepo.GetListAsync(predicate: sit =>
+            sit.StaffId == staffId && intentIds.Contains(sit.IntentTypeId)))
+            .Select(sit => sit.IntentTypeId)
+            .ToList();
+
+        var newIntentIds = intentIds.Except(existingAssignmentIds).ToList();
+
+        if (newIntentIds.Any())
+        {
+            var newAssignments = newIntentIds.Select(id => new StaffIntentType
+            {
+                StaffId = staffId,
+                IntentTypeId = id
+            }).ToList();
+
+            await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                await staffIntentTypeRepo.InsertRangeAsync(newAssignments);
+            });
+        }
+
+        return true;
+    }
+
+    public async Task<bool> UnassignIntentFromStaffAsync(Guid staffId, AssignStaffToIntentTypeRequest unassignStaffFromIntentTypeRequest)
+    {
+        var staffIntentTypeRepo = _unitOfWork.GetRepository<StaffIntentType>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
+        var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();   
+
+        var existingStaff = staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == staffId && s.IsActive != false)
+            ?? throw new NotFoundException($"Staff {staffId} not found or inactive");
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var existingAssignment = await staffIntentTypeRepo.SingleOrDefaultAsync(predicate: sit =>
+                sit.StaffId == staffId && sit.IntentTypeId == unassignStaffFromIntentTypeRequest.IntentId) ?? throw new NotFoundException("Staff havent been assigned with this intent");
+
+            staffIntentTypeRepo.Delete(existingAssignment);
+        });
+        return true;
+
+    }
 }

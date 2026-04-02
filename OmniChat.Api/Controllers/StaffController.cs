@@ -44,9 +44,9 @@ public class StaffController : BaseController<StaffController>
     [SwaggerOperation(
         Summary = "Cập nhật thông tin staff",
         Description = "Dùng cho manager cập nhật thông tin cho staff đã được tạo. Tất cả các trường trong body là tùy chọn (nullable), chỉ những trường có giá trị khác null sẽ được cập nhật")]
-    public async Task<IActionResult> UpdateStaffAsync([FromRoute] Guid staffId, [FromBody] UpdateStaffRequest updateStaffRequest)
+    public async Task<IActionResult> UpdateStaffAsync([FromRoute] Guid id, [FromBody] UpdateStaffRequest updateStaffRequest)
     {
-        var result = await _staffService.UpdateStaffAsync(staffId, updateStaffRequest);
+        var result = await _staffService.UpdateStaffAsync(id, updateStaffRequest);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Account updated successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -60,9 +60,9 @@ public class StaffController : BaseController<StaffController>
     [SwaggerOperation(
         Summary = "Xóa thông tin staff",
         Description = "Dùng cho manager xóa thông tin cho staff đã được tạo.")]
-    public async Task<IActionResult> DeleteStaffAsync([FromRoute] Guid staffId)
+    public async Task<IActionResult> DeleteStaffAsync([FromRoute] Guid id)
     {
-        var result = await _staffService.DeleteStaffAsync(staffId);
+        var result = await _staffService.DeleteStaffAsync(id);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Account deleted successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -76,7 +76,7 @@ public class StaffController : BaseController<StaffController>
     [SwaggerOperation(
         Summary = "Lấy list thông tin staff theo phòng ban",
         Description = "Dùng cho manager và admin lấy list thông tin staff theo phòng ban.")]
-    public async Task<IActionResult> GetAllStaffsAsync([FromQuery][Required]Guid deparmentId, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    public async Task<IActionResult> GetAllStaffsAsync([FromQuery][Required] Guid deparmentId, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _staffService.GetStaffsAsync(
             deparmentId,
@@ -89,4 +89,37 @@ public class StaffController : BaseController<StaffController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [HttpPost(ApiEndPointConstant.Staff.AssignIntent)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+       Summary = "Assign intent cho staff",
+       Description = "Assign intent cho staff")]
+    public async Task<IActionResult> AssignIntentToStaffAsync([FromRoute] Guid id, [FromBody] IEnumerable<AssignStaffToIntentTypeRequest> assignIntentRequests)
+    {
+        var result = await _staffService.AssignIntentToStaffAsync(id, assignIntentRequests);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Assign intent to staff successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+
+    }
+
+    [HttpPost(ApiEndPointConstant.Staff.UnassignIntent)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+       Summary = "Remove intent từ staff",
+       Description = "Remove intent từ staff")]
+    public async Task<IActionResult> UnassignIntentFromStaffAsync([FromRoute] Guid id, [FromBody] AssignStaffToIntentTypeRequest assignIntentRequests)
+    {
+        var result = await _staffService.UnassignIntentFromStaffAsync(id, assignIntentRequests);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Assign intent to staff successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+
+    }
 }

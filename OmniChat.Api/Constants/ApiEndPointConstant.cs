@@ -116,6 +116,8 @@ public class ApiEndPointConstant
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
         public const string GetAll = "get";
+        public const string AssignIntent = "{id}/assign-intent";
+        public const string UnassignIntent = "{id}/unassign-intent";
     }
 
     public static class Product
@@ -179,6 +181,13 @@ public class ApiEndPointConstant
     {
         public const string Base = ApiV1 + "/brands";
         public const string GetAll = "get";
+    }
+
+    public static class  Wallet
+    {
+        public const string Base = ApiV1 + "/wallets";
+        public const string Payment = Base + "/payment";
+
     }
 
 }

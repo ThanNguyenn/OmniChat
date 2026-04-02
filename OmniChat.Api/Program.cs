@@ -1,13 +1,9 @@
 using Amazon.Runtime;
 using Amazon.S3;
-using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -25,10 +21,9 @@ using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Implements;
 using OmniChat.Infrastructure.Repositories.Interfaces;
-using SwaggerThemes;
-using System;
-using System.Text;
 using StackExchange.Redis;
+using SwaggerThemes;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -171,13 +166,13 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IInstagramUserService, InstagramUserService>();
     builder.Services.AddScoped<ISupportStaffMessageService, SupportStaffMessageService>();
     builder.Services.AddScoped<ISupportConversationService, SupportConversationService>();
-    builder.Services.AddScoped<ITaskAssignmentService,TaskAssignmentService>();
+    builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
     builder.Services.AddScoped<IClaimTypeService, ClaimTypeService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IStaffService, StaffService>();
-    builder.Services.AddScoped<ICustomerMergeService,CustomerMergeService>();
+    builder.Services.AddScoped<ICustomerMergeService, CustomerMergeService>();
     builder.Services.AddSingleton<IUserIdProvider, SignalRUserIdProvider>();
     builder.Services.AddScoped<IProductService, ProductService>();
     builder.Services.AddScoped<IClaimService, ClaimService>();
@@ -190,6 +185,9 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IMessageKeywordFilterService, MessageKeywordFilterService>();
     builder.Services.AddScoped<IR2StorageService, R2StorageService>();
     builder.Services.AddScoped<IProductBrandService, ProductBrandService>();
+    builder.Services.AddScoped<IWalletService, WalletService>();
+    builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+    builder.Services.AddScoped<ICreditNoteService, CreditNoteService>();
 }
 
 void RegisterBackgroundServices()
@@ -199,7 +197,6 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
     builder.Services.AddHostedService<WebhookBackgroundWorker>();
     builder.Services.AddHostedService<ChatAggregationWorker>();
-    builder.Services.AddHostedService<ConversationReminderWorker>();
 }
 
 // add signalR
@@ -236,7 +233,7 @@ void ConfigureDatabase()
     );
 }
 
- void BackgoudTaskQueue()
+void BackgoudTaskQueue()
 {
     builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 }
@@ -279,12 +276,12 @@ void ConfigureAuthentication()
                     }
 
                     var accessToken = context.Request.Headers["Authorization"].FirstOrDefault();
-              
+
                     if (!string.IsNullOrEmpty(accessToken) && !accessToken.StartsWith("Bearer "))
                     {
                         context.Request.Headers["Authorization"] = "Bearer " + accessToken;
                     }
-                        return Task.CompletedTask;
+                    return Task.CompletedTask;
                 },
                 OnTokenValidated = context =>
                 {
