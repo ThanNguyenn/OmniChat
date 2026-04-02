@@ -414,6 +414,7 @@ void ConfigureMiddleware()
         options.SetIsOriginAllowed(origin =>
            origin.StartsWith("http://localhost:") ||
            origin.StartsWith("https://localhost:") ||
+           origin.Contains("omnichat.click") ||
            origin.EndsWith(".vercel.app"))
               .AllowAnyMethod()
               .AllowAnyHeader()
