@@ -108,9 +108,15 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public IQueryable<T> GetQueryable(
     Expression<Func<T, bool>> predicate = null,
-    Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
+    Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null,
+    bool asNoTracking = false)
     {
         IQueryable<T> query = _dbSet.AsQueryable();
+
+        if (asNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
 
         if (include != null)
         {
