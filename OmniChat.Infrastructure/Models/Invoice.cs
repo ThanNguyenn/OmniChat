@@ -32,6 +32,7 @@ namespace OmniChat.Infrastructure.Models
 
         public double PaidAmount { get; set; }
 
+        public double DeductedAmount { get; set; }
         public virtual ICollection<CreditNote> CreditNotes { get; set; } = new List<CreditNote>();
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
