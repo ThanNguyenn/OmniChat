@@ -32,6 +32,10 @@ namespace OmniChat.Infrastructure.Models
 
         public PostSaleRequestStatus Status { get; set; }
 
+        public string Reason { get; set; }
+
+        public double? RefundAmount { get; set; } // only for return and refund request
+
         public DateTime? RequestedTime { get; set; } = DateTime.UtcNow;
 
         public DateTime? ResolvedTime { get; set; } = DateTime.UtcNow;
