@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
+using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerProfile;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -96,5 +97,58 @@ namespace OmniChat.Application.Services.Implements
 
             return targetValue;
         }
+
+        public async Task HandleEnrichCustomerAsync(EnrichCustomerRequest dto)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+           
+            var current = await _customerProfileService.GetCustomerProfileByIdAsync(dto.ProfileId);
+
+            if (current == null)
+                throw new NotFoundException("Profile not found");
+
+           
+            var email = dto.Email?.Trim().ToLower();
+            var phone = NormalizePhone(dto.Phone);
+
+            var existing = await repo.SingleOrDefaultAsync(predicate: x =>
+                (email != null && x.Email == email) ||
+                (phone != null && x.PhoneNumber == phone)
+            );
+
+            
+            if (existing != null && existing.Id != current.Id)
+            {
+                await MergeAndDeleteAsync(current.Id, existing.Id);
+                return;
+            }
+
+            
+            current.Email = email;
+            current.PhoneNumber = phone;
+            current.Address = dto.Address;
+            current.IsNewCustomer = false;
+
+            repo.Update(current);
+        }
+
+        private string NormalizePhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return phone;
+
+            phone = phone.Trim()
+                         .Replace(" ", "")
+                         .Replace(".", "")
+                         .Replace("-", "");
+
+            if (phone.StartsWith("+84"))
+                phone = "0" + phone.Substring(3);
+
+            return phone;
+        }
+
+
     }
 }

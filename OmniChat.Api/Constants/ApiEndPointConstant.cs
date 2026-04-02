@@ -58,6 +58,9 @@ public class ApiEndPointConstant
         public const string GetCustomerProfileByConversationId = CustomerProfile + "/{conversationId}";
 
         public const string CustomerMerge =ApiV1 + "/customer-profile/merge";
+
+        public const string EnrichCustomerProfile =
+           CustomerProfile + "/enrich";
     }
 
     public static class SupportStaffMessageEndPoint

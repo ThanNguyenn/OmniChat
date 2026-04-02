@@ -28,7 +28,7 @@ namespace OmniChat.Api.Controllers
             Summary = "Lấy Profile của Customer có Paging",
             Description = "Lấy Profile của Customer có Paging và research bằng customer Name"
             )]
-        public async Task<IActionResult>GetAllCustomerProfileByCustomerNamePagingAsync(
+        public async Task<IActionResult> GetAllCustomerProfileByCustomerNamePagingAsync(
       [FromQuery] string? customerName = null,
       [FromQuery] int pageNumber = 1,
       [FromQuery] int pageSize = 20)
@@ -51,7 +51,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetCustomerProfileByConversationId)]
-        [ProducesResponseType(typeof(ApiResponse<PagingResponse<CustomerDetailResponse>>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<CustomerDetailResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy Profile của Customer có bằng conversationId",
             Description = "Lấy Profile của Customer  customer Profile bằng conversationId cho staff"
@@ -61,7 +61,7 @@ namespace OmniChat.Api.Controllers
         {
             var result = await _customerProfileService.GetCustomerDetailByConversationIdAsync(conversationId);
 
-            return Ok(new ApiResponse<CustomerDetailResponse> 
+            return Ok(new ApiResponse<CustomerDetailResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
                 IsSuccess = true,
@@ -72,7 +72,7 @@ namespace OmniChat.Api.Controllers
 
 
         [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetCustomerByEmailOrPhone)]
-        [ProducesResponseType(typeof(ApiResponse<GetCustomerProfileResponse>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<GetCustomerProfileResponse>), StatusCodes.Status200OK)]
         [SwaggerOperation(
            Summary = "Tìm Customer theo Email hoặc Phone",
            Description = "Dùng để tìm customer đã tồn tại trước khi thực hiện merge"
@@ -143,6 +143,42 @@ namespace OmniChat.Api.Controllers
                 Message = "Merge customer profile successfully",
                 Data = result
             });
+        }
+
+
+        [HttpPost(ApiEndPointConstant.CustomerProfileEndPoint.EnrichCustomerProfile)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Enrich thông tin Customer Profile",
+            Description = "Enrich thông tin Customer Profile bằng các dữ liệu như email, phone, address từ form "
+        )]
+        public async Task<IActionResult> EnrichCustomerProfileAsync(
+            [FromBody] EnrichCustomerRequest request)
+        {
+
+            if (request == null || request.ProfileId == Guid.Empty)
+            {
+                return BadRequest(new ApiResponse<bool>
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    IsSuccess = false,
+                    Message = "Invalid request",
+                    Data = false
+                });
+            }
+
+            await _customerMergeService.HandleEnrichCustomerAsync(request);
+          
+                return Ok(new ApiResponse<bool>
+                {
+                    StatusCode = StatusCodes.Status200OK,
+                    IsSuccess = true,
+                    Message = "Enrich customer profile successfully",
+                    Data = true
+                });
+           
         }
     }
 }
