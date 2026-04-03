@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
+using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerProfile;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -21,6 +22,7 @@ namespace OmniChat.Application.Services.Implements
         private readonly ICustomerProfileService _customerProfileService;
         private readonly ICustomerMessageService _customerMessageService;
         private readonly ISupportConversationService _supportConversationService;
+        private readonly ISupportStaffMessageService _supportStaffMessageService;
         private readonly IUnitOfWork<OmniChatDbContext> _unitOfWork;
         private readonly IHubContext<SupportConversationHub> _hubContext;
         private readonly IMapper _mapper;
@@ -31,11 +33,13 @@ namespace OmniChat.Application.Services.Implements
             ISupportConversationService supportConversationService,
             IUnitOfWork<OmniChatDbContext> unitOfWork,
             IHubContext<SupportConversationHub> hubContext,
+            ISupportStaffMessageService supportStaffMessageService,
             IMapper mapper)
         {
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
             _supportConversationService = supportConversationService;
+            _supportStaffMessageService = supportStaffMessageService;
             _unitOfWork = unitOfWork;
             _hubContext = hubContext;
             _mapper = mapper;
@@ -149,6 +153,50 @@ namespace OmniChat.Application.Services.Implements
             return phone;
         }
 
+        public async Task SendFormLinkIfNeededAsync(SupportConversation conversation)
+        {
+            if (conversation.ActiveCustomerId == null || conversation.ActiveStaffId == null)
+                return;
 
+            var customer = await _customerProfileService
+                .GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
+
+          
+            if (customer.IsFormSent)
+                return;
+
+            var formLink = $"https://customer-form-fveykgmr3-khoanamk3s-projects.vercel.app?profileId={customer.Id}";
+
+                        var message = $@"
+            Chào bạn 
+
+            Để hỗ trợ bạn tốt hơn, vui lòng điền thông tin tại đây:
+            {formLink}
+            ";
+
+            var ZALO_PROVIDER_ID = Guid.Parse("bb4a4a44-4b03-442f-9a5e-a43ad45391a0");
+            var FACEBOOK_PROVIDER_ID = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
+
+            if (conversation.ProvidersId == ZALO_PROVIDER_ID)
+            {
+                await _supportStaffMessageService.SendZaloMessageAsync(new CreateSupportStaffMessageRequest
+                {
+                    SupportConversationId = conversation.Id,
+                    StaffId = conversation.ActiveStaffId.Value,
+                    Content = message
+                });
+            }
+            else if (conversation.ProvidersId == FACEBOOK_PROVIDER_ID)
+            {
+                await _supportStaffMessageService.SendFacebookMesageAsync(new CreateSupportStaffMessageRequest
+                {
+                    SupportConversationId = conversation.Id,
+                    StaffId = conversation.ActiveStaffId.Value,
+                    Content = message
+                });
+            }
+
+            await _customerProfileService.UpdateIsformSentCustomerProfileAsync(customer.Id);
+        }
     }
 }

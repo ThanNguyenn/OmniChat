@@ -32,6 +32,7 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly ICustomerMessageService _customerMessageService;
 
+        private readonly ICustomerMergeService _customerMergeService;
 
         private readonly IFacebookUserService _facebookUserService;
 
@@ -43,7 +44,7 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService,IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService,IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService, ICustomerMergeService customerMergeService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
@@ -54,6 +55,7 @@ namespace OmniChat.Application.Services.Resolver
             _hubContext = hubContext;
             _supportConversationService = supportConversationService;
             _chatAggregationService = chatAggregationService;
+            _customerMergeService = customerMergeService;
         }
 
         public async Task FacebookWebhookLogic(FaceBookWebhookPayload faceBookWebhookPayload)
@@ -219,6 +221,8 @@ namespace OmniChat.Application.Services.Resolver
 
                         if (updatedConversation.ActiveStaffId != null)
                         {
+                            await _customerMergeService.SendFormLinkIfNeededAsync(updatedConversation);
+
                             var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
 
                             var sidebarUpdate = new StaffConversationSideBarUpdateResponse

@@ -31,6 +31,8 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly ICustomerProfileService _customerProfileService;
 
+        private readonly ICustomerMergeService _customerMergeService;
+
         private readonly ICustomerMessageService _customerMessageService;
 
         private readonly IZaloUserService _zaloUserService;
@@ -50,6 +52,7 @@ namespace OmniChat.Application.Services.Resolver
             IProviderService providerService,
             ICustomerProfileService customerProfileService,
             ICustomerMessageService customerMessageService,
+            ICustomerMergeService customerMergeService,
             IZaloUserService zaloUserService,
             IFacebookUserService facebookUserService,
             ISupportConversationService supportConversationService,
@@ -62,6 +65,7 @@ namespace OmniChat.Application.Services.Resolver
             _providerService = providerService;
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
+            _customerMergeService = customerMergeService;
             _supportConversationService = supportConversationService;
             _zaloUserService = zaloUserService;
             _supportConversationService = supportConversationService;
@@ -235,6 +239,8 @@ namespace OmniChat.Application.Services.Resolver
 
                 if (updatedConversation.ActiveStaffId != null)
                 {
+                    await _customerMergeService.SendFormLinkIfNeededAsync(updatedConversation);
+
                     var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
 
                     var sidebarUpdate = new StaffConversationSideBarUpdateResponse
