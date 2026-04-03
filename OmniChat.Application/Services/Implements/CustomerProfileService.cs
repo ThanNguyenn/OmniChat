@@ -217,5 +217,21 @@ namespace OmniChat.Application.Services.Implements
             return result;
 
         }
+
+        public async Task UpdateIsformSentCustomerProfileAsync(Guid customerProfileId)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+            var customerProfile = await repo.GetByIdAsync(customerProfileId);
+
+            if (customerProfile == null)
+                throw new NotFoundException("CustomerProfile not found");
+
+            customerProfile.IsFormSent = true;
+
+                repo.Update(customerProfile);
+
+                await _unitOfWork.CommitAsync();
+        }
     }
 }

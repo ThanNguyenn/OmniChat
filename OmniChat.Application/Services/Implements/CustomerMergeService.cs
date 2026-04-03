@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.SignalR;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
+using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
+using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerProfile;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -20,6 +22,7 @@ namespace OmniChat.Application.Services.Implements
         private readonly ICustomerProfileService _customerProfileService;
         private readonly ICustomerMessageService _customerMessageService;
         private readonly ISupportConversationService _supportConversationService;
+        private readonly ISupportStaffMessageService _supportStaffMessageService;
         private readonly IUnitOfWork<OmniChatDbContext> _unitOfWork;
         private readonly IHubContext<SupportConversationHub> _hubContext;
         private readonly IMapper _mapper;
@@ -30,11 +33,13 @@ namespace OmniChat.Application.Services.Implements
             ISupportConversationService supportConversationService,
             IUnitOfWork<OmniChatDbContext> unitOfWork,
             IHubContext<SupportConversationHub> hubContext,
+            ISupportStaffMessageService supportStaffMessageService,
             IMapper mapper)
         {
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
             _supportConversationService = supportConversationService;
+            _supportStaffMessageService = supportStaffMessageService;
             _unitOfWork = unitOfWork;
             _hubContext = hubContext;
             _mapper = mapper;
@@ -95,6 +100,103 @@ namespace OmniChat.Application.Services.Implements
                 return sourceValue;
 
             return targetValue;
+        }
+
+        public async Task HandleEnrichCustomerAsync(EnrichCustomerRequest dto)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+           
+            var current = await _customerProfileService.GetCustomerProfileByIdAsync(dto.ProfileId);
+
+            if (current == null)
+                throw new NotFoundException("Profile not found");
+
+           
+            var email = dto.Email?.Trim().ToLower();
+            var phone = NormalizePhone(dto.Phone);
+
+            var existing = await repo.SingleOrDefaultAsync(predicate: x =>
+                (email != null && x.Email == email) ||
+                (phone != null && x.PhoneNumber == phone)
+            );
+
+            
+            if (existing != null && existing.Id != current.Id)
+            {
+                await MergeAndDeleteAsync(current.Id, existing.Id);
+                return;
+            }
+
+            
+            current.Email = email;
+            current.PhoneNumber = phone;
+            current.Address = dto.Address;
+            current.IsNewCustomer = false;
+
+            repo.Update(current);
+        }
+
+        private string NormalizePhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return phone;
+
+            phone = phone.Trim()
+                         .Replace(" ", "")
+                         .Replace(".", "")
+                         .Replace("-", "");
+
+            if (phone.StartsWith("+84"))
+                phone = "0" + phone.Substring(3);
+
+            return phone;
+        }
+
+        public async Task SendFormLinkIfNeededAsync(SupportConversation conversation)
+        {
+            if (conversation.ActiveCustomerId == null || conversation.ActiveStaffId == null)
+                return;
+
+            var customer = await _customerProfileService
+                .GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
+
+          
+            if (customer.IsFormSent)
+                return;
+
+            var formLink = $"https://customer-form-fveykgmr3-khoanamk3s-projects.vercel.app?profileId={customer.Id}";
+
+                        var message = $@"
+            Chào bạn 
+
+            Để hỗ trợ bạn tốt hơn, vui lòng điền thông tin tại đây:
+            {formLink}
+            ";
+
+            var ZALO_PROVIDER_ID = Guid.Parse("bb4a4a44-4b03-442f-9a5e-a43ad45391a0");
+            var FACEBOOK_PROVIDER_ID = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
+
+            if (conversation.ProvidersId == ZALO_PROVIDER_ID)
+            {
+                await _supportStaffMessageService.SendZaloMessageAsync(new CreateSupportStaffMessageRequest
+                {
+                    SupportConversationId = conversation.Id,
+                    StaffId = conversation.ActiveStaffId.Value,
+                    Content = message
+                });
+            }
+            else if (conversation.ProvidersId == FACEBOOK_PROVIDER_ID)
+            {
+                await _supportStaffMessageService.SendFacebookMesageAsync(new CreateSupportStaffMessageRequest
+                {
+                    SupportConversationId = conversation.Id,
+                    StaffId = conversation.ActiveStaffId.Value,
+                    Content = message
+                });
+            }
+
+            await _customerProfileService.UpdateIsformSentCustomerProfileAsync(customer.Id);
         }
     }
 }
