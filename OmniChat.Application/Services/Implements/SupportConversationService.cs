@@ -22,14 +22,16 @@ namespace OmniChat.Application.Services.Implements
 {
     public class SupportConversationService : BaseService<SupportConversationService>, ISupportConversationService
     {
+        private ISupportTaskService _supportTaskService;
 
         private readonly ICustomerProfileService _customerProfileService;
 
         private readonly IMessageKeywordFilterService _messageKeywordFilterService;
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IMessageKeywordFilterService messageKeywordFilterService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IMessageKeywordFilterService messageKeywordFilterService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
             _messageKeywordFilterService = messageKeywordFilterService;
+            _supportTaskService = supportTaskService;
         }
 
         public async Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId)
@@ -50,17 +52,46 @@ namespace OmniChat.Application.Services.Implements
 
             conversation.UpdateDate = DateTime.UtcNow;
 
-                repo.Update(conversation);
+            repo.Update(conversation);
 
             await _unitOfWork.CommitAsync();
 
             return conversation;
-           
+
         }
+
+        public async Task<bool> CompleteConversationAsync(Guid conversationId)
+        {
+            var conversationTasks = await _supportTaskService
+                .GetSupportTaskByConversationIdAsync(conversationId);
+
+            var conversation = await GetSupportConversationByIdAsync(conversationId);
+            
+            if (conversation.Status == ConversationStatus.Complete)
+            {
+                throw new BadRequestException("Conversation already completed");
+            }
+
+            var allDone = conversationTasks.All(x => x.Status == SupportTaskStatus.Done);
+
+            if (!allDone)
+            {
+                throw new BadRequestException("Conversation tasks are not complete yet");
+            }
+
+            conversation.Status = ConversationStatus.Complete;
+            conversation.CloseAt = DateTime.UtcNow;
+            conversation.UpdateDate = DateTime.UtcNow;
+
+            await _unitOfWork.CommitAsync();
+
+            return true;
+        }
+
 
         public async Task<List<SupportConversation>> GetConversationsForReminderAsync()
         {
-           var repo = _unitOfWork.GetRepository<SupportConversation>();
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
             var conversations = await repo.GetQueryable()
                 .Where(sc =>
                     sc.Status != ConversationStatus.Complete &&
@@ -102,7 +133,7 @@ namespace OmniChat.Application.Services.Implements
 
 
         // Staff Pending SupportConversation side bar
-        public async Task<IEnumerable<StaffConversationSideBarResponse>>GetStaffConversationSideBarAsync(Guid staffId, string providerName)
+        public async Task<IEnumerable<StaffConversationSideBarResponse>> GetStaffConversationSideBarAsync(Guid staffId, string providerName)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
@@ -138,7 +169,7 @@ namespace OmniChat.Application.Services.Implements
             return conversations;
         }
 
-        public async Task<SupportConversationDetailResponse>GetCustomerConversationHistoryAsync(Guid conversationId)
+        public async Task<SupportConversationDetailResponse> GetCustomerConversationHistoryAsync(Guid conversationId)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
@@ -324,7 +355,7 @@ namespace OmniChat.Application.Services.Implements
                 conversation.ActiveStaffId = staffAsignId;
             }
 
-           conversation.IsDistributed = true;
+            conversation.IsDistributed = true;
 
             repo.Update(conversation);
 
@@ -333,7 +364,7 @@ namespace OmniChat.Application.Services.Implements
             return conversation;
         }
 
-        public async Task<List<CompleteSupportConversationHistoryResponse>>GetCustomerCompleteSupportConversationHistoryAsync(Guid customerId)
+        public async Task<List<CompleteSupportConversationHistoryResponse>> GetCustomerCompleteSupportConversationHistoryAsync(Guid customerId)
         {
             return await _unitOfWork.GetRepository<SupportConversation>()
                 .GetQueryable()

@@ -24,7 +24,7 @@ namespace OmniChat.Application.Services.Implements
         {
             var repo = _unitOfWork.GetRepository<SupportTask>();
             var supportTasks = await repo.GetListAsync(
-                predicate: x => x.SupportConversationId == conversationId 
+                predicate: x => x.SupportConversationId == conversationId
                 && x.Status == SupportTaskStatus.Done);
 
             if (!supportTasks.Any())
@@ -33,6 +33,45 @@ namespace OmniChat.Application.Services.Implements
             }
 
             return supportTasks;
+        }
+
+
+        public async Task<IEnumerable<SupportTask>> GetSupportTaskByConversationIdAsync(Guid conversationId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportTask>();
+
+            var supportTasks = await repo.GetListAsync(
+                predicate: x => x.SupportConversationId == conversationId
+                );
+
+            if (!supportTasks.Any())
+            {
+                throw new NotFoundException("No SupportTask Found");
+            }
+            return supportTasks;
+        }
+
+        public async Task<bool> CompleteTaskAsync(Guid TaskId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportTask>();
+
+            var existSupportTask = await repo.GetByIdAsync(TaskId);
+
+            if (existSupportTask == null)
+            {
+                throw new NotFoundException("No SupportTask found");
+                
+            }
+
+            if (existSupportTask.Status == SupportTaskStatus.Done)
+            {
+                throw new BadRequestException("Task already completed");
+            }
+
+            existSupportTask.Status = SupportTaskStatus.Done;
+       
+           await _unitOfWork.CommitAsync();
+            return true;
         }
     }
 }

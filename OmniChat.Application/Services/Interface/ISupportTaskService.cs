@@ -10,5 +10,9 @@ namespace OmniChat.Application.Services.Interface
     public interface ISupportTaskService
     {
         public  Task<IEnumerable<SupportTask>> GetDoneSupportTaskByConversationIdAsync(Guid conversationId);
+
+        public  Task<IEnumerable<SupportTask>> GetSupportTaskByConversationIdAsync(Guid conversationId);
+       
+        public  Task<bool> CompleteTaskAsync(Guid TaskId);
     }
 }

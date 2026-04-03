@@ -73,6 +73,12 @@ public class ApiEndPointConstant
         public const string UpdateStatusToSent = SupportStaffMessage + "/{id}/status/sent";
     }
 
+    public static class SupportTaskEndPoint
+    {
+        public const string SupportTask = ApiV1 + "/support-task";
+        public const string CompleteSupportTask = SupportTask + "/{id}/complete-task";
+    }
+
     public static class SupportConversationEndPoint
     {
         public const string SupportConversation = ApiV1 + "/support-conversation";
@@ -83,6 +89,7 @@ public class ApiEndPointConstant
         public const string GetConversationDetail = SupportConversations + "/{conversationId}";
         public const string GetCompletedConversationDetail = SupportConversations + "/history/{conversationId}";
         public const string CustomerCompleteConversationHistory = SupportConversations + "/customer/{customerId}/complete-history";
+        public const string CompleteConversation = SupportConversation + "/{id}/complete";
     }
 
     public static class Auth
