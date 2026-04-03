@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
@@ -25,6 +26,7 @@ namespace OmniChat.Application.Services.Implements
         private readonly ICustomerMessageService _customerMessageService;
         private readonly ISupportConversationService _supportConversationService;
         private readonly ISupportStaffMessageService _supportStaffMessageService;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
         public CustomerMergeService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerMergeService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor,
@@ -32,13 +34,15 @@ namespace OmniChat.Application.Services.Implements
             ICustomerMessageService customerMessageService,
             ISupportConversationService supportConversationService,
             IHubContext<SupportConversationHub> hubContext,
-            ISupportStaffMessageService supportStaffMessageService
+            ISupportStaffMessageService supportStaffMessageService,
+            IServiceScopeFactory serviceScopeFactory
             ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
             _supportConversationService = supportConversationService;
             _supportStaffMessageService = supportStaffMessageService;
+            _serviceScopeFactory = serviceScopeFactory;
             _hubContext = hubContext;
         }
 
@@ -198,12 +202,15 @@ namespace OmniChat.Application.Services.Implements
             {formLink}
             ";
 
+            using var scope = _serviceScopeFactory.CreateScope();
+            var messageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
+
             var ZALO_PROVIDER_ID = Guid.Parse("bb4a4a44-4b03-442f-9a5e-a43ad45391a0");
             var FACEBOOK_PROVIDER_ID = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
 
             if (conversation.ProvidersId == ZALO_PROVIDER_ID)
             {
-                await _supportStaffMessageService.SendZaloMessageAsync(new CreateSupportStaffMessageRequest
+                await messageService.SendZaloMessageAsync(new CreateSupportStaffMessageRequest
                 {
                     SupportConversationId = conversation.Id,
                     StaffId = conversation.ActiveStaffId.Value,
@@ -212,7 +219,7 @@ namespace OmniChat.Application.Services.Implements
             }
             else if (conversation.ProvidersId == FACEBOOK_PROVIDER_ID)
             {
-                await _supportStaffMessageService.SendFacebookMesageAsync(new CreateSupportStaffMessageRequest
+                await messageService.SendFacebookMesageAsync(new CreateSupportStaffMessageRequest
                 {
                     SupportConversationId = conversation.Id,
                     StaffId = conversation.ActiveStaffId.Value,

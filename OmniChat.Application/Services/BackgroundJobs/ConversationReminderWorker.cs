@@ -44,36 +44,36 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
         private async Task ProcessReminder()
         {
-            using var scope = _serviceProvider.CreateScope();
+            List<SupportConversation> conversations;
 
-            var conversationService = scope.ServiceProvider
-                .GetRequiredService<ISupportConversationService>();
+            // Scope riêng chỉ để load danh sách
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var conversationService = scope.ServiceProvider
+                    .GetRequiredService<ISupportConversationService>();
 
-            var messageService = scope.ServiceProvider
-                .GetRequiredService<ISupportStaffMessageService>();
+                conversations = await conversationService.GetConversationsForReminderAsync();
+            }
 
             var now = DateTime.UtcNow;
 
-            var conversations = await conversationService.GetConversationsForReminderAsync();
-
             foreach (var convo in conversations)
             {
-                if (convo.LastStaffMessageAt == null)
-                    continue;
-
+                if (convo.LastStaffMessageAt == null) continue;
                 if (!CustomerNotReplied(convo)) continue;
+                if (convo.Status == ConversationStatus.Complete) continue;
 
                 var diff = now - convo.LastStaffMessageAt.Value;
-
                 bool needUpdate = false;
-
-                if (convo.Status == ConversationStatus.Complete)
-                    continue;
 
                 // For testing, set to 5 minutes
                 //if (diff.TotalHours >= 23 && !convo.ReminderSent)
                 if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
                 {
+                    using var sendScope = _serviceProvider.CreateScope();
+                    var messageService = sendScope.ServiceProvider
+                        .GetRequiredService<ISupportStaffMessageService>();
+
                     await SendReminder(convo, messageService);
                     convo.ReminderSent = true;
                     needUpdate = true;
@@ -89,7 +89,19 @@ namespace OmniChat.Application.Services.BackgroundJobs
                 }
 
                 if (needUpdate)
-                    await conversationService.UpdateConversationAsync(convo);
+                {
+                    using var updateScope = _serviceProvider.CreateScope();
+                    var conversationService = updateScope.ServiceProvider
+                        .GetRequiredService<ISupportConversationService>();
+
+                    var freshConvo = await conversationService.GetSupportConversationByIdAsync(convo.Id);
+
+                    freshConvo.ReminderSent = convo.ReminderSent;
+                    freshConvo.Status = convo.Status;
+                    freshConvo.CloseAt = convo.CloseAt;
+
+                    await conversationService.UpdateConversationAsync(freshConvo);
+                }
             }
         }
 
