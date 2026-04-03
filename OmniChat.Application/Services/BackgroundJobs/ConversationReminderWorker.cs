@@ -58,32 +58,34 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
             foreach (var convo in conversations)
             {
+                if (convo.LastStaffMessageAt == null)
+                    continue;
+
                 if (!CustomerNotReplied(convo)) continue;
 
                 var diff = now - convo.LastStaffMessageAt.Value;
 
                 bool needUpdate = false;
 
-                if (diff.TotalHours >= 22 && diff.TotalHours < 24)
+                if (convo.Status == ConversationStatus.Complete)
+                    continue;
+
+                // For testing, set to 5 minutes
+                //if (diff.TotalHours >= 23 && !convo.ReminderSent)
+                if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
                 {
-                    if (!convo.ReminderSent)
-                    {
-                        convo.ReminderSent = true;
-                        needUpdate = true;
-
-                        await conversationService.UpdateConversationAsync(convo);
-
-                        await SendReminder(convo, messageService);
-                    }
+                    await SendReminder(convo, messageService);
+                    convo.ReminderSent = true;
+                    needUpdate = true;
                 }
 
-                if (diff.TotalHours >= 24)
+                // close conversation if customer does not reply after 10 minutes of staff message
+                //   if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
+                if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
                 {
                     convo.Status = ConversationStatus.Complete;
                     convo.CloseAt = now;
                     needUpdate = true;
-
-                    // not performace yet
                 }
 
                 if (needUpdate)
@@ -98,7 +100,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
             if (convo.LastCustomerMessageAt == null)
                 return true;
 
-            return convo.LastCustomerMessageAt < convo.LastStaffMessageAt;
+            return convo.LastCustomerMessageAt <= convo.LastStaffMessageAt;
         }
 
         private async Task SendReminder(SupportConversation convo, ISupportStaffMessageService messageService)
