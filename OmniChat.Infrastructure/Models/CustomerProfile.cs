@@ -30,6 +30,8 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
+        public bool IsFormSent { get; set; } = false; // Indicates whether the form has been sent to the customer
+
         public double DebtLimit { get; set; }
 
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();
