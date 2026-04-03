@@ -105,13 +105,19 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
         private async Task SendReminder(SupportConversation convo, ISupportStaffMessageService messageService)
         {
+            _logger.LogInformation("SendReminder triggered | ConversationId: {Id}", convo.Id);
+
             if (convo.Providers == null || convo.ActiveStaffId == null)
+            {
+                _logger.LogWarning("Cannot send reminder due to missing data");
                 return;
+            }
 
             var content = "Hi bạn, bên mình vẫn đang hỗ trợ. Bạn cần thêm gì không?";
 
             if (convo.Providers.ProviderName == "Zalo")
             {
+                _logger.LogInformation("Sending Zalo reminder");
                 await messageService.SendZaloMessageAsync(new CreateSupportStaffMessageRequest
                 {
                     SupportConversationId = convo.Id,
@@ -121,6 +127,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
             }
             else if (convo.Providers.ProviderName == "Facebook")
             {
+                _logger.LogInformation("Sending Facebook reminder");
                 await messageService.SendFacebookMesageAsync(new CreateSupportStaffMessageRequest
                 {
                     SupportConversationId = convo.Id,

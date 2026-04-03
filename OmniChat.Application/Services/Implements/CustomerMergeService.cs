@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
@@ -17,81 +19,84 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public  class CustomerMergeService : ICustomerMergeService
+    public class CustomerMergeService : BaseService<CustomerMergeService>, ICustomerMergeService
     {
         private readonly ICustomerProfileService _customerProfileService;
         private readonly ICustomerMessageService _customerMessageService;
         private readonly ISupportConversationService _supportConversationService;
         private readonly ISupportStaffMessageService _supportStaffMessageService;
-        private readonly IUnitOfWork<OmniChatDbContext> _unitOfWork;
         private readonly IHubContext<SupportConversationHub> _hubContext;
-        private readonly IMapper _mapper;
 
-        public CustomerMergeService(
-            ICustomerProfileService customerProfileService,
+        public CustomerMergeService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerMergeService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor,
+             ICustomerProfileService customerProfileService,
             ICustomerMessageService customerMessageService,
             ISupportConversationService supportConversationService,
-            IUnitOfWork<OmniChatDbContext> unitOfWork,
             IHubContext<SupportConversationHub> hubContext,
-            ISupportStaffMessageService supportStaffMessageService,
-            IMapper mapper)
+            ISupportStaffMessageService supportStaffMessageService
+            ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
             _supportConversationService = supportConversationService;
             _supportStaffMessageService = supportStaffMessageService;
-            _unitOfWork = unitOfWork;
             _hubContext = hubContext;
-            _mapper = mapper;
         }
 
         public async Task<GetCustomerProfileResponse> MergeAndDeleteAsync(
             Guid sourceId,
             Guid targetId)
         {
-            return await _unitOfWork.ProcessInTransactionAsync(async () =>
+            _logger.LogInformation("Start MergeAndDeleteAsync | SourceId: {SourceId}, TargetId: {TargetId}", sourceId, targetId);
+
+            var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
+
+            var source = await _customerProfileService.GetCustomerProfileByIdAsync(sourceId);
+            var target = await _customerProfileService.GetCustomerProfileByIdAsync(targetId);
+
+            if (source.Id == target.Id)
             {
-                var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
+                _logger.LogWarning("Merge failed: Source and Target are the same ID {Id}", source.Id);
+                throw new BusinessException("Cannot merge same customer");
+            }
 
-                var source = await _customerProfileService.GetCustomerProfileByIdAsync(sourceId);
-                var target = await _customerProfileService.GetCustomerProfileByIdAsync(targetId);
+            _logger.LogInformation("Merging profiles | Source: {SourceId} -> Target: {TargetId}", source.Id, target.Id);
+            // Merge senderId
+            target.FacebookSenderId ??= source.FacebookSenderId;
+            target.ZaloSenderId ??= source.ZaloSenderId;
+            target.InstagramSenderId ??= source.InstagramSenderId;
 
-                if (source.Id == target.Id)
-                    throw new BusinessException("Cannot merge same customer");
+            //Merge Profile Fields
+            target.CustomerName = MergeField(target.CustomerName, source.CustomerName);
+            target.Email = MergeField(target.Email, source.Email);
+            target.PhoneNumber = MergeField(target.PhoneNumber, source.PhoneNumber);
+            target.Address = MergeField(target.Address, source.Address);
+            target.AvatarUrl = MergeField(target.AvatarUrl, source.AvatarUrl);
+            target.IsNewCustomer = false;
 
-                // Merge senderId
-                target.FacebookSenderId ??= source.FacebookSenderId;
-                target.ZaloSenderId ??= source.ZaloSenderId;
-                target.InstagramSenderId ??= source.InstagramSenderId;
+            //  Re-assign FK Data 
+            await _customerMessageService
+                .UpdateCustomerMessageAfterMergeAsync(source, target);
 
-                //Merge Profile Fields
-                target.CustomerName = MergeField(target.CustomerName, source.CustomerName);
-                target.Email = MergeField(target.Email, source.Email);
-                target.PhoneNumber = MergeField(target.PhoneNumber, source.PhoneNumber);
-                target.Address = MergeField(target.Address, source.Address);
-                target.AvatarUrl = MergeField(target.AvatarUrl, source.AvatarUrl);
-                target.IsNewCustomer = false;
+            await _supportConversationService
+                .UpdateConversationAfterMergeAsync(source, target);
 
-                //  Re-assign FK Data 
-                await _customerMessageService
-                    .UpdateCustomerMessageAfterMergeAsync(source, target);
+            await customerRepo.DeleteAsync(x => x.Id == source.Id);
+            _logger.LogInformation("Deleted source profile {SourceId}", source.Id);
 
-                await _supportConversationService
-                    .UpdateConversationAfterMergeAsync(source, target);
+            var response = _mapper.Map<GetCustomerProfileResponse>(target);
 
-                await customerRepo.DeleteAsync(x => x.Id == source.Id);
+            customerRepo.Update(target);
+            _logger.LogInformation("Updated target profile {TargetId}", target.Id);
 
-                var response = _mapper.Map<GetCustomerProfileResponse>(target);
-    
-                 customerRepo.Update(target);
+            await _unitOfWork.CommitAsync();
 
-                await _hubContext.Clients.All.SendAsync(
-                    "SidebarCustomerUpdated",
-                    response
-                );
+            await _hubContext.Clients.All.SendAsync(
+                "SidebarCustomerUpdated",
+                response
+            );
 
-                return response;
-            });
+            return response;
+            ;
         }
 
         private string? MergeField(string? targetValue, string? sourceValue)
@@ -104,37 +109,47 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task HandleEnrichCustomerAsync(EnrichCustomerRequest dto)
         {
+
+            _logger.LogInformation("Start EnrichCustomer | ProfileId: {ProfileId}", dto.ProfileId);
+
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-           
             var current = await _customerProfileService.GetCustomerProfileByIdAsync(dto.ProfileId);
 
             if (current == null)
+            {
+                _logger.LogError("Profile not found: {ProfileId}", dto.ProfileId);
                 throw new NotFoundException("Profile not found");
+            }
 
-           
+
+
             var email = dto.Email?.Trim().ToLower();
             var phone = NormalizePhone(dto.Phone);
+
+            _logger.LogInformation("Normalized data | Email: {Email}, Phone: {Phone}", email, phone);
 
             var existing = await repo.SingleOrDefaultAsync(predicate: x =>
                 (email != null && x.Email == email) ||
                 (phone != null && x.PhoneNumber == phone)
             );
 
-            
+
             if (existing != null && existing.Id != current.Id)
             {
+                _logger.LogInformation("Found duplicate profile {ExistingId}, merging...", existing.Id);
                 await MergeAndDeleteAsync(current.Id, existing.Id);
                 return;
             }
 
-            
+
             current.Email = email;
             current.PhoneNumber = phone;
             current.Address = dto.Address;
             current.IsNewCustomer = false;
 
             repo.Update(current);
+            _logger.LogInformation("Updated profile successfully {ProfileId}", current.Id);
         }
 
         private string NormalizePhone(string phone)
@@ -155,19 +170,28 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task SendFormLinkIfNeededAsync(SupportConversation conversation)
         {
+            _logger.LogInformation("Check SendFormLink | ConversationId: {Id}", conversation.Id);
+
             if (conversation.ActiveCustomerId == null || conversation.ActiveStaffId == null)
+            {
+                _logger.LogWarning("Missing customer or staff in conversation {Id}", conversation.Id);
                 return;
+            }
 
             var customer = await _customerProfileService
                 .GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
 
-          
             if (customer.IsFormSent)
+            {
+                _logger.LogInformation("Form already sent to customer {CustomerId}", customer.Id);
                 return;
+            }
 
-            var formLink = $"https://customer-form-fveykgmr3-khoanamk3s-projects.vercel.app?profileId={customer.Id}";
 
-                        var message = $@"
+            var formLink = $"https://customer-form-black.vercel.app/?profileId={customer.Id}";
+            _logger.LogInformation("Sending form link to customer {CustomerId}", customer.Id);
+
+            var message = $@"
             Chào bạn 
 
             Để hỗ trợ bạn tốt hơn, vui lòng điền thông tin tại đây:
@@ -197,6 +221,7 @@ namespace OmniChat.Application.Services.Implements
             }
 
             await _customerProfileService.UpdateIsformSentCustomerProfileAsync(customer.Id);
+            _logger.LogInformation("Marked form as sent for customer {CustomerId}", customer.Id);
         }
     }
 }
