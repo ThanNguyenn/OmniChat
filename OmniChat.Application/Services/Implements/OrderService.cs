@@ -23,12 +23,15 @@ namespace OmniChat.Application.Services.Implements;
 
 public class OrderService : BaseService<OrderService>, IOrderService
 {
+    private readonly ICreditNoteService creditNoteService;
     public OrderService(IUnitOfWork<OmniChatDbContext> unitOfWork,
         ILogger<OrderService> logger,
         IMapper mapper,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ICreditNoteService creditNoteService)
         : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
+        this.creditNoteService = creditNoteService;
     }
 
     public async Task<bool> CreateOrderAsync(CreateOrderRequest request)
@@ -189,10 +192,8 @@ public class OrderService : BaseService<OrderService>, IOrderService
         return true;
     }
 
-    public async Task<bool> CancelOrderAsync(Guid orderId, OrderStatus newStatus)
+    public async Task<bool> CancelOrderAsync(Guid orderId)
     {
-        if (newStatus != OrderStatus.Cancelled)
-            throw new BusinessException("Invalid cancel status: the target status must be 'Cancelled'.");
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -207,7 +208,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             if (order.Status != OrderStatus.Pending)
                 throw new BusinessException("Only pending orders can be cancelled");
             await HandleBatchRestockAsync(order.OrderItems, batchRepo);
-            order.Status = newStatus;
+            order.Status = OrderStatus.Cancelled;
             orderRepo.Update(order);
             return true;
         });
@@ -230,7 +231,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
         batchRepo.UpdateRange(batches);
     }
 
-    public Task<bool> CompleteDeliverdOrderAsync(Guid orderId, DeliveryStatus newDeliveredStatus)
+    public Task<bool> CompleteDeliverdOrderAsync(Guid orderId)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         return _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -240,13 +241,13 @@ public class OrderService : BaseService<OrderService>, IOrderService
             {
                 throw new NotFoundException("Order not found");
             }
-            order.DeliveryStatus = newDeliveredStatus;
+            order.DeliveryStatus = DeliveryStatus.Completed;
             orderRepo.Update(order);
             return true;
         });
     }
 
-    public Task<bool> ReturnOrderAsync(Guid orderId, OrderStatus returnedStatus)
+    public Task<bool> ReturnOrderPaidAsync(Guid orderId, double amount)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         return _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -256,8 +257,27 @@ public class OrderService : BaseService<OrderService>, IOrderService
             {
                 throw new NotFoundException("Order not found");
             }
-            order.Status = returnedStatus;
+            order.Status = OrderStatus.Returned;
+            
             orderRepo.Update(order);
+            await creditNoteService.CreateCreditNoteRefundAsync(orderId, amount);
+            return true;
+        });
+    }
+
+    public Task<bool> ReturnOrderUnpaidAsync(Guid orderId, double amount)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        return _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var order = await orderRepo.GetByIdAsync(orderId);
+            if (order == null)
+            {
+                throw new NotFoundException("Order not found");
+            }
+            order.Status = OrderStatus.Returned;
+            orderRepo.Update(order);
+            await creditNoteService.CreateCreditNoteAdjustmentAsync(orderId, amount);
             return true;
         });
     }

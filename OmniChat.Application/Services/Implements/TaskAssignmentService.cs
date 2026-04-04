@@ -247,4 +247,5 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
         return JsonSerializer.Deserialize<PredictResponse>(rawResponse);
     }
+
 }

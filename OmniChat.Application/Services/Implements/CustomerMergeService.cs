@@ -28,6 +28,7 @@ namespace OmniChat.Application.Services.Implements
         private readonly ISupportStaffMessageService _supportStaffMessageService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IHubContext<SupportConversationHub> _hubContext;
+        private readonly IWalletService _walletService;
 
         public CustomerMergeService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerMergeService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor,
              ICustomerProfileService customerProfileService,
@@ -35,7 +36,8 @@ namespace OmniChat.Application.Services.Implements
             ISupportConversationService supportConversationService,
             IHubContext<SupportConversationHub> hubContext,
             ISupportStaffMessageService supportStaffMessageService,
-            IServiceScopeFactory serviceScopeFactory
+            IServiceScopeFactory serviceScopeFactory,
+            IWalletService walletService
             ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
@@ -44,6 +46,7 @@ namespace OmniChat.Application.Services.Implements
             _supportStaffMessageService = supportStaffMessageService;
             _serviceScopeFactory = serviceScopeFactory;
             _hubContext = hubContext;
+            _walletService = walletService;
         }
 
         public async Task<GetCustomerProfileResponse> MergeAndDeleteAsync(
@@ -62,12 +65,11 @@ namespace OmniChat.Application.Services.Implements
                 _logger.LogWarning("Merge failed: Source and Target are the same ID {Id}", source.Id);
                 throw new BusinessException("Cannot merge same customer");
             }
-
             _logger.LogInformation("Merging profiles | Source: {SourceId} -> Target: {TargetId}", source.Id, target.Id);
             // Merge senderId
             target.FacebookSenderId ??= source.FacebookSenderId;
             target.ZaloSenderId ??= source.ZaloSenderId;
-            target.InstagramSenderId ??= source.InstagramSenderId;
+            target.InstagramSenderId ??= source.InstagramSenderId;  
 
             //Merge Profile Fields
             target.CustomerName = MergeField(target.CustomerName, source.CustomerName);
