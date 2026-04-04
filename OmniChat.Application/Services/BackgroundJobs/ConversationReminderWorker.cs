@@ -81,7 +81,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                 // close conversation if customer does not reply after 10 minutes of staff message
                 //   if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
-                if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
+                else if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
                 {
                     convo.Status = ConversationStatus.Complete;
                     convo.CloseAt = now;

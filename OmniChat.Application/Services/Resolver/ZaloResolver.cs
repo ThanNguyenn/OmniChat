@@ -239,7 +239,7 @@ namespace OmniChat.Application.Services.Resolver
 
                 if (updatedConversation.ActiveStaffId != null)
                 {
-                    await _customerMergeService.SendFormLinkIfNeededAsync(updatedConversation);
+                   
 
                     var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
 

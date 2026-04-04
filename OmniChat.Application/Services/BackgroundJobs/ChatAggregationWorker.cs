@@ -164,6 +164,17 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                             await taskService.ProcessTask(predictReqet, conversation.Id);
 
+                            var updatedConversation = await conversationService
+                            .GetSupportConversationHavePendingByCustomerIdAsync(customerId, providerId);
+
+                            if (updatedConversation?.ActiveStaffId != null)
+                            {
+                                var mergeService = scope.ServiceProvider
+                                    .GetRequiredService<ICustomerMergeService>();
+
+                                await mergeService.SendFormLinkIfNeededAsync(updatedConversation);
+                            }
+
                             _logger.LogInformation($"[AGGREGATION] Done key={key}");
 
                             // cleanup
