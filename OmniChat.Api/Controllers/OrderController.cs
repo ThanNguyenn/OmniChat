@@ -64,7 +64,7 @@ public class OrderController : BaseController<OrderController>
     )]
     public async Task<IActionResult> CancelOrder([FromRoute] Guid id)
     {
-        var result = await _orderService.CancelOrderAsync(id, OrderStatus.Cancelled);
+        var result = await _orderService.CancelOrderAsync(id);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order cancelled successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -76,7 +76,7 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CompleteDeliveredOrder([FromRoute] Guid id)
     {
-        var result = await _orderService.CompleteDeliverdOrderAsync(id, DeliveryStatus.Completed);
+        var result = await _orderService.CompleteDeliverdOrderAsync(id);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order delivery status updated successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }

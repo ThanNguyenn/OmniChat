@@ -1,0 +1,35 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using OmniChat.Api.Constants;
+using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Wallet;
+using OmniChat.Infrastructure.Metadatas;
+using Swashbuckle.AspNetCore.Annotations;
+
+namespace OmniChat.Api.Controllers;
+
+
+[ApiController]
+[Route(ApiEndPointConstant.Wallet.Base)]
+public class WalletController : BaseController<WalletController>
+{
+    private readonly IWalletService _walletService;
+    public WalletController(ILogger<WalletController> logger, IWalletService walletService) : base(logger)
+    {
+        _walletService = walletService;
+    }
+
+    [HttpPost(ApiEndPointConstant.Wallet.Payment)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Trả tiền mặt cho payment ",
+        Description = "Dùng cho Manager hoặc Driver xác nhận khách hàng trả tiền mặt")]
+    public async Task<IActionResult> PaymentAsync([FromBody] WalletPaymentRequest walletPaymentRequest)
+    {
+        var result = await _walletService.DepositToWallet(walletPaymentRequest);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Payment successful", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+}
