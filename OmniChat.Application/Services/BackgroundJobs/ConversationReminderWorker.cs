@@ -38,7 +38,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     _logger.LogError(ex, "Error in Reminder Job");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
 
@@ -79,15 +79,17 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     needUpdate = true;
                 }
 
-                // close conversation if customer does not reply after 10 minutes of staff message
+                // close conversation if customer does not reply after 15 minutes of staff message
                 //   if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
-                else if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
+                else if (diff.TotalMinutes >= 15 && convo.ReminderSent && CustomerNotReplied(convo))
                 {
                     convo.Status = ConversationStatus.Complete;
                     convo.CloseAt = now;
                     needUpdate = true;
                     // complete task and complete conversation -> increate staff performance
                 }
+
+
 
                 if (needUpdate)
                 {
