@@ -32,6 +32,8 @@ namespace OmniChat.Infrastructure.Models
 
         public bool IsFormSent { get; set; } = false; // Indicates whether the form has been sent to the customer
 
+        public bool IsProfileCompleted { get; set; } = false; // flag to make sure customer no send multiple form with same customer profile
+       
         public double DebtLimit { get; set; }
 
         public virtual ICollection<CustomerMessage> CustomerMessages { get; set; } = new List<CustomerMessage>();

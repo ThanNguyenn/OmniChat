@@ -49,9 +49,7 @@ namespace OmniChat.Application.Services.Implements
             _walletService = walletService;
         }
 
-        public async Task<GetCustomerProfileResponse> MergeAndDeleteAsync(
-            Guid sourceId,
-            Guid targetId)
+        public async Task<GetCustomerProfileResponse> MergeAndDeleteAsync(Guid sourceId, Guid targetId)
         {
             _logger.LogInformation("Start MergeAndDeleteAsync | SourceId: {SourceId}, TargetId: {TargetId}", sourceId, targetId);
 
@@ -61,17 +59,16 @@ namespace OmniChat.Application.Services.Implements
             var target = await _customerProfileService.GetCustomerProfileByIdAsync(targetId);
 
             if (source.Id == target.Id)
-            {
-                _logger.LogWarning("Merge failed: Source and Target are the same ID {Id}", source.Id);
                 throw new BusinessException("Cannot merge same customer");
-            }
+
             _logger.LogInformation("Merging profiles | Source: {SourceId} -> Target: {TargetId}", source.Id, target.Id);
-            // Merge senderId
+
+            
             target.FacebookSenderId ??= source.FacebookSenderId;
             target.ZaloSenderId ??= source.ZaloSenderId;
-            target.InstagramSenderId ??= source.InstagramSenderId;  
+            target.InstagramSenderId ??= source.InstagramSenderId;
 
-            //Merge Profile Fields
+          
             target.CustomerName = MergeField(target.CustomerName, source.CustomerName);
             target.Email = MergeField(target.Email, source.Email);
             target.PhoneNumber = MergeField(target.PhoneNumber, source.PhoneNumber);
@@ -79,30 +76,25 @@ namespace OmniChat.Application.Services.Implements
             target.AvatarUrl = MergeField(target.AvatarUrl, source.AvatarUrl);
             target.IsNewCustomer = false;
 
-            //  Re-assign FK Data 
-            await _customerMessageService
-                .UpdateCustomerMessageAfterMergeAsync(source, target);
+         
+            await _customerMessageService.UpdateCustomerMessageAfterMergeAsync(source, target);
+            await _supportConversationService.UpdateConversationAfterMergeAsync(source, target);
 
-            await _supportConversationService
-                .UpdateConversationAfterMergeAsync(source, target);
+            customerRepo.Update(target);
 
+           
+            await _unitOfWork.CommitAsync();
+            _logger.LogInformation("Committed FK re-assignments and target update");
+         
             await customerRepo.DeleteAsync(x => x.Id == source.Id);
+            await _unitOfWork.CommitAsync();
             _logger.LogInformation("Deleted source profile {SourceId}", source.Id);
 
             var response = _mapper.Map<GetCustomerProfileResponse>(target);
 
-            customerRepo.Update(target);
-            _logger.LogInformation("Updated target profile {TargetId}", target.Id);
-
-            await _unitOfWork.CommitAsync();
-
-            await _hubContext.Clients.All.SendAsync(
-                "SidebarCustomerUpdated",
-                response
-            );
+            await _hubContext.Clients.All.SendAsync("SidebarCustomerUpdated", response);
 
             return response;
-            ;
         }
 
         private string? MergeField(string? targetValue, string? sourceValue)
@@ -148,12 +140,20 @@ namespace OmniChat.Application.Services.Implements
                 return;
             }
 
+            if (current.IsProfileCompleted)
+            {
+                _logger.LogInformation("Profile {ProfileId} already completed, skipping", current.Id);
+                return;
+            }
 
             current.Email = email;
             current.PhoneNumber = phone;
             current.Address = dto.Address;
             current.IsNewCustomer = false;
+            current.IsProfileCompleted = true;
 
+            await _walletService.CreateWallet(current.Id);
+            
             repo.Update(current);
 
             await _unitOfWork.CommitAsync();

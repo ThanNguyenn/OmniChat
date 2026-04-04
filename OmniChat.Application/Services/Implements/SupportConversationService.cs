@@ -312,6 +312,7 @@ namespace OmniChat.Application.Services.Implements
             foreach (var conv in conversations)
             {
                 conv.ActiveCustomerId = target.Id;
+                conversationRepo.Update(conv);
             }
         }
 

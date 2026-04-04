@@ -82,6 +82,7 @@ namespace OmniChat.Application.Services.Implements
             foreach (var msg in messages)
             {
                 msg.CustomerId = target.Id;
+                messageRepo.Update(msg);
             }
         }
     }
