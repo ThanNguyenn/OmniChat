@@ -54,21 +54,11 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                 conversations = await conversationService.GetConversationsForReminderAsync();
             }
-            _logger.LogInformation("[REMINDER] Worker tick | Total conversations loaded: {Count}", conversations.Count);
             var now = DateTime.UtcNow;
 
             foreach (var convo in conversations)
             {
                 
-                _logger.LogInformation(
-                    "[REMINDER] Checking ConvoId={Id} | Status={Status} | Provider={Provider} | " +
-                    "LastStaffMsg={LastStaffMsg} | LastCustomerMsg={LastCustomerMsg} | ReminderSent={ReminderSent}",
-                    convo.Id, convo.Status,
-                    convo.Providers?.ProviderName ?? "NULL",
-                    convo.LastStaffMessageAt,
-                    convo.LastCustomerMessageAt,
-                    convo.ReminderSent
-                );
 
                 if (convo.LastStaffMessageAt == null)
                 {
@@ -90,16 +80,10 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                 var diff = now - convo.LastStaffMessageAt.Value;
 
-                _logger.LogInformation(
-            "[REMINDER] ConvoId={Id} | DiffMinutes={Diff:F1} | ReminderSent={ReminderSent}",
-            convo.Id, diff.TotalMinutes, convo.ReminderSent
-        );
-
                 bool needUpdate = false;
 
-                // For testing, set to 5 minutes
-                //if (diff.TotalHours >= 23 && !convo.ReminderSent)
-                if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
+                // send reminder if customer does not reply after 23 hours of staff message 
+                if (diff.TotalHours >= 23 && !convo.ReminderSent)
                 {
                     _logger.LogInformation("Conversation send remider");
                     using var sendScope = _serviceProvider.CreateScope();
@@ -111,23 +95,14 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     needUpdate = true;
                 }
 
-                // close conversation if customer does not reply after 15 minutes of staff message
-                //   if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
-                else if (diff.TotalMinutes >= 15 && convo.ReminderSent && CustomerNotReplied(convo))
+                // close conversation if customer does not reply after 24 minutes of staff message
+                else if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
                 {
                     _logger.LogInformation("Conversation close");
                     convo.Status = ConversationStatus.Complete;
                     convo.CloseAt = now;
                     needUpdate = true;
                     // complete task and complete conversation -> increate staff performance
-                }
-                else
-                {
-                  
-                    _logger.LogInformation(
-                        "[REMINDER] No action for ConvoId={Id} | DiffMinutes={Diff:F1} | ReminderSent={ReminderSent}",
-                        convo.Id, diff.TotalMinutes, convo.ReminderSent
-                    );
                 }
 
 
