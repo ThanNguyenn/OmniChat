@@ -20,6 +20,14 @@ namespace OmniChat.Infrastructure.Models
 
         public double Amount { get; set; }
 
+        public AllocationType AllocationType { get; set; }
+
         public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
+    }
+
+    public enum AllocationType
+    {
+        Payment = 0,
+        Deduction = 1
     }
 }
