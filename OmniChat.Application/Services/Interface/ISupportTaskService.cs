@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Models;
+﻿using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,9 @@ namespace OmniChat.Application.Services.Interface
         public  Task<IEnumerable<SupportTask>> GetDoneSupportTaskByConversationIdAsync(Guid conversationId);
 
         public  Task<IEnumerable<SupportTask>> GetSupportTaskByConversationIdAsync(Guid conversationId);
-       
+
+        public  Task<IEnumerable<SupportTasksResponse>> GetSupportTaskOnConversationIdAsync(Guid conversationId);
+
         public  Task<bool> CompleteTaskAsync(Guid TaskId);
     }
 }

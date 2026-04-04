@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
@@ -33,6 +35,22 @@ namespace OmniChat.Application.Services.Implements
             }
 
             return supportTasks;
+        }
+
+        public async Task<IEnumerable<SupportTasksResponse>> GetSupportTaskOnConversationIdAsync(Guid conversationId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportTask>();
+            var supportTasks = await repo.GetListAsync(
+                predicate: x => x.SupportConversationId == conversationId,
+                include: x => x.Include(x => x.IntentType)
+            );
+
+            if (!supportTasks.Any())
+            {
+                throw new NotFoundException("No SupportTask Found");
+            }
+
+            return _mapper.Map<IEnumerable<SupportTasksResponse>>(supportTasks);
         }
 
 
