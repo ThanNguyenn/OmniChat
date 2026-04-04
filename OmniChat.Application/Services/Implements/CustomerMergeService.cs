@@ -155,6 +155,8 @@ namespace OmniChat.Application.Services.Implements
             current.IsNewCustomer = false;
 
             repo.Update(current);
+
+            await _unitOfWork.CommitAsync();
             _logger.LogInformation("Updated profile successfully {ProfileId}", current.Id);
         }
 
