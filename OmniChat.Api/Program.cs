@@ -166,6 +166,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IInstagramUserService, InstagramUserService>();
     builder.Services.AddScoped<ISupportStaffMessageService, SupportStaffMessageService>();
     builder.Services.AddScoped<ISupportConversationService, SupportConversationService>();
+    builder.Services.AddScoped<ISupportTaskService, SupportTaskService>();
     builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
     builder.Services.AddScoped<IClaimTypeService, ClaimTypeService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
