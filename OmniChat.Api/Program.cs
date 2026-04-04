@@ -185,9 +185,10 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IMessageKeywordFilterService, MessageKeywordFilterService>();
     builder.Services.AddScoped<IR2StorageService, R2StorageService>();
     builder.Services.AddScoped<IProductBrandService, ProductBrandService>();
-    //builder.Services.AddScoped<IWalletService, WalletService>();
-    //builder.Services.AddScoped<IInvoiceService, InvoiceService>();
-    //builder.Services.AddScoped<ICreditNoteService, CreditNoteService>();
+    builder.Services.AddScoped<IWalletService, WalletService>();
+    builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+    builder.Services.AddScoped<ICreditNoteService, CreditNoteService>();
+    builder.Services.AddScoped<IPostSaleRequestService, PostSaleRequestService>();
 }
 
 void RegisterBackgroundServices()

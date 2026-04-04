@@ -193,4 +193,16 @@ public class ApiEndPointConstant
 
     }
 
+    public static class PostSaleRequest
+    {
+        public const string Base = ApiV1 + "/post-sale-requests";
+        public const string Create = Base + "/create";
+        public const string Update = Base + "/{id}/update";
+        public const string Delete = Base + "/{id}/delete";
+        public const string GetAll = Base + "get";
+        public const string GetById = Base + "/{id}";
+        public const string Approve = Base + "/{id}/approve";
+        public const string Reject = Base + "/{id}/reject";
+    }
+
 }
