@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -29,6 +30,24 @@ namespace OmniChat.Api.Controllers
             {
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Complete SupportTask Successfully",
+                IsSuccess = true,
+                Data = result
+            });
+        }
+
+        [HttpGet(ApiEndPointConstant.SupportTaskEndPoint.GetSupportTaskByConversationId)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<SupportTasksResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [SwaggerOperation(
+        Summary = "Get Support Task On Conversation",
+        Description = "Lấy tất cả các Support Task của Conversation bằng Conversation Id")]
+        public async Task<IActionResult> GetSupportTaskByConversationId(Guid conversationId)
+        {
+            var result = await _supportTaskService.GetSupportTaskOnConversationIdAsync(conversationId);
+            return Ok(new ApiResponse<IEnumerable<SupportTasksResponse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Support Task Successfully",
                 IsSuccess = true,
                 Data = result
             });
