@@ -54,16 +54,47 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                 conversations = await conversationService.GetConversationsForReminderAsync();
             }
-
+            _logger.LogInformation("[REMINDER] Worker tick | Total conversations loaded: {Count}", conversations.Count);
             var now = DateTime.UtcNow;
 
             foreach (var convo in conversations)
             {
-                if (convo.LastStaffMessageAt == null) continue;
-                if (!CustomerNotReplied(convo)) continue;
-                if (convo.Status == ConversationStatus.Complete) continue;
+                
+                _logger.LogInformation(
+                    "[REMINDER] Checking ConvoId={Id} | Status={Status} | Provider={Provider} | " +
+                    "LastStaffMsg={LastStaffMsg} | LastCustomerMsg={LastCustomerMsg} | ReminderSent={ReminderSent}",
+                    convo.Id, convo.Status,
+                    convo.Providers?.ProviderName ?? "NULL",
+                    convo.LastStaffMessageAt,
+                    convo.LastCustomerMessageAt,
+                    convo.ReminderSent
+                );
+
+                if (convo.LastStaffMessageAt == null)
+                {
+                    _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: LastStaffMessageAt is null", convo.Id);
+                    continue;
+                }
+
+                if (!CustomerNotReplied(convo))
+                {
+                    _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Customer already replied", convo.Id);
+                    continue;
+                }
+
+                if (convo.Status == ConversationStatus.Complete)
+                {
+                    _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Status is Complete", convo.Id);
+                    continue;
+                }
 
                 var diff = now - convo.LastStaffMessageAt.Value;
+
+                _logger.LogInformation(
+            "[REMINDER] ConvoId={Id} | DiffMinutes={Diff:F1} | ReminderSent={ReminderSent}",
+            convo.Id, diff.TotalMinutes, convo.ReminderSent
+        );
+
                 bool needUpdate = false;
 
                 // For testing, set to 5 minutes
@@ -90,7 +121,14 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     needUpdate = true;
                     // complete task and complete conversation -> increate staff performance
                 }
-
+                else
+                {
+                  
+                    _logger.LogInformation(
+                        "[REMINDER] No action for ConvoId={Id} | DiffMinutes={Diff:F1} | ReminderSent={ReminderSent}",
+                        convo.Id, diff.TotalMinutes, convo.ReminderSent
+                    );
+                }
 
 
                 if (needUpdate)
