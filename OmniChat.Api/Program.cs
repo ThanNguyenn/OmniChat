@@ -198,6 +198,7 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<ZaloTokenRefreshWorker>();
     builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
     builder.Services.AddHostedService<WebhookBackgroundWorker>();
+    builder.Services.AddHostedService<ConversationReminderWorker>();
     builder.Services.AddHostedService<ChatAggregationWorker>();
 }
 
