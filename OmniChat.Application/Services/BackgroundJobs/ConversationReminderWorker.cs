@@ -70,6 +70,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                 //if (diff.TotalHours >= 23 && !convo.ReminderSent)
                 if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
                 {
+                    _logger.LogInformation("Conversation send remider");
                     using var sendScope = _serviceProvider.CreateScope();
                     var messageService = sendScope.ServiceProvider
                         .GetRequiredService<ISupportStaffMessageService>();
@@ -83,6 +84,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                 //   if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
                 else if (diff.TotalMinutes >= 15 && convo.ReminderSent && CustomerNotReplied(convo))
                 {
+                    _logger.LogInformation("Conversation close");
                     convo.Status = ConversationStatus.Complete;
                     convo.CloseAt = now;
                     needUpdate = true;
