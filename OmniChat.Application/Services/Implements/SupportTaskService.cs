@@ -41,7 +41,7 @@ namespace OmniChat.Application.Services.Implements
         {
             var repo = _unitOfWork.GetRepository<SupportTask>();
             var supportTasks = await repo.GetListAsync(
-                predicate: x => x.SupportConversationId == conversationId,
+                predicate: x => x.SupportConversationId == conversationId && x.Status == SupportTaskStatus.InProgress,
                 include: x => x.Include(x => x.IntentType)
             );
 

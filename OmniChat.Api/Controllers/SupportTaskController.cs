@@ -39,7 +39,7 @@ namespace OmniChat.Api.Controllers
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<SupportTasksResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
-        Summary = "Get Support Task On Conversation",
+        Summary = "Get Support Task Inprocess On Conversation",
         Description = "Lấy tất cả các Support Task của Conversation bằng Conversation Id")]
         public async Task<IActionResult> GetSupportTaskByConversationId(Guid conversationId)
         {
