@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
-using static OmniChat.Api.Constants.ApiEndPointConstant;
 
 namespace OmniChat.Api.Controllers
 {
@@ -102,6 +100,27 @@ namespace OmniChat.Api.Controllers
                 Message = "Get Customer Complete Conversation History Successfully",
                 IsSuccess = true,
                 Data = conversations
+            });
+        }
+
+        [HttpPatch(ApiEndPointConstant.SupportConversationEndPoint.CompleteConversation)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Hoàn thành conversation",
+            Description = "Hoàn thành conversation bằng conversaiton id"
+            )]
+        public async Task<IActionResult> CompleteConversationAsync(Guid id)
+        {
+            var result = await _supportConversationService.CompleteConversationAsync(id);
+
+            return Ok(new ApiResponse<bool>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Complete Conversation Successfully",
+                IsSuccess = true,
+                Data = result
             });
         }
     }
