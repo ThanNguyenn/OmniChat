@@ -24,7 +24,9 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Account Account { get; set; }
 
-        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual ICollection<Order> OrdersAsDriver { get; set; } = new List<Order>();
+
+        public virtual ICollection<Order> OrdersCreated { get; set; } = new List<Order>();
 
         public virtual ICollection<StaffIntentType> StaffIntentTypes { get; set; } = new List<StaffIntentType>();
 
