@@ -40,15 +40,23 @@ namespace OmniChat.Application.Services.Implements
         public async Task<IEnumerable<SupportTasksResponse>> GetSupportTaskOnConversationIdAsync(Guid conversationId)
         {
             var repo = _unitOfWork.GetRepository<SupportTask>();
+
+            var activeStatuses = new[]
+            {
+        SupportTaskStatus.Done,
+        SupportTaskStatus.InProgress,
+        SupportTaskStatus.PendingReassign
+              };
+
             var supportTasks = await repo.GetListAsync(
-                predicate: x => x.SupportConversationId == conversationId && x.Status == SupportTaskStatus.InProgress,
+                predicate: x => x.SupportConversationId == conversationId
+                             && activeStatuses.Contains(x.Status),
                 include: x => x.Include(x => x.IntentType)
             );
 
+
             if (!supportTasks.Any())
-            {
-                throw new NotFoundException("No SupportTask Found");
-            }
+                return Enumerable.Empty<SupportTasksResponse>();
 
             return _mapper.Map<IEnumerable<SupportTasksResponse>>(supportTasks);
         }
