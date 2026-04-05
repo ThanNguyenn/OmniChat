@@ -16,19 +16,23 @@ namespace OmniChat.Infrastructure.Models
 
         public int TaskCompleted { get; set; }
 
-        public int AvgTaskHandleTime { get; set; }
-
-        public int ConversationOwned { get; set; }
-
-        public int AvgFirstResponseTime { get; set; }
-
         public int ReassignmentCount { get; set; }
 
         public int CancelledCount { get; set; }
 
-        public DateTime? FromTime { get; set; } = DateTime.UtcNow;
+        public int ConversationOwned { get; set; }
 
-        public DateTime? ToTime { get; set; } = DateTime.UtcNow;
+        public int TotalTaskHandleTime { get; set; }
+
+        public int TotalFirstResponseTime { get; set; }
+        
+        public double? AvgTaskHandleTime { get; set; } 
+
+        public double? AvgFirstResponseTime { get; set; }
+
+        public DateTime? FromTime { get; set; }
+
+        public DateTime? ToTime { get; set; }
 
         public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
