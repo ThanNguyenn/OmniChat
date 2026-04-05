@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Models;
+﻿using OmniChat.Infrastructure.Dtos.Responses.IntentType;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,4 +20,7 @@ public class GetStaffsResponse
 
     public StaffStatus Status { get; set; }
 
+    //staff performance metrics
+
+    public IEnumerable<GetStaffIntentTypeResponse> StaffIntentTypes { get; set; }
 }

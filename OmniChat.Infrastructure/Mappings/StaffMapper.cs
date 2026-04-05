@@ -15,8 +15,10 @@ public class StaffMapper  : Profile
     public StaffMapper()
     {
 
-        CreateMap<CreateStaffRequest, Staff>();
-        CreateMap<UpdateStaffRequest, Staff>().ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+        CreateMap<CreateStaffRequest, Staff>().ForMember(dest => dest.StaffIntentTypes, opt => opt.Ignore());
+        CreateMap<UpdateStaffRequest, Staff>()
+            .ForMember(dest => dest.StaffIntentTypes, opt => opt.Ignore())
+            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
         CreateMap<Staff, GetStaffsResponse>();
     }

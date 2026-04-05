@@ -9,6 +9,4 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Staff;
 public class AssignStaffToIntentTypeRequest
 {
     public Guid IntentId { get; set; }
-
-
 }

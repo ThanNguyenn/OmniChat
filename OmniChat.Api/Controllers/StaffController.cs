@@ -76,10 +76,11 @@ public class StaffController : BaseController<StaffController>
     [SwaggerOperation(
         Summary = "Lấy list thông tin staff theo phòng ban",
         Description = "Dùng cho manager và admin lấy list thông tin staff theo phòng ban.")]
-    public async Task<IActionResult> GetAllStaffsAsync([FromQuery][Required] Guid deparmentId, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    public async Task<IActionResult> GetAllStaffsAsync([FromQuery]IEnumerable<Guid> deparmentIds, string? search, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _staffService.GetStaffsAsync(
-            deparmentId,
+            search,
+            deparmentIds,
             pageNumber ?? 1,
             pageSize ?? 20,
             sortBy ?? "id",
