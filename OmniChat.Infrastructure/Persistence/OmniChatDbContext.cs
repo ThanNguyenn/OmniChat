@@ -66,7 +66,7 @@ namespace OmniChat.Infrastructure.Persistence
         public DbSet<Transaction> Transactions { get; set; }
 
         public DbSet<SupportConversationFile> SupportConversationFiles { get; set; }
-        
+
         public DbSet<InternalConversation> InternalConversations { get; set; }
 
         public DbSet<TaskAction> TaskActions { get; set; }
@@ -160,7 +160,7 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<Product>()
                 .Property(p => p.ProductKind)
-                .HasConversion<string>();   
+                .HasConversion<string>();
 
             modelBuilder.Entity<Invoice>()
                 .Property(i => i.InvoiceStatus)
@@ -178,9 +178,9 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(psr => psr.Type)
                 .HasConversion<string>();
 
-                modelBuilder.Entity<PostSaleRequest>()
-                .Property(psr => psr.Status)
-                .HasConversion<string>();
+            modelBuilder.Entity<PostSaleRequest>()
+            .Property(psr => psr.Status)
+            .HasConversion<string>();
 
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.TransactionType)
@@ -469,7 +469,7 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(cm => cm.Id)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
-             
+
             modelBuilder.Entity<CustomerMessage>()
                 .HasMany(cm => cm.MessageIntentTypes)
                 .WithOne(mkt => mkt.CustomerMessage)
@@ -532,7 +532,7 @@ namespace OmniChat.Infrastructure.Persistence
             // ==== Provider - SupportConversation ( one to Many ) ====
             modelBuilder.Entity<Provider>()
                 .HasIndex(p => p.Id);
-                
+
             modelBuilder.Entity<Provider>()
                 .Property(p => p.Id)
                 .ValueGeneratedOnAdd()
@@ -549,23 +549,23 @@ namespace OmniChat.Infrastructure.Persistence
 
             // ==== Provider - OathToken ( one to Many ) ====
 
-                modelBuilder.Entity<Provider>()
-                    .HasMany(p => p.FacebookOathTokens)
-                    .WithOne(ot => ot.Provider)
-                    .HasForeignKey(ot => ot.ProviderId)
-                    .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Provider>()
+                .HasMany(p => p.FacebookOathTokens)
+                .WithOne(ot => ot.Provider)
+                .HasForeignKey(ot => ot.ProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<Provider>()
-                    .HasMany(p => p.InstagramOathTokens)
-                    .WithOne(ot => ot.Provider)
-                    .HasForeignKey(ot => ot.ProviderId)
-                    .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Provider>()
+                .HasMany(p => p.InstagramOathTokens)
+                .WithOne(ot => ot.Provider)
+                .HasForeignKey(ot => ot.ProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<Provider>()
-                    .HasMany(p => p.ZaloOathTokens)
-                    .WithOne(ot => ot.Provider)
-                    .HasForeignKey(ot => ot.ProviderId)
-                    .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Provider>()
+                .HasMany(p => p.ZaloOathTokens)
+                .WithOne(ot => ot.Provider)
+                .HasForeignKey(ot => ot.ProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // == CustomerMessage - SupportConversation ( many to one ) ==
             modelBuilder.Entity<SupportConversation>()
@@ -1094,11 +1094,21 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Order>()
                 .HasIndex(o => o.DeliveryStatus);
 
+            // ==== order - staffCreator (Staff) (one to Many ) ====
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Creator)
+                .WithMany(s => s.OrdersCreated)
+                .HasForeignKey(o => o.CreatorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.CreatorId); // index scan order by creator faster
+
             // ==== order - Drvider (Staff) (one to Many ) ====
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Driver)
-                .WithMany(s => s.Orders)
+                .WithMany(s => s.OrdersAsDriver)
                 .HasForeignKey(o => o.DriverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -1232,7 +1242,7 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Brand>()
                 .Property(b => b.Id)
                 .ValueGeneratedOnAdd()
-                .HasDefaultValueSql("gen_random_uuid()");   
+                .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<Brand>()
                 .HasMany(b => b.Products)
@@ -1331,7 +1341,7 @@ namespace OmniChat.Infrastructure.Persistence
                 .WithOne(psr => psr.ResolveBy)
                 .HasForeignKey(psr => psr.ResolveById)
                 .OnDelete(DeleteBehavior.Restrict);
-        
+
             modelBuilder.Entity<PostSaleRequest>()
                 .HasIndex(psr => psr.PresentByStaffId); // index scan postsalerequest by presentbystaff faster
 

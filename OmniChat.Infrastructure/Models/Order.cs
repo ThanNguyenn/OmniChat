@@ -36,6 +36,10 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Staff Driver { get; set; }
 
+        public Guid CreatorId { get; set; }
+       
+        public virtual Staff Creator { get; set; }
+
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
         public virtual ICollection<CreditNote> CreditNotes { get; set; } = new List<CreditNote>();
