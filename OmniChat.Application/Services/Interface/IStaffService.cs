@@ -1,5 +1,7 @@
 ﻿using OmniChat.Infrastructure.Dtos.Requests.Staff;
+using OmniChat.Infrastructure.Dtos.Requests.SupportTask;
 using OmniChat.Infrastructure.Dtos.Responses.Staff;
+using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using System;
@@ -13,11 +15,14 @@ namespace OmniChat.Application.Services.Interface;
 public interface IStaffService
 {
     Task<bool> CreateStaffAsync(CreateStaffRequest createStaffRequest);
+
     Task<bool> UpdateStaffAsync(Guid StaffId, UpdateStaffRequest updateStaffRequest);
 
     Task<bool> DeleteStaffAsync(Guid StaffId);
 
     public  Task<StaffDassboardResponse> GetStaffDassboardByIdAsync(Guid staffId);
+
+    public  Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId, StaffTaskFilterRequest request);
 
     Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(string? search = null , IEnumerable<Guid>? deparmentIds = null, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 

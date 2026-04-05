@@ -6,7 +6,9 @@ using Microsoft.ML;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Dtos.Requests.Staff;
+using OmniChat.Infrastructure.Dtos.Requests.SupportTask;
 using OmniChat.Infrastructure.Dtos.Responses.Staff;
+using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
@@ -296,6 +298,43 @@ public class StaffService : BaseService<StaffService>, IStaffService
             TotalCreateOrder = totalCreateOrder,
             AfferageResolveTime = avgResolveTime / 60.0,
             StaffPerformance = Math.Round(performance, 2)
+        };
+    }
+
+    public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId,StaffTaskFilterRequest request)
+    {
+        var repo = _unitOfWork.GetRepository<SupportTask>();
+        var page = request.Page <= 0 ? 1 : request.Page;
+        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+        var fromDate = request.FromDate?.Date;
+        var toDate = request.ToDate?.Date.AddDays(1);
+
+        var result = await repo.GetPagingListAsync(
+            predicate: t =>
+                t.CurrentAssignedStaffId == staffId &&
+                t.Status == SupportTaskStatus.Done &&
+                t.CompleteDate != null &&
+                (!fromDate.HasValue || t.CompleteDate >= fromDate) &&
+                (!toDate.HasValue || t.CompleteDate < toDate) &&
+                (!request.IntentTypeId.HasValue || t.IntentTypeId == request.IntentTypeId),
+            orderBy: q => q.OrderByDescending(t => t.CompleteDate),
+            include: q => q
+                .Include(t => t.IntentType)
+                .Include(t => t.SupportConversation),
+            page: page,
+            size: pageSize
+        );
+
+        return new PagingResponse<StaffSupportTaskResponse>
+        {
+            Items = _mapper.Map<List<StaffSupportTaskResponse>>(result.Items),
+            Meta = new PaginationMeta
+            {
+                TotalItems = result.Meta.TotalItems,
+                TotalPages = result.Meta.TotalPages,
+                CurrentPage = page,
+                PageSize = pageSize
+            }
         };
     }
 }

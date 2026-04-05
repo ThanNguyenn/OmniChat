@@ -130,6 +130,7 @@ public class ApiEndPointConstant
         public const string AssignIntent = "{id}/assign-intent";
         public const string UnassignIntent = "{id}/unassign-intent";
         public const string StaffDashboard = "{id}/dashboard";
+        public const string getStaffTasks = "{id}/tasks";
     }
 
     public static class Product
