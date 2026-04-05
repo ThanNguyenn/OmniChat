@@ -17,6 +17,8 @@ public interface IStaffService
 
     Task<bool> DeleteStaffAsync(Guid StaffId);
 
+    public  Task<StaffDassboardResponse> GetStaffDassboardByIdAsync(Guid staffId);
+
     Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(string? search = null , IEnumerable<Guid>? deparmentIds = null, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 
     Task<bool> AssignIntentToStaffAsync(Guid staffId, IEnumerable<AssignStaffToIntentTypeRequest> requests);

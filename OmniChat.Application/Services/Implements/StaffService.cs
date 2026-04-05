@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.ML;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Dtos.Requests.Staff;
@@ -256,5 +257,45 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
             await staffIntentTypeRepo.InsertRangeAsync(newAssignments);
         }
+    }
+
+
+    public async Task<StaffDassboardResponse> GetStaffDassboardByIdAsync(Guid staffId)
+    {
+        var taskRepo = _unitOfWork.GetRepository<SupportTask>();
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+
+        var totalDoneTask = await taskRepo.CountAsync(
+            t => t.CurrentAssignedStaffId == staffId &&
+                 t.Status == SupportTaskStatus.Done);
+
+        var totalCreateOrder = await orderRepo.CountAsync(
+            o => o.CreatorId == staffId &&
+                 o.IsDeleted != true);
+
+        var totalTask = await taskRepo.CountAsync(
+            t => t.CurrentAssignedStaffId == staffId);
+
+        var tasks = await taskRepo.GetListAsync( predicate:
+            t => t.CurrentAssignedStaffId == staffId &&
+                 t.Status == SupportTaskStatus.Done &&
+                 t.CreatedAt != null &&
+                 t.CompleteDate != null);
+
+        var avgResolveTime = tasks.Any()
+            ? tasks.Average(t => (t.CompleteDate.Value - t.CreatedAt.Value).TotalMinutes)
+            : 0;
+
+        double performance = totalTask == 0
+            ? 0
+            : (double)totalDoneTask / totalTask * 100;
+
+        return new StaffDassboardResponse
+        {
+            TotalDoneTask = totalDoneTask,
+            TotalCreateOrder = totalCreateOrder,
+            AfferageResolveTime = avgResolveTime / 60.0,
+            StaffPerformance = Math.Round(performance, 2)
+        };
     }
 }

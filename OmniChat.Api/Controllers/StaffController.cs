@@ -123,4 +123,19 @@ public class StaffController : BaseController<StaffController>
         return StatusCode(StatusCodes.Status200OK, response);
 
     }
+
+    [HttpGet(ApiEndPointConstant.Staff.StaffDashboard)]
+    [ProducesResponseType(typeof(ApiResponse<StaffDassboardResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+       Summary = "Lấy dashboard của staff",
+       Description = "Lấy dashboard của staff :TotalDoneTask,TotalCreateOrder,AfferageResolveTime,StaffPerformance ")]
+    public async Task<IActionResult> GetStaffDashboardByIdAsync([FromRoute] Guid id)
+    {
+        var result = await _staffService.GetStaffDassboardByIdAsync(id);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff dashboard successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
 }
