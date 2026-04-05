@@ -231,6 +231,11 @@ namespace OmniChat.Application.Services.Implements
                 });
             }
 
+            if (conversation.FirstResponseAt == null)
+            {
+                await _supportConversationService.UpdateFirstReponseAtOnconversationAsync(conversation);
+            }
+
             await _customerProfileService.UpdateIsformSentCustomerProfileAsync(customer.Id);
             _logger.LogInformation("Marked form as sent for customer {CustomerId}", customer.Id);
         }
