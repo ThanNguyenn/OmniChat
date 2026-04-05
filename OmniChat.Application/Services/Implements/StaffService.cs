@@ -43,11 +43,17 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
             var account = await CreateAccountForStaffAsync(createStaffRequest);
             await accountRepo.InsertAsync(account);
+            //commit to get account id for staff
             await _unitOfWork.CommitAsync();
 
             staff.AccountId = account.Id;
             await staffRepo.InsertAsync(staff);
-
+            //commit to get staff id for staff intent type
+            await _unitOfWork.CommitAsync();
+            if (createStaffRequest.StaffIntentTypes != null && createStaffRequest.StaffIntentTypes.Any())
+            {
+                await AssignIntentToStaffAsync(staff.Id, createStaffRequest.StaffIntentTypes);
+            }
             return true;
         });
     }
@@ -77,6 +83,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
             }
             _mapper.Map(updateStaffRequest, existingStaff);
             staffRepository.Update(existingStaff);
+            await SyncStaffIntentsAsync(existingStaff.Id, updateStaffRequest.StaffIntentTypes);
             return true;
         });
     }
@@ -97,19 +104,36 @@ public class StaffService : BaseService<StaffService>, IStaffService
     }
 
 
-    public async Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(Guid deparmentId, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
+    public async Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(
+        string? search = null,
+        IEnumerable<Guid>? departmentIds = null,
+        int pageNumber = 1,
+        int pageSize = 20,
+        string sortBy = "id",
+        bool descending = false)
     {
         var staffRepository = _unitOfWork.GetRepository<Staff>();
-        var departmentRepository = _unitOfWork.GetRepository<IntentType>();
-        var existingDepartment = await departmentRepository.GetByIdAsync(deparmentId) ?? throw new NotFoundException("Department id not exist");
 
         var response = await staffRepository.GetPagingListAsync<GetStaffsResponse>(
-            predicate: s =>  s.IsActive == true,
+            predicate: s =>
+                s.IsActive == true &&
+                (departmentIds == null || !departmentIds.Any() ||
+                    departmentIds.All(id =>
+                        s.StaffIntentTypes.Any(sit => sit.IntentTypeId == id)
+                    )
+                ) &&
+                (string.IsNullOrEmpty(search) ||
+                    s.Name.Contains(search) ||
+                    s.Email.Contains(search) ||
+                    s.Phone.Contains(search)
+                ),
+
             orderBy: q => OrderBy(q, sortBy, descending),
             selector: e => _mapper.Map<GetStaffsResponse>(e),
             page: pageNumber,
             size: pageSize
         );
+
         return response;
     }
 
@@ -136,9 +160,6 @@ public class StaffService : BaseService<StaffService>, IStaffService
         var staffIntentTypeRepo = _unitOfWork.GetRepository<StaffIntentType>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
         var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();
-
-        var existingStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == staffId && s.IsActive != false)
-            ?? throw new NotFoundException($"Staff {staffId} not found or inactive");
 
         var intentIds = requests.Select(r => r.IntentId).Distinct().ToList();
 
@@ -191,5 +212,49 @@ public class StaffService : BaseService<StaffService>, IStaffService
         });
         return true;
 
+    }
+
+    private async Task SyncStaffIntentsAsync(Guid staffId, IEnumerable<AssignStaffToIntentTypeRequest> requests)
+    {
+        var staffIntentTypeRepo = _unitOfWork.GetRepository<StaffIntentType>();
+        var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();
+
+        var newIntentIds = requests?.Select(r => r.IntentId).Distinct().ToList() ?? new List<Guid>();
+        if (newIntentIds.Any())
+        {
+            var validIntents = await intentTypeRepo.GetListAsync(
+                predicate: it => newIntentIds.Contains(it.Id) && it.IsActive != false);
+
+            if (validIntents.Count != newIntentIds.Count)
+            {
+                throw new NotFoundException("One or more intent types not found or inactive.");
+            }
+        }
+
+        var existingAssignments = await staffIntentTypeRepo.GetListAsync(
+            predicate: sit => sit.StaffId == staffId);
+
+        var existingIntentIds = existingAssignments.Select(x => x.IntentTypeId).ToList();
+
+        var toAdd = newIntentIds.Except(existingIntentIds).ToList();
+        var toRemove = existingAssignments
+            .Where(x => !newIntentIds.Contains(x.IntentTypeId))
+            .ToList();
+
+        if (toRemove.Any())
+        {
+            staffIntentTypeRepo.DeleteRange(toRemove);
+        }
+
+        if (toAdd.Any())
+        {
+            var newAssignments = toAdd.Select(id => new StaffIntentType
+            {
+                StaffId = staffId,
+                IntentTypeId = id
+            }).ToList();
+
+            await staffIntentTypeRepo.InsertRangeAsync(newAssignments);
+        }
     }
 }

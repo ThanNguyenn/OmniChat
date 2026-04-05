@@ -14,5 +14,5 @@ public class UpdateStaffRequest
 
     public string? Phone { get; set; }
 
-    public Guid? DepartmentId { get; set; }
+    public IEnumerable<AssignStaffToIntentTypeRequest>? StaffIntentTypes { get; set; }
 }
