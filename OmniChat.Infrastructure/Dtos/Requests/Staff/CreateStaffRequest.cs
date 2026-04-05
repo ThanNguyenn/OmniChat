@@ -16,4 +16,6 @@ public class CreateStaffRequest
     public string Phone { get; set; }
 
     public Guid RoleId { get; set; }
+        
+    public IEnumerable<AssignStaffToIntentTypeRequest>? StaffIntentTypes { get; set; } 
 }
