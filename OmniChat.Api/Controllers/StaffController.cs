@@ -2,7 +2,9 @@
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Staff;
+using OmniChat.Infrastructure.Dtos.Requests.SupportTask;
 using OmniChat.Infrastructure.Dtos.Responses.Staff;
+using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
@@ -123,4 +125,37 @@ public class StaffController : BaseController<StaffController>
         return StatusCode(StatusCodes.Status200OK, response);
 
     }
+
+    [HttpGet(ApiEndPointConstant.Staff.StaffDashboard)]
+    [ProducesResponseType(typeof(ApiResponse<StaffDassboardResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+       Summary = "Lấy dashboard của staff",
+       Description = "Lấy dashboard của staff :TotalDoneTask,TotalCreateOrder,AfferageResolveTime,StaffPerformance ")]
+    public async Task<IActionResult> GetStaffDashboardByIdAsync([FromRoute] Guid id)
+    {
+        var result = await _staffService.GetStaffDassboardByIdAsync(id);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff dashboard successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+
+    [HttpPost(ApiEndPointConstant.Staff.getStaffTasks)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<StaffSupportTaskResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [SwaggerOperation(
+       Summary = "Lấy list task của staff",
+       Description = "Lấy list task của staff theo filter: IntentTypeId, FromDate, ToFromDate,  pageNumber, pageSize")]
+     public async Task<IActionResult> GetStaffTasksAsync([FromRoute] Guid id, [FromBody] StaffTaskFilterRequest getStaffTasksRequest)
+    {
+        var result = await _staffService.GetStaffTasksAsync(id, getStaffTasksRequest);
+
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff tasks successfully", result);
+
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
 }

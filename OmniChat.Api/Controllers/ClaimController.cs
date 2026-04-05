@@ -61,7 +61,7 @@ namespace OmniChat.Api.Controllers
         [SwaggerOperation(
       Summary = "Cập nhật Claim",
       Description = "Cập nhật thông tin Claim khi đang Pending")]
-        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] UpdateClaimRequest request)
+        public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] UpdateClaimRequest request)
         {
             var result = await _claimService.UpdateClaimInforAsync(id, request);
 
@@ -79,7 +79,7 @@ namespace OmniChat.Api.Controllers
         [SwaggerOperation(
        Summary = "Duyệt Claim",
        Description = "Approve Claim khi đang Pending")]
-        public async Task<IActionResult> ApproveAsync(Guid id)
+        public async Task<IActionResult> ApproveAsync([FromRoute] Guid id)
         {
             var result = await _claimService.ApproveClaimAsync(id);
 
@@ -98,7 +98,7 @@ namespace OmniChat.Api.Controllers
         [SwaggerOperation(
         Summary = "Từ chối Claim",
         Description = "Reject Claim khi đang Pending")]
-        public async Task<IActionResult> RejectAsync(Guid id)
+        public async Task<IActionResult> RejectAsync([FromRoute] Guid id)
         {
             var result = await _claimService.RejectClaimAsync(id);
 
@@ -108,6 +108,35 @@ namespace OmniChat.Api.Controllers
                 Message = "Reject Claim Successfully",
                 IsSuccess = true,
                 Data = result
+            });
+        }
+
+        [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetByStaffId)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StaffClaimResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [SwaggerOperation(
+            summary: "Lấy Claim theo StaffId",
+            description: "Lấy tất cả Claim của một nhân viên dựa trên StaffId"
+            )]
+        public async Task<IActionResult> GetByStaffIdAsync([FromRoute] Guid staffId)
+        {
+            var claims = await _claimService.GetClaimsByStaffIdAsync(staffId);
+            if (claims == null || !claims.Any())
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Message = "No claims found for the specified StaffId",
+                    IsSuccess = false,
+                    Data = null
+                });
+            }
+            return Ok(new ApiResponse<IEnumerable<StaffClaimResponse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Claims by StaffId Successfully",
+                IsSuccess = true,
+                Data = claims
             });
         }
     }

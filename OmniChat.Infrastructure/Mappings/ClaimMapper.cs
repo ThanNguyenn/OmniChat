@@ -32,6 +32,8 @@ namespace OmniChat.Infrastructure.Mappings
             // Entity → Response
             CreateMap<Claim, ClaimDetailResponse>();
 
+            CreateMap<Claim, StaffClaimResponse>()
+              .ForMember(dest => dest.ClaimType, opt => opt.MapFrom(src => src.ClaimType.TypeName));
         }
     }
 }

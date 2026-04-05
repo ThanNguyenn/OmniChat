@@ -129,6 +129,8 @@ public class ApiEndPointConstant
         public const string GetAll = "get";
         public const string AssignIntent = "{id}/assign-intent";
         public const string UnassignIntent = "{id}/unassign-intent";
+        public const string StaffDashboard = "{id}/dashboard";
+        public const string getStaffTasks = "{id}/tasks";
     }
 
     public static class Product
@@ -154,6 +156,7 @@ public class ApiEndPointConstant
         public const string Update = Base + "/{id}";
         public const string Approve = Base + "/{id}/approve";
         public const string Reject = Base + "/{id}/reject";
+        public const string GetByStaffId = Base + "/staff/{staffId}";
     }
 
     public static class Order
