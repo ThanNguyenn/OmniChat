@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Claim;
 using OmniChat.Infrastructure.Dtos.Responses.Claim;
 using OmniChat.Infrastructure.Exceptions;
+using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -111,6 +113,22 @@ namespace OmniChat.Application.Services.Implements
 
                 return _mapper.Map<ClaimDetailResponse>(claim);
             });
+        }
+
+        public async Task<IEnumerable<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId)
+        {
+            var repo = _unitOfWork.GetRepository<Claim>();
+
+            var claims = await repo.GetListAsync(
+                predicate: x => x.StaffId == staffId,
+                include: q => q.Include(x => x.ClaimType),
+                orderBy: q => q.OrderByDescending(x => x.SubmitDate)
+            );
+
+            if (!claims.Any())
+                throw new NotFoundException("No claims found for this staff");
+
+            return _mapper.Map<IEnumerable<StaffClaimResponse>>(claims);
         }
     }
 }

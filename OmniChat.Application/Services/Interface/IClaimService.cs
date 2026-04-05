@@ -14,6 +14,8 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task<IEnumerable<ClaimDetailResponse>> GetAllClaim();
 
+        public  Task<IEnumerable<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId);
+
         public  Task<bool> UpdateClaimInforAsync(Guid claimId, UpdateClaimRequest claimRequest);
 
         public  Task<ClaimDetailResponse> ApproveClaimAsync(Guid claimId);

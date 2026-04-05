@@ -156,6 +156,7 @@ public class ApiEndPointConstant
         public const string Update = Base + "/{id}";
         public const string Approve = Base + "/{id}/approve";
         public const string Reject = Base + "/{id}/reject";
+        public const string GetByStaffId = Base + "/staff/{staffId}";
     }
 
     public static class Order
