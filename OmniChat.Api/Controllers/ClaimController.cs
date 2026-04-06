@@ -139,5 +139,24 @@ namespace OmniChat.Api.Controllers
                 Data = claims
             });
         }
+
+        [HttpPut(ApiEndPointConstant.ClaimEndPoint.ReAssign)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [SwaggerOperation(
+            summary: "Gán Conversation cho new Staff ",
+            description: "Gán lại một Conversation cho nhân viên khác dựa trên ConversationId và NewStaffId"
+            )]
+        public async Task<IActionResult> ReAssignStaffAsync([FromRoute] Guid conversationId, [FromRoute] Guid newStaffId)
+        {
+            await _claimService.ReAssignStaffAsync(newStaffId, conversationId);
+            return Ok(new ApiResponse<bool>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Reassign Staff Successfully",
+                IsSuccess = true,
+                Data = true
+            });
+        }
     }
 }
