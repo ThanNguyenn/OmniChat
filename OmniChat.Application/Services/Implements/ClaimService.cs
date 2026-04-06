@@ -21,8 +21,16 @@ namespace OmniChat.Application.Services.Implements
 {
     public class ClaimService : BaseService<ClaimService>, IClaimService
     {
-        public ClaimService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<ClaimService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IStaffPerformanceService _staffPerformanceService;
+
+        private readonly ISupportConversationService _supportConversationService;
+
+        private readonly ISupportTaskService _supportTaskService;
+        public ClaimService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<ClaimService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IStaffPerformanceService staffPerformanceService, ISupportConversationService supportConversationService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _staffPerformanceService = staffPerformanceService;
+            _supportConversationService = supportConversationService;
+            _supportTaskService = supportTaskService;
         }
 
         public async Task<bool> CreateClaimAsync(CreateClaimRequest claimRequest)
@@ -129,6 +137,103 @@ namespace OmniChat.Application.Services.Implements
                 throw new NotFoundException("No claims found for this staff");
 
             return _mapper.Map<IEnumerable<StaffClaimResponse>>(claims);
+        }
+
+        public async Task ReAssignStaffAsync(Guid newStaffAssignId, Guid conversationReAssignId)
+        {
+            var converRepo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var staffRepo = _unitOfWork.GetRepository<Staff>();
+
+            var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
+
+            var conversation = await converRepo.SingleOrDefaultAsync(predicate: cs => cs.Id == conversationReAssignId,
+                include: c => c.Include(x => x.SupportTasks));
+
+            if (conversation == null)
+                throw new NotFoundException($"Conversation {conversationReAssignId} not found");
+
+            var oldStaffId = conversation.ActiveStaffId;
+
+            if (oldStaffId == null)
+                throw new BusinessException("Conversation has no assigned staff to reassign");
+
+            var newStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == newStaffAssignId,
+                include: s => s.Include(x => x.StaffIntentTypes)
+               );
+
+            if (newStaff == null)
+                throw new NotFoundException($"Staff {newStaffAssignId} not found");
+
+            
+            var conversationIntentTypeIds = conversation.SupportTasks
+                .Where(t => t.Status != SupportTaskStatus.Done
+                         && t.Status != SupportTaskStatus.Cancelled
+                         && t.Status != SupportTaskStatus.closed)
+                .Select(t => t.IntentTypeId)
+                .Distinct()
+                .ToHashSet();
+
+            var newStaffIntentTypeIds = newStaff.StaffIntentTypes
+                .Select(si => si.IntentTypeId)
+                .ToHashSet();
+
+            bool hasMatchingIntent = conversationIntentTypeIds
+                 .Any(id => newStaffIntentTypeIds.Contains(id));
+
+            if (!hasMatchingIntent)
+                throw new BusinessException(
+                 "New staff does not have any matching IntentType with this conversation's tasks");
+
+            conversation.ActiveStaffId = newStaffAssignId;
+            conversation.UpdateDate = DateTime.UtcNow;
+
+            _unitOfWork.GetRepository<SupportConversation>().Update(conversation);
+
+            var activeTasks = conversation.SupportTasks
+               .Where(t => t.Status != SupportTaskStatus.Done
+                        && t.Status != SupportTaskStatus.Cancelled
+                        && t.Status != SupportTaskStatus.closed)
+               .ToList();
+
+            foreach (var task in activeTasks)
+            {
+                task.CurrentAssignedStaffId = newStaffAssignId;
+                _unitOfWork.GetRepository<SupportTask>().Update(task);
+            }
+
+            var performanceList = await _unitOfWork.GetRepository<StaffPerformance>()
+             .GetListAsync(predicate: sp => sp.StaffId == oldStaffId);
+
+            var oldStaffPerformance = performanceList
+                .OrderByDescending(sp => sp.CreateDate)
+                .FirstOrDefault();
+
+            if (oldStaffPerformance != null)
+            {
+                oldStaffPerformance.ReassignmentCount += 1;
+                oldStaffPerformance.UpdateDate = DateTime.UtcNow;
+                _unitOfWork.GetRepository<StaffPerformance>().Update(oldStaffPerformance);
+            }
+            else
+            {
+                // Chưa có performance record → tạo mới
+                var newPerformance = new StaffPerformance
+                {
+                    Id = Guid.NewGuid(),
+                    StaffId = oldStaffId.Value,
+                    ReassignmentCount = 1,
+                    CreateDate = DateTime.UtcNow,
+                    UpdateDate = DateTime.UtcNow
+                };
+                await _unitOfWork.GetRepository<StaffPerformance>().InsertAsync(newPerformance);
+            }
+
+            await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation(
+                "[REASSIGN] Conversation {ConvId} reassigned from Staff {OldStaff} to Staff {NewStaff}. Tasks updated: {Count}",
+                conversationReAssignId, oldStaffId, newStaffAssignId, activeTasks.Count);
         }
     }
 }
