@@ -214,6 +214,7 @@ namespace OmniChat.Application.Services.Implements
 
             if (conversation.ProvidersId == ZALO_PROVIDER_ID)
             {
+                _logger.LogInformation("Matched ZALO");
                 await messageService.SendZaloMessageAsync(new CreateSupportStaffMessageRequest
                 {
                     SupportConversationId = conversation.Id,
@@ -224,13 +225,18 @@ namespace OmniChat.Application.Services.Implements
             }
             else if (conversation.ProvidersId == FACEBOOK_PROVIDER_ID)
             {
+                _logger.LogInformation("Matched FACEBOOK");
                 await messageService.SendFacebookMesageAsync(new CreateSupportStaffMessageRequest
                 {
                     SupportConversationId = conversation.Id,
                     StaffId = conversation.ActiveStaffId.Value,
                     Content = message
                 });
-                _logger.LogInformation("Sending Zalo form successfully");
+                _logger.LogInformation("Sending Facebook form successfully");
+            }
+            else
+            {
+                _logger.LogWarning("NO MATCH PROVIDER !!! {ProviderId}", conversation.ProvidersId);
             }
 
             await _customerProfileService.UpdateIsformSentCustomerProfileAsync(customer.Id);
