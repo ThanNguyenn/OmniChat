@@ -230,11 +230,10 @@ namespace OmniChat.Application.Services.Resolver
                 );
 
                 var updatedConversation = await _supportConversationService
-                .UpdateSupportConversationUpdateDateAsync(conversation.Id);
-
+                .GetSupportConversationByIdAsync(conversation.Id);
+                updatedConversation.UpdateDate = DateTime.UtcNow;
                 updatedConversation.LastCustomerMessageAt = DateTime.UtcNow;
                 updatedConversation.ReminderSent = false;
-
                 await _supportConversationService.UpdateConversationAsync(updatedConversation);
 
                 if (updatedConversation.ActiveStaffId != null)

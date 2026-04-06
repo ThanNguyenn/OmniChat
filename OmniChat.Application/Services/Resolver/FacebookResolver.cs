@@ -44,7 +44,7 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService,IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService, ICustomerMergeService customerMergeService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService, IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService, ICustomerMergeService customerMergeService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
@@ -211,16 +211,15 @@ namespace OmniChat.Application.Services.Resolver
                         );
 
                         var updatedConversation = await _supportConversationService
-                          .UpdateSupportConversationUpdateDateAsync(conversation.Id);
-
+                          .GetSupportConversationByIdAsync(conversation.Id);
+                        updatedConversation.UpdateDate = DateTime.UtcNow;
                         updatedConversation.LastCustomerMessageAt = DateTime.UtcNow;
                         updatedConversation.ReminderSent = false;
-
                         await _supportConversationService.UpdateConversationAsync(updatedConversation);
 
                         if (updatedConversation.ActiveStaffId != null)
                         {
-                           
+
 
                             var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
 

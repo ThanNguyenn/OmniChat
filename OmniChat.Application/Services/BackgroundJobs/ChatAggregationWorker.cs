@@ -185,6 +185,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                         }
                         catch (Exception ex)
                         {
+                            _logger.LogError(ex, "[AGGREGATION] Error processing key={key}", key);
                             await db.KeyDeleteAsync(key);
                             await db.KeyDeleteAsync(lastKey);
                             await db.SetRemoveAsync("chat_keys", key.ToString());

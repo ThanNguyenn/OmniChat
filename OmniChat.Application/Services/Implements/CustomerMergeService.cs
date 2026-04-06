@@ -220,6 +220,7 @@ namespace OmniChat.Application.Services.Implements
                     StaffId = conversation.ActiveStaffId.Value,
                     Content = message
                 });
+                _logger.LogInformation("Sending Zalo form successfully");
             }
             else if (conversation.ProvidersId == FACEBOOK_PROVIDER_ID)
             {
@@ -229,6 +230,7 @@ namespace OmniChat.Application.Services.Implements
                     StaffId = conversation.ActiveStaffId.Value,
                     Content = message
                 });
+                _logger.LogInformation("Sending Zalo form successfully");
             }
 
             await _customerProfileService.UpdateIsformSentCustomerProfileAsync(customer.Id);
