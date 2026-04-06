@@ -316,13 +316,6 @@ namespace OmniChat.Application.Services.Implements
             }
         }
 
-        public async Task UpdateFirstReponseAtOnconversationAsync(SupportConversation conversation)
-        {
-            conversation.FirstResponseAt = DateTime.UtcNow;
-            var repo = _unitOfWork.GetRepository<SupportConversation>();
-            repo.Update(conversation);
-            await _unitOfWork.CommitAsync();
-        }
         public async Task<SupportConversation> CreateNewSupportConversationAsync(CreateSupportConversationRequest request)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();

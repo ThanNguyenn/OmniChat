@@ -158,6 +158,11 @@ namespace OmniChat.Application.Services.Implements
                 existConversation.LastStaffMessageAt = now;
                 existConversation.ReminderSent = false;
 
+                if (existConversation.FirstResponseAt == null)
+                {
+                    existConversation.FirstResponseAt = now;
+                }
+
                 await _supportConversationService.UpdateConversationAsync(existConversation);
 
                 // Update Sidebar for Staff via SignalR (GROUP-BASED)
@@ -258,6 +263,11 @@ namespace OmniChat.Application.Services.Implements
                 existConversation.UpdateDate = now;
                 existConversation.LastStaffMessageAt = now;
                 existConversation.ReminderSent = false;
+
+                if (existConversation.FirstResponseAt == null)
+                {
+                    existConversation.FirstResponseAt = now;
+                }
 
                 await _supportConversationService.UpdateConversationAsync(existConversation);
 

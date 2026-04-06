@@ -84,8 +84,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
 
                 // close conversation if customer does not reply after 24 minutes of staff message
-                //  if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
-                if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
+                if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
+                //if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
                 {
                     _logger.LogInformation("Conversation close");
                     convo.Status = ConversationStatus.Complete;
@@ -101,8 +101,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
                 }
 
                 // send reminder if customer does not reply after 23 hours of staff message 
-                //else if (diff.TotalHours >= 23 && !convo.ReminderSent)
-                else if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
+                else if (diff.TotalHours >= 23 && !convo.ReminderSent)
+                //else if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
                 {
                     _logger.LogInformation("Conversation send remider");
                     using var sendScope = _serviceProvider.CreateScope();
