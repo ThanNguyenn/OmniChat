@@ -46,149 +46,68 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                     foreach (var keyValue in keys)
                     {
-                        if (!keyValue.HasValue)
-                        {
-                            _logger.LogWarning("[REDIS] Empty keyValue → skip");
-                            continue;
-                        }
+                        if (!keyValue.HasValue) continue;
 
-                        RedisKey key = keyValue.ToString();
-                        var lastKey = $"last:{key}";
+                        string keyStr = keyValue.ToString();
+                        var lastKey = $"last:{keyStr}";
+                        var lockKey = $"lock:{keyStr}";
 
-                        
+                  
                         var lastValue = await db.StringGetAsync(lastKey);
-
-                        if (!lastValue.HasValue)
-                        {
-                            continue;
-                        }
+                        if (!lastValue.HasValue) continue;
 
                         var lastTime = new DateTime((long)lastValue);
-                        var diff = DateTime.UtcNow - lastTime;
+                        if (DateTime.UtcNow - lastTime < TimeSpan.FromSeconds(60)) continue;
 
-                        // debounce 60s
-                        if (diff < TimeSpan.FromSeconds(60))
-                        {
-                            continue;
-                        }
-
-                        var lockKey = $"lock:{key}";
-
-                        var isLocked = await db.StringSetAsync(
-                            lockKey,
-                            "1",
-                            TimeSpan.FromSeconds(10),
-                            When.NotExists
-                        );
-
-                        if (!isLocked)
-                        {
-                            continue;
-                        }
+                      
+                        var isLocked = await db.StringSetAsync(lockKey, "1", TimeSpan.FromSeconds(30), When.NotExists);
+                        if (!isLocked) continue;
 
                         try
                         {
-                            var messages = await db.ListRangeAsync(key);
+                            var messages = await db.ListRangeAsync(keyStr);
+                            if (messages.Length == 0) { await CleanupRedis(db, keyStr, lastKey); continue; }
 
-
-                            if (messages.Length == 0)
-                            {
-                                _logger.LogWarning($"[REDIS] Empty messages → cleanup key={key}");
-
-                                await db.KeyDeleteAsync(key);
-                                await db.KeyDeleteAsync(lastKey);
-                                await db.SetRemoveAsync("chat_keys", key.ToString());
-                                continue;
-                            }
-
-                            var keyStr = key.ToString();
                             var parts = keyStr.Split(':');
-
-                            if (parts.Length != 3)
+                            if (parts.Length != 3 || !Guid.TryParse(parts[1], out var providerId) || !Guid.TryParse(parts[2], out var customerId))
                             {
-
-                                await db.KeyDeleteAsync(key);
-                                await db.KeyDeleteAsync(lastKey);
-                                await db.SetRemoveAsync("chat_keys", key.ToString());
-                                continue;
-                            }
-
-                            if (!Guid.TryParse(parts[1], out var providerId) ||
-                                !Guid.TryParse(parts[2], out var customerId))
-                            {
-
-                                await db.KeyDeleteAsync(key);
-                                await db.KeyDeleteAsync(lastKey);
-                                await db.SetRemoveAsync("chat_keys", key.ToString());
-                                continue;
+                                await CleanupRedis(db, keyStr, lastKey); continue;
                             }
 
                             using var scope = _scopeFactory.CreateScope();
+                            var conversationService = scope.ServiceProvider.GetRequiredService<ISupportConversationService>();
+                            var taskService = scope.ServiceProvider.GetRequiredService<ITaskAssignmentService>();
+                            var mergeService = scope.ServiceProvider.GetRequiredService<ICustomerMergeService>();
 
-                            var conversationService = scope.ServiceProvider
-                                .GetRequiredService<ISupportConversationService>();
+                          
+                            var conversation = await conversationService.GetSupportConversationHavePendingByCustomerIdAsync(customerId, providerId);
+                            if (conversation == null || conversation.IsDistributed) { await CleanupRedis(db, keyStr, lastKey); continue; }
 
-                            var taskService = scope.ServiceProvider
-                                .GetRequiredService<ITaskAssignmentService>();
-
-                            var conversation = await conversationService
-                                .GetSupportConversationHavePendingByCustomerIdAsync(customerId, providerId);
-
-                            if (conversation == null)
-                            {
-
-                                await db.KeyDeleteAsync(key);
-                                await db.KeyDeleteAsync(lastKey);
-                                await db.SetRemoveAsync("chat_keys", key.ToString());
-                                continue;
-                            }
-
-                            if (conversation.IsDistributed)
-                            {
-
-                                await db.KeyDeleteAsync(key);
-                                await db.KeyDeleteAsync(lastKey);
-                                await db.SetRemoveAsync("chat_keys", key.ToString());
-                                continue;
-                            }
-
+                       
                             var text = string.Join(" ", messages.Select(x => x.ToString()));
+                            _logger.LogInformation("[AGGREGATION] Calling AI for Customer: {Id}", customerId);
 
-                            _logger.LogInformation($"[AGGREGATION] TEXT = {text}");
+                            await taskService.ProcessTask(new PredictRequest { Message = text }, conversation.Id);
 
+                          
+                            var updatedConv = await conversationService.GetSupportConversationByIdAsync(conversation.Id);
 
-                            var predictReqet = new PredictRequest
+                            if (updatedConv?.ActiveStaffId != null)
                             {
-                                Message = text,
-                            };
-
-                            await taskService.ProcessTask(predictReqet, conversation.Id);
-
-                            var updatedConversation = await conversationService
-                            .GetSupportConversationHavePendingByCustomerIdAsync(customerId, providerId);
-
-                            if (updatedConversation?.ActiveStaffId != null)
-                            {
-                                var mergeService = scope.ServiceProvider
-                                    .GetRequiredService<ICustomerMergeService>();
-
-                                await mergeService.SendFormLinkIfNeededAsync(updatedConversation);
+                                _logger.LogInformation("[AGGREGATION] Staff assigned: {Staff}. Sending Link...", updatedConv.ActiveStaffId);
+                              
+                                await mergeService.SendFormLinkIfNeededAsync(updatedConv);
                             }
 
-                            _logger.LogInformation($"[AGGREGATION] Done key={key}");
-
-                            // cleanup
-                            await db.KeyDeleteAsync(key);
-                            await db.KeyDeleteAsync(lastKey);
-                            await db.SetRemoveAsync("chat_keys", key.ToString());
-
+                           
+                            await CleanupRedis(db, keyStr, lastKey);
+                            _logger.LogInformation("[AGGREGATION] Done & Cleaned: {Key}", keyStr);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "[AGGREGATION] Error processing key={key}", key);
-                            await db.KeyDeleteAsync(key);
-                            await db.KeyDeleteAsync(lastKey);
-                            await db.SetRemoveAsync("chat_keys", key.ToString());
+                            _logger.LogError(ex, "[AGGREGATION] Error processing key={Key}", keyStr);
+                           
+                            await CleanupRedis(db, keyStr, lastKey);
                         }
                         finally
                         {
@@ -198,13 +117,17 @@ namespace OmniChat.Application.Services.BackgroundJobs
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "[AGGREGATION] Loop error");
+                    _logger.LogError(ex, "[AGGREGATION] Global loop error");
                 }
-
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(2000, stoppingToken);
             }
+        }
 
-            _logger.LogInformation("[AGGREGATION] Worker stopped");
+        private async Task CleanupRedis(IDatabase db, string key, string lastKey)
+        {
+            await db.KeyDeleteAsync(key);
+            await db.KeyDeleteAsync(lastKey);
+            await db.SetRemoveAsync("chat_keys", key);
         }
     }
 }

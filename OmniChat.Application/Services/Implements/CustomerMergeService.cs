@@ -63,12 +63,12 @@ namespace OmniChat.Application.Services.Implements
 
             _logger.LogInformation("Merging profiles | Source: {SourceId} -> Target: {TargetId}", source.Id, target.Id);
 
-            
+
             target.FacebookSenderId ??= source.FacebookSenderId;
             target.ZaloSenderId ??= source.ZaloSenderId;
             target.InstagramSenderId ??= source.InstagramSenderId;
 
-          
+
             target.CustomerName = MergeField(target.CustomerName, source.CustomerName);
             target.Email = MergeField(target.Email, source.Email);
             target.PhoneNumber = MergeField(target.PhoneNumber, source.PhoneNumber);
@@ -76,16 +76,16 @@ namespace OmniChat.Application.Services.Implements
             target.AvatarUrl = MergeField(target.AvatarUrl, source.AvatarUrl);
             target.IsNewCustomer = false;
 
-         
+
             await _customerMessageService.UpdateCustomerMessageAfterMergeAsync(source, target);
             await _supportConversationService.UpdateConversationAfterMergeAsync(source, target);
 
             customerRepo.Update(target);
 
-           
+
             await _unitOfWork.CommitAsync();
             _logger.LogInformation("Committed FK re-assignments and target update");
-         
+
             await customerRepo.DeleteAsync(x => x.Id == source.Id);
             await _unitOfWork.CommitAsync();
             _logger.LogInformation("Deleted source profile {SourceId}", source.Id);
@@ -153,7 +153,7 @@ namespace OmniChat.Application.Services.Implements
             current.IsProfileCompleted = true;
 
             await _walletService.CreateWallet(current.Id);
-            
+
             repo.Update(current);
 
             await _unitOfWork.CommitAsync();
@@ -178,69 +178,87 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task SendFormLinkIfNeededAsync(SupportConversation conversation)
         {
-            _logger.LogInformation("Check SendFormLink | ConversationId: {Id}", conversation.Id);
-
-            if (conversation.ActiveCustomerId == null || conversation.ActiveStaffId == null)
-            {
-                _logger.LogWarning("Missing customer or staff in conversation {Id}", conversation.Id);
-                return;
-            }
-
-            var customer = await _customerProfileService
-                .GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
-
-            if (customer.IsFormSent)
-            {
-                _logger.LogInformation("Form already sent to customer {CustomerId}", customer.Id);
-                return;
-            }
-
-
-            var formLink = $"https://customer-form-black.vercel.app/?profileId={customer.Id}";
-            _logger.LogInformation("Sending form link to customer {CustomerId}", customer.Id);
-
-            var message = $@"
-            Chào bạn 
-
-            Để hỗ trợ bạn tốt hơn, vui lòng điền thông tin tại đây:
-            {formLink}
-            ";
-
+            
             using var scope = _serviceScopeFactory.CreateScope();
-            var messageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
+            var scopedCustomerService = scope.ServiceProvider.GetRequiredService<ICustomerProfileService>();
+            var scopedMessageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
 
-            var ZALO_PROVIDER_ID = Guid.Parse("bb4a4a44-4b03-442f-9a5e-a43ad45391a0");
-            var FACEBOOK_PROVIDER_ID = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
-
-            if (conversation.ProvidersId == ZALO_PROVIDER_ID)
+            try
             {
-                _logger.LogInformation("Matched ZALO");
-                await messageService.SendZaloMessageAsync(new CreateSupportStaffMessageRequest
+                if (conversation.ActiveCustomerId == null) return;
+
+                _logger.LogInformation(">>> [STEP 1] Start SendFormLink for Customer: {Id}", conversation.ActiveCustomerId);
+
+               
+                var customer = await scopedCustomerService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
+
+                if (customer == null)
+                {
+                    _logger.LogWarning(">>> [STEP 2] Customer not found in DB!");
+                    return;
+                }
+
+                if (customer.IsFormSent)
+                {
+                    _logger.LogInformation(">>> [STEP 2] Link already sent for Customer {Id}. Skipping.", customer.Id);
+                    return;
+                }
+
+                var ZALO_ID = Guid.Parse("bb4a4a44-4b03-442f-9a5e-a43ad45391a0");
+                var FB_ID = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
+
+                var message = $"Chào bạn, vui lòng bổ sung thông tin tại đây để chúng tôi hỗ trợ tốt nhất: https://customer-form-black.vercel.app/?profileId={customer.Id}";
+
+                var request = new CreateSupportStaffMessageRequest
                 {
                     SupportConversationId = conversation.Id,
-                    StaffId = conversation.ActiveStaffId.Value,
+                    StaffId = conversation.ActiveStaffId ?? Guid.Empty,
                     Content = message
-                });
-                _logger.LogInformation("Sending Zalo form successfully");
-            }
-            else if (conversation.ProvidersId == FACEBOOK_PROVIDER_ID)
-            {
-                _logger.LogInformation("Matched FACEBOOK");
-                await messageService.SendFacebookMesageAsync(new CreateSupportStaffMessageRequest
-                {
-                    SupportConversationId = conversation.Id,
-                    StaffId = conversation.ActiveStaffId.Value,
-                    Content = message
-                });
-                _logger.LogInformation("Sending Facebook form successfully");
-            }
-            else
-            {
-                _logger.LogWarning("NO MATCH PROVIDER !!! {ProviderId}", conversation.ProvidersId);
-            }
+                };
 
-            await _customerProfileService.UpdateIsformSentCustomerProfileAsync(customer.Id);
-            _logger.LogInformation("Marked form as sent for customer {CustomerId}", customer.Id);
+                _logger.LogInformation(">>> [STEP 3] Calling API for Provider: {PId}", conversation.ProvidersId);
+
+                bool canUpdateDb = false;
+                try
+                {
+                    if (conversation.ProvidersId == ZALO_ID)
+                    {
+                        _logger.LogInformation(">>> [API] Sending Zalo Message...");
+                        await scopedMessageService.SendZaloMessageAsync(request);
+                        canUpdateDb = true;
+                    }
+                    else if (conversation.ProvidersId == FB_ID)
+                    {
+                        _logger.LogInformation(">>> [API] Sending Facebook Message...");
+                        await scopedMessageService.SendFacebookMesageAsync(request);
+                        canUpdateDb = true;
+                    }
+                    else
+                    {
+                        _logger.LogWarning(">>> [API] Unknown Provider ID: {Id}", conversation.ProvidersId);
+                    }
+                }
+                catch (Exception apiEx)
+                {
+                   
+                    _logger.LogError(">>> [API ERROR] Provider API Failed: {Msg}", apiEx.Message);
+
+                  
+                    canUpdateDb = true;
+                }
+
+                if (canUpdateDb)
+                {
+                    _logger.LogInformation(">>> [DB] Updating IsFormSent flag for Customer {Id}", customer.Id);
+                    await scopedCustomerService.UpdateIsformSentCustomerProfileAsync(customer.Id);
+                    _logger.LogInformation(">>> [SUCCESS] Process finished for Customer {Id}", customer.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ">>> [FATAL ERROR] System failure in SendFormLinkIfNeededAsync for Customer {Id}", conversation.ActiveCustomerId);
+                throw; 
+            }
         }
     }
 }

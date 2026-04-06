@@ -48,6 +48,8 @@ app.Run();
 
 void ConfigureServices()
 {
+    builder.Services.AddHttpClient();
+
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
