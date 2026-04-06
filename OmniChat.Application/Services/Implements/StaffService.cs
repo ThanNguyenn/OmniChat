@@ -264,41 +264,41 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
     public async Task<StaffDassboardResponse> GetStaffDassboardByIdAsync(Guid staffId)
     {
+        var now = DateTime.UtcNow;
         var taskRepo = _unitOfWork.GetRepository<SupportTask>();
         var orderRepo = _unitOfWork.GetRepository<Order>();
+        var performanceRepo = _unitOfWork.GetRepository<StaffPerformance>();
 
-        var totalDoneTask = await taskRepo.CountAsync(
-            t => t.CurrentAssignedStaffId == staffId &&
-                 t.Status == SupportTaskStatus.Done);
+        // Lấy performance current month
+        var currentPerformance = await performanceRepo.SingleOrDefaultAsync(
+            predicate: x => x.StaffId == staffId &&
+                            x.FromTime <= now &&
+                            x.ToTime >= now
+        );
 
         var totalCreateOrder = await orderRepo.CountAsync(
             o => o.CreatorId == staffId &&
-                 o.IsDeleted != true);
-
-        var totalTask = await taskRepo.CountAsync(
-            t => t.CurrentAssignedStaffId == staffId);
-
-        var tasks = await taskRepo.GetListAsync( predicate:
-            t => t.CurrentAssignedStaffId == staffId &&
-                 t.Status == SupportTaskStatus.Done &&
-                 t.CreatedAt != null &&
-                 t.CompleteDate != null);
-
-        var avgResolveTime = tasks.Any()
-            ? tasks.Average(t => (t.CompleteDate.Value - t.CreatedAt.Value).TotalMinutes)
-            : 0;
-
-        double performance = totalTask == 0
-            ? 0
-            : (double)totalDoneTask / totalTask * 100;
+                 o.IsDeleted != true
+        );
 
         return new StaffDassboardResponse
         {
-            TotalDoneTask = totalDoneTask,
+            TotalDoneTask = currentPerformance?.TaskCompleted ?? 0,
             TotalCreateOrder = totalCreateOrder,
-            AfferageResolveTime = avgResolveTime / 60.0,
-            StaffPerformance = Math.Round(performance, 2)
+            AfferageResolveTime = currentPerformance?.AvgTaskHandleTime / 60.0 ?? 0, 
+            StaffPerformance = CalculatePerformanceScore(currentPerformance)
         };
+    }
+
+    private double CalculatePerformanceScore(StaffPerformance? performance)
+    {
+        if (performance == null) return 0;
+
+        var total = performance.TaskCompleted + performance.CancelledCount + performance.ReassignmentCount;
+
+        if (total == 0) return 0;
+
+        return Math.Round((double)performance.TaskCompleted / total * 100, 2);
     }
 
     public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId,StaffTaskFilterRequest request)

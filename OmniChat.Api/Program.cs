@@ -167,6 +167,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<ISupportStaffMessageService, SupportStaffMessageService>();
     builder.Services.AddScoped<ISupportConversationService, SupportConversationService>();
     builder.Services.AddScoped<ISupportTaskService, SupportTaskService>();
+    builder.Services.AddScoped<IStaffPerformanceService, StaffPerformanceService>();
     builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
     builder.Services.AddScoped<IClaimTypeService, ClaimTypeService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
@@ -199,8 +200,11 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<RefreshTokenCleanUpWorker>();
     builder.Services.AddHostedService<WebhookBackgroundWorker>();
     builder.Services.AddHostedService<ConversationReminderWorker>();
+    builder.Services.AddHostedService<StaffPerformanceWorker>();
     builder.Services.AddHostedService<ChatAggregationWorker>();
 }
+
+
 
 // add signalR
 void ConfigureSignalRServices()

@@ -22,13 +22,13 @@ namespace OmniChat.Infrastructure.Models
 
         public int ConversationOwned { get; set; }
 
-        public int TotalTaskHandleTime { get; set; }
+        public int TotalTaskHandleTime { get; set; } //TotalTaskHandleTime += (CompleteDate - CreatedAt).TotalSeconds
 
-        public int TotalFirstResponseTime { get; set; }
-        
-        public double? AvgTaskHandleTime { get; set; } 
+        public int TotalFirstResponseTime { get; set; } //TotalFirstResponseTime += (FirstResponseAt - CreatedDate).TotalSeconds
 
-        public double? AvgFirstResponseTime { get; set; }
+        public double? AvgTaskHandleTime { get; set; }  // TotalTaskHandleTime / TaskCompleted
+
+        public double? AvgFirstResponseTime { get; set; } // AvgFirstResponseTime = TotalFirstResponseTime / ConversationOwned
 
         public DateTime? FromTime { get; set; }
 

@@ -82,8 +82,27 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                 bool needUpdate = false;
 
+
+                // close conversation if customer does not reply after 24 minutes of staff message
+                //  if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
+                if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
+                {
+                    _logger.LogInformation("Conversation close");
+                    convo.Status = ConversationStatus.Complete;
+                    convo.CloseAt = now;
+                    needUpdate = true;
+                    // complete task and complete conversation -> increate staff performance
+
+                    using var taskScope = _serviceProvider.CreateScope();
+                    var performanceService = taskScope.ServiceProvider
+                        .GetRequiredService<IStaffPerformanceService>();
+
+                    await performanceService.CompleteConversationAndTasksAsync(convo);
+                }
+
                 // send reminder if customer does not reply after 23 hours of staff message 
-                if (diff.TotalHours >= 23 && !convo.ReminderSent)
+                //else if (diff.TotalHours >= 23 && !convo.ReminderSent)
+                else if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
                 {
                     _logger.LogInformation("Conversation send remider");
                     using var sendScope = _serviceProvider.CreateScope();
@@ -94,17 +113,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     convo.ReminderSent = true;
                     needUpdate = true;
                 }
-
-                // close conversation if customer does not reply after 24 minutes of staff message
-                else if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
-                {
-                    _logger.LogInformation("Conversation close");
-                    convo.Status = ConversationStatus.Complete;
-                    convo.CloseAt = now;
-                    needUpdate = true;
-                    // complete task and complete conversation -> increate staff performance
-                }
-
 
                 if (needUpdate)
                 {
