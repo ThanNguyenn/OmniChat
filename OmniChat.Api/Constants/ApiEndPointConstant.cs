@@ -63,6 +63,12 @@ public class ApiEndPointConstant
            CustomerProfile + "/enrich";
     }
 
+    public  static class StaffPerformanceEndPoint
+    {
+        public const string StaffPerformance = ApiV1 + "/staff-performance";
+        public const string InitializePerformanceForStaff = StaffPerformance + "/initialize-performance/{staffId}";
+    }
+
     public static class SupportStaffMessageEndPoint
     {
         public const string SupportStaffMessage = ApiV1 + "/support-staff-message";

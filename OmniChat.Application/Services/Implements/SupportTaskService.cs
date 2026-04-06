@@ -18,8 +18,11 @@ namespace OmniChat.Application.Services.Implements
 {
     public class SupportTaskService : BaseService<SupportTaskService>, ISupportTaskService
     {
-        public SupportTaskService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportTaskService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IStaffPerformanceService _staffPerformanceService;
+
+        public SupportTaskService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportTaskService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IStaffPerformanceService staffPerformanceService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _staffPerformanceService = staffPerformanceService;
         }
 
         public async Task<IEnumerable<SupportTask>> GetDoneSupportTaskByConversationIdAsync(Guid conversationId)
@@ -77,27 +80,40 @@ namespace OmniChat.Application.Services.Implements
             return supportTasks;
         }
 
-        public async Task<bool> CompleteTaskAsync(Guid TaskId)
+        public async Task<bool> CompleteTaskAsync(Guid taskId)
         {
             var repo = _unitOfWork.GetRepository<SupportTask>();
-
-            var existSupportTask = await repo.GetByIdAsync(TaskId);
+            var existSupportTask = await repo.GetByIdAsync(taskId);
 
             if (existSupportTask == null)
-            {
                 throw new NotFoundException("No SupportTask found");
-                
-            }
 
             if (existSupportTask.Status == SupportTaskStatus.Done)
-            {
                 throw new BadRequestException("Task already completed");
-            }
+
+            var now = DateTime.UtcNow;
+
+           
+            var handleTime = existSupportTask.CreatedAt.HasValue
+                ? (int)(now - existSupportTask.CreatedAt.Value).TotalSeconds
+                : 0;
 
             existSupportTask.Status = SupportTaskStatus.Done;
-       
-           await _unitOfWork.CommitAsync();
+            existSupportTask.CompleteDate = now;
+
+            await _unitOfWork.CommitAsync();
+
+           
+            if (existSupportTask.CurrentAssignedStaffId.HasValue)
+            {
+                await _staffPerformanceService.UpdatePerformanceOnTaskCompleteAsync(
+                    existSupportTask.CurrentAssignedStaffId.Value,
+                    handleTime
+                );
+            }
+
             return true;
         }
+
     }
 }
