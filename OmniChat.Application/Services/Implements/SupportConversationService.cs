@@ -38,7 +38,10 @@ namespace OmniChat.Application.Services.Implements
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
-            var exitSupportConversation = await repo.SingleOrDefaultAsync(predicate: sc => sc.Id == conversationId);
+            var exitSupportConversation = await repo.SingleOrDefaultAsync(predicate:sc => sc.Id == conversationId, 
+                include: sc => sc
+                    .Include(c => c.Staff)
+                    .Include(c => c.Providers));
 
             if (exitSupportConversation == null)
                 throw new NotFoundException("No supportConversation Found");

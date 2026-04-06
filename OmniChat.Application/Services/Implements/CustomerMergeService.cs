@@ -178,7 +178,6 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task SendFormLinkIfNeededAsync(SupportConversation conversation)
         {
-            
             using var scope = _serviceScopeFactory.CreateScope();
             var scopedCustomerService = scope.ServiceProvider.GetRequiredService<ICustomerProfileService>();
             var scopedMessageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
@@ -187,27 +186,16 @@ namespace OmniChat.Application.Services.Implements
             {
                 if (conversation.ActiveCustomerId == null) return;
 
-                _logger.LogInformation(">>> [STEP 1] Start SendFormLink for Customer: {Id}", conversation.ActiveCustomerId);
+                var customer = await scopedCustomerService
+                    .GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
 
-               
-                var customer = await scopedCustomerService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
-
-                if (customer == null)
-                {
-                    _logger.LogWarning(">>> [STEP 2] Customer not found in DB!");
-                    return;
-                }
-
-                if (customer.IsFormSent)
-                {
-                    _logger.LogInformation(">>> [STEP 2] Link already sent for Customer {Id}. Skipping.", customer.Id);
-                    return;
-                }
+                if (customer == null || customer.IsFormSent) return;
 
                 var ZALO_ID = Guid.Parse("bb4a4a44-4b03-442f-9a5e-a43ad45391a0");
                 var FB_ID = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
 
-                var message = $"Chào bạn, vui lòng bổ sung thông tin tại đây để chúng tôi hỗ trợ tốt nhất: https://customer-form-black.vercel.app/?profileId={customer.Id}";
+                var message = $"Chào bạn, vui lòng bổ sung thông tin tại đây để chúng tôi hỗ trợ tốt nhất: " +
+                              $"https://customer-form-black.vercel.app/?profileId={customer.Id}";
 
                 var request = new CreateSupportStaffMessageRequest
                 {
@@ -216,48 +204,35 @@ namespace OmniChat.Application.Services.Implements
                     Content = message
                 };
 
-                _logger.LogInformation(">>> [STEP 3] Calling API for Provider: {PId}", conversation.ProvidersId);
-
                 bool canUpdateDb = false;
                 try
                 {
                     if (conversation.ProvidersId == ZALO_ID)
-                    {
-                        _logger.LogInformation(">>> [API] Sending Zalo Message...");
                         await scopedMessageService.SendZaloMessageAsync(request);
-                        canUpdateDb = true;
-                    }
                     else if (conversation.ProvidersId == FB_ID)
-                    {
-                        _logger.LogInformation(">>> [API] Sending Facebook Message...");
                         await scopedMessageService.SendFacebookMesageAsync(request);
-                        canUpdateDb = true;
-                    }
                     else
                     {
-                        _logger.LogWarning(">>> [API] Unknown Provider ID: {Id}", conversation.ProvidersId);
+                        _logger.LogWarning("Unknown Provider ID: {Id}", conversation.ProvidersId);
+                        return;
                     }
+
+                    canUpdateDb = true;
                 }
                 catch (Exception apiEx)
                 {
-                   
-                    _logger.LogError(">>> [API ERROR] Provider API Failed: {Msg}", apiEx.Message);
-
-                  
-                    canUpdateDb = true;
+                    _logger.LogError("Provider API Failed: {Msg}", apiEx.Message);
+                    canUpdateDb = false;
                 }
 
                 if (canUpdateDb)
-                {
-                    _logger.LogInformation(">>> [DB] Updating IsFormSent flag for Customer {Id}", customer.Id);
                     await scopedCustomerService.UpdateIsformSentCustomerProfileAsync(customer.Id);
-                    _logger.LogInformation(">>> [SUCCESS] Process finished for Customer {Id}", customer.Id);
-                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ">>> [FATAL ERROR] System failure in SendFormLinkIfNeededAsync for Customer {Id}", conversation.ActiveCustomerId);
-                throw; 
+                _logger.LogError(ex, "FATAL ERROR in SendFormLinkIfNeededAsync for Customer {Id}",
+                    conversation.ActiveCustomerId);
+                throw;
             }
         }
     }
