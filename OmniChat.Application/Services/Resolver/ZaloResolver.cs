@@ -229,31 +229,30 @@ namespace OmniChat.Application.Services.Resolver
                     newMessage.Id
                 );
 
-                var updatedConversation = await _supportConversationService
-                .GetSupportConversationByIdAsync(conversation.Id);
-                updatedConversation.UpdateDate = DateTime.UtcNow;
-                updatedConversation.LastCustomerMessageAt = DateTime.UtcNow;
-                updatedConversation.ReminderSent = false;
-                await _supportConversationService.UpdateConversationAsync(updatedConversation);
 
-                if (updatedConversation.ActiveStaffId != null)
+                conversation.UpdateDate = DateTime.UtcNow;
+                conversation.LastCustomerMessageAt = DateTime.UtcNow;
+                conversation.ReminderSent = false;
+                await _supportConversationService.UpdateConversationAsync(conversation);
+
+                if (conversation.ActiveStaffId != null)
                 {
                    
 
-                    var unreadCount = await CountUnreadMessagesByConversationIdAsync(updatedConversation.Id);
+                    var unreadCount = await CountUnreadMessagesByConversationIdAsync(conversation.Id);
 
                     var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                     {
-                        ConversationId = updatedConversation.Id,
-                        CustomerName = updatedConversation.CustomerName,
-                        avartarUrl = updatedConversation.AvatarUrl,
+                        ConversationId = conversation.Id,
+                        CustomerName = conversation.CustomerName,
+                        avartarUrl = conversation.AvatarUrl,
                         providerName = provider.ProviderName,
                         LastMessage = newMessage.Content,
                         UnreadMessage = unreadCount,
                     };
 
                     await _hubContext.Clients
-                        .User(updatedConversation.ActiveStaffId.ToString())
+                        .User(conversation.ActiveStaffId.ToString())
                         .SendAsync("SidebarUpdated", sidebarUpdate);
 
                     var extractResult = await _messageKeywordFilterService.ExtractKeywords(newMessage.Content);
@@ -271,7 +270,7 @@ namespace OmniChat.Application.Services.Resolver
                     };
 
                     await _hubContext.Clients
-                        .Group($"conversation:{updatedConversation.Id}")
+                        .Group($"conversation:{conversation.Id}")
                         .SendAsync("CustomerReceiveMessage", supportConversationMessages);
                 }
             }
