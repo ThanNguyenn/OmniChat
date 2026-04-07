@@ -93,7 +93,7 @@ namespace OmniChat.Application.Services.Implements
 
             var now = DateTime.UtcNow;
 
-           
+
             var handleTime = existSupportTask.CreatedAt.HasValue
                 ? (int)(now - existSupportTask.CreatedAt.Value).TotalSeconds
                 : 0;
@@ -103,7 +103,7 @@ namespace OmniChat.Application.Services.Implements
 
             await _unitOfWork.CommitAsync();
 
-           
+
             if (existSupportTask.CurrentAssignedStaffId.HasValue)
             {
                 await _staffPerformanceService.UpdatePerformanceOnTaskCompleteAsync(
@@ -115,5 +115,24 @@ namespace OmniChat.Application.Services.Implements
             return true;
         }
 
+        public async Task<IEnumerable<TaskIntentDashboardResponse>> GetTaskIntentDashboardResponsesAsync(DateTime from, DateTime to)
+        {
+            var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
+
+            var query = supportTaskRepo.GetQueryable(
+                predicate: t => t.CreatedAt.HasValue &&
+                                t.CreatedAt.Value.Date >= from.Date &&
+                                t.CreatedAt.Value.Date <= to.Date,
+                asNoTracking: true
+            )
+            .GroupBy(t => t.IntentType.TypeName)
+            .Select(g => new TaskIntentDashboardResponse
+            {
+                IntentName = g.Key,
+                TaskCount = g.Count()
+            });
+
+            return await query.ToListAsync();
+        }
     }
 }
