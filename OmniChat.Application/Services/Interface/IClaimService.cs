@@ -1,5 +1,6 @@
 ﻿using OmniChat.Infrastructure.Dtos.Requests.Claim;
 using OmniChat.Infrastructure.Dtos.Responses.Claim;
+using OmniChat.Infrastructure.Metadatas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,11 @@ namespace OmniChat.Application.Services.Interface
     {
         public  Task<bool> CreateClaimAsync(CreateClaimRequest claimRequest);
 
-        public  Task<IEnumerable<ClaimDetailResponse>> GetAllClaim();
+        public  Task<ClaimDashboardResponse> GetClaimDashboardAsync();
+
+        public  Task<PagingResponse<ClaimDetailResponse>> GetPendingClaimAsync(int pageIndex = 1, int pageSize = 10);
+
+        public Task<PagingResponse<ClaimDetailResponse>> GetClaimHistoryAsync(int pageIndex = 1, int pageSize = 10);
 
         public  Task<IEnumerable<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId);
 

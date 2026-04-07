@@ -19,19 +19,41 @@ namespace OmniChat.Api.Controllers
             _claimService = claimService;
         }
 
-        [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetAll)]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ClaimDetailResponse>>), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetHistory)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<ClaimDetailResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
-        Summary = "Lấy tất cả Claim",
-        Description = "Lấy thông tin của tất cả Claim")]
-        public async Task<IActionResult> GetAllAsync()
+            Summary = "Lấy lịch sử Claim",
+            Description = "Lấy danh sách Claim đã xử lý (không bao gồm Pending)")]
+        public async Task<IActionResult> GetClaimHistoryAsync(
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 10)
         {
-            var claims = await _claimService.GetAllClaim();
+            var claims = await _claimService.GetClaimHistoryAsync(pageIndex, pageSize);
 
-            return Ok(new ApiResponse<IEnumerable<ClaimDetailResponse>>
+            return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get All Claim Successfully",
+                Message = "Get Claim History Successfully",
+                IsSuccess = true,
+                Data = claims
+            });
+        }
+
+        [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetPending)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<ClaimDetailResponse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+        Summary = "Lấy danh sách Claim đang chờ xử lý",
+        Description = "Lấy các Claim có trạng thái Pending")]
+        public async Task<IActionResult> GetPendingClaimsAsync(
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 10)
+        {
+            var claims = await _claimService.GetPendingClaimAsync(pageIndex, pageSize);
+
+            return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Pending Claims Successfully",
                 IsSuccess = true,
                 Data = claims
             });
@@ -51,6 +73,24 @@ namespace OmniChat.Api.Controllers
             {
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Create Claim Successfully",
+                IsSuccess = true,
+                Data = result
+            });
+        }
+
+        [HttpGet(ApiEndPointConstant.ClaimEndPoint.Dashboard)]
+        [ProducesResponseType(typeof(ApiResponse<ClaimDashboardResponse>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+        Summary = "Claim Dashboard",
+        Description = "Thống kê số lượng claim theo trạng thái")]
+        public async Task<IActionResult> GetClaimDashboardAsync()
+        {
+            var result = await _claimService.GetClaimDashboardAsync();
+
+            return Ok(new ApiResponse<ClaimDashboardResponse>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Claim Dashboard Successfully",
                 IsSuccess = true,
                 Data = result
             });

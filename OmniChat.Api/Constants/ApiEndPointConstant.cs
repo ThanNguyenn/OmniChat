@@ -160,8 +160,9 @@ public class ApiEndPointConstant
     public static class ClaimEndPoint
     {
         public const string Base = "api/v1/claims";
-
-        public const string GetAll = Base;
+        public const string GetPending = Base + "/pending";
+        public const string GetHistory = Base + "/history";
+        public const string Dashboard = Base + "/dashboard";
         public const string Create = Base;
         public const string Update = Base + "/{id}";
         public const string Approve = Base + "/{id}/approve";
