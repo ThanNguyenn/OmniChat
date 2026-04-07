@@ -193,6 +193,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IInvoiceService, InvoiceService>();
     builder.Services.AddScoped<ICreditNoteService, CreditNoteService>();
     builder.Services.AddScoped<IPostSaleRequestService, PostSaleRequestService>();
+    builder.Services.AddScoped<IConversationWarningService, ConversationWarningService>();
 }
 
 void RegisterBackgroundServices()
@@ -204,6 +205,7 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<ConversationReminderWorker>();
     builder.Services.AddHostedService<StaffPerformanceWorker>();
     builder.Services.AddHostedService<ChatAggregationWorker>();
+    builder.Services.AddHostedService<ConversationWarningWorker>();
 }
 
 
