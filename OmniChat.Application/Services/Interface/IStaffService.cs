@@ -20,13 +20,19 @@ public interface IStaffService
 
     Task<bool> DeleteStaffAsync(Guid StaffId);
 
-    public  Task<StaffDassboardResponse> GetStaffDassboardByIdAsync(Guid staffId);
+    public Task<StaffDassboardResponse> GetStaffDassboardByIdAsync(Guid staffId);
 
-    public  Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId, StaffTaskFilterRequest request);
+    public Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId, StaffTaskFilterRequest request);
 
-    Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(string? search = null , IEnumerable<Guid>? deparmentIds = null, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
+    Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(string? search = null, IEnumerable<Guid>? deparmentIds = null, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 
     Task<bool> AssignIntentToStaffAsync(Guid staffId, IEnumerable<AssignStaffToIntentTypeRequest> requests);
 
-    Task <bool> UnassignIntentFromStaffAsync(Guid staffId, AssignStaffToIntentTypeRequest unassignStaffFromIntentTypeRequest);
+    Task<bool> UnassignIntentFromStaffAsync(Guid staffId, AssignStaffToIntentTypeRequest unassignStaffFromIntentTypeRequest);
+
+    public Task AssignShipperOrderAsync(Guid shipperId, Guid orderId);
+
+    public Task<PagingResponse<ShipperResposne>> GetShippersAsync(int pageIndex = 1, int pageSize = 10);
+
+    public  Task<ShipperResposne> GetShipperByShipperIdAsync(Guid shipperId);
 }
