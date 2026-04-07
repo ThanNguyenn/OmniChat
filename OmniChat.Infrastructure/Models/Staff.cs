@@ -53,6 +53,8 @@ namespace OmniChat.Infrastructure.Models
         public virtual ICollection<PostSaleRequest> PostSaleRequestsResolved { get; set; } = new List<PostSaleRequest>();
 
         public virtual ICollection<StaffPerformance> StaffPerformances { get; set; } = new List<StaffPerformance>();
+
+        public virtual ICollection<ConversationWarning> ConversationWarnings { get; set; } = new List<ConversationWarning>();
     }
 
     public enum StaffStatus

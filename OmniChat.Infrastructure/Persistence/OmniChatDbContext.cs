@@ -55,6 +55,8 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<SupportConversation> SupportConversations { get; set; }
 
+        public DbSet<ConversationWarning> ConversationWarnings { get; set; }
+
         public DbSet<FeedBack> FeedBacks { get; set; }
 
         public DbSet<Notification> Notifications { get; set; }
@@ -192,6 +194,10 @@ namespace OmniChat.Infrastructure.Persistence
 
             modelBuilder.Entity<Allocation>()
                 .Property(a => a.AllocationType)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<ConversationWarning>()
+                .Property(cw => cw.WarningType)
                 .HasConversion<string>();
 
             // default value IsActive = true
@@ -740,6 +746,34 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Notification>()
                 .HasIndex(nf => new { nf.ConversationId, nf.IsRead }); // index scan nofitication by conversation and isread fasters
 
+            // ==== Staff - SupportConversationWarning ( one to Many ) ====
+            modelBuilder.Entity<ConversationWarning>()
+                .HasKey(cw => cw.Id);
+
+            //Auto gen Guid Id ConversationWarning
+            modelBuilder.Entity<ConversationWarning>()
+                .Property(cw => cw.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<Staff>()
+                .HasMany(s => s.ConversationWarnings)
+                .WithOne(cw => cw.Staff)
+                .HasForeignKey(cw => cw.StaffId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ConversationWarning>()
+                .HasIndex(cw => cw.StaffId); // index scan ConversationWarning by staff faster
+
+            // ==== SupportConversation - ConversationWarning ( one to Many ) ====
+            modelBuilder.Entity<SupportConversation>()
+                .HasMany(sc => sc.ConversationWarnings)
+                .WithOne(cw => cw.Conversation)
+                .HasForeignKey(cw => cw.ConversationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ConversationWarning>()
+                .HasIndex(cw => new { cw.ConversationId, cw.WarningType }); // index scan ConversationWarning by conversation and warning type faster
 
             // ==== Staff - SupportStaffMessage ( one to Many ) ====
 

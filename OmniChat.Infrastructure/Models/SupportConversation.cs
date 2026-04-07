@@ -56,6 +56,8 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<SupportTask> SupportTasks { get; set; } = new List<SupportTask>();
 
+        public virtual ICollection<ConversationWarning> ConversationWarnings { get; set; } = new List<ConversationWarning>();
+
     }
 
     public enum ConversationStatus
