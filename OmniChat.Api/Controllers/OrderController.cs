@@ -156,4 +156,21 @@ public class OrderController : BaseController<OrderController>
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders retrieved successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
+
+    [HttpGet(ApiEndPointConstant.Order.Dashboard)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetOrderResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy order dashboard info",
+        Description = "Lấy order dashboard info theo datetime UTC."
+    )]
+    public async Task<IActionResult> GetOrderDashboardInfo([FromQuery] DateTime from, [FromQuery] DateTime to)
+    {
+        var result = await _orderService.GetOrderDashBoardByStatusesAsync(from, to);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order dashboard info retrieved successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+
+    }
 }

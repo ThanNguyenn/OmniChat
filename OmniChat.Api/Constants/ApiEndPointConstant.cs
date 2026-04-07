@@ -84,6 +84,7 @@ public class ApiEndPointConstant
         public const string SupportTask = ApiV1 + "/support-task";
         public const string CompleteSupportTask = SupportTask + "/{id}/complete-task";
         public const string GetSupportTaskByConversationId = SupportTask + "/conversation/{conversationId}";
+        public const string GetTaskIntentDashboard = SupportTask + "/{id}/dashboard";
     }
 
     public static class SupportConversationEndPoint
@@ -185,7 +186,7 @@ public class ApiEndPointConstant
         public const string GetByCustomerId = "customer/{customerId}/get";
         public const string CancelOrder = "{id}/cancel";
         public const string CompleteDeliveredOrder = "{id}/complete-delivery";
-
+        public const string Dashboard = "dashboard";
     }
 
     public static class FacebookOAuthToken
@@ -235,5 +236,23 @@ public class ApiEndPointConstant
         public const string Base = ApiV1 + "/conversation-warnings";
         public const string GetAll = Base + "/get";
         public const string GetById = Base + "/{id}/warning";
+    }
+    public static class Keyword
+    {
+        public const string Base = ApiV1 + "/keywords";
+        public const string Create = "create";
+        public const string Update = "update/{id}";
+        public const string Delete = "delete/{id}";
+        public const string GetAll = "get";
+        public const string GetById = "get/{id}";
+
+    }
+
+    public static class  Invoice
+    {
+        public const string Base = ApiV1 + "/invoices";
+        public const string TotalRevenue = Base + "/total-revenue";
+        public const string TotalUnpaid = Base + "/total-unpaid";
+
     }
 }

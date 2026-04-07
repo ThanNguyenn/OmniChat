@@ -168,4 +168,39 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             .ToList();
     }
 
+    public async Task<double> TotalIncomeByTime(DateTime from, DateTime to)
+    {
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
+
+        var fromDate = from.Date;
+        var toDateExclusive = to.Date.AddDays(1);
+
+        return await invoiceRepo.GetQueryable(
+                i => i.CompletedDate.HasValue &&
+                     i.CompletedDate.Value >= fromDate &&
+                     i.CompletedDate.Value < toDateExclusive &&
+                     (i.InvoiceStatus == InvoiceStatus.Completed ||
+                      i.InvoiceStatus == InvoiceStatus.PartialPaid),
+                asNoTracking: true
+            )
+            .SumAsync(i => (double?)i.PaidAmount) ?? 0;
+    }
+
+
+    public async Task<double> TotalUnpaidAmountByTime(DateTime from, DateTime to)
+    {
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
+
+        var fromDate = from.Date;
+        var toDateExclusive = to.Date.AddDays(1);
+
+        return await invoiceRepo.GetQueryable(
+                i => i.CreateAt >= fromDate &&
+                     i.CreateAt < toDateExclusive &&
+                     (i.InvoiceStatus == InvoiceStatus.Pending ||
+                      i.InvoiceStatus == InvoiceStatus.PartialPaid),
+                asNoTracking: true
+            )
+            .SumAsync(i => (double?)(i.Total - i.PaidAmount - i.DeductedAmount)) ?? 0;
+    }
 }

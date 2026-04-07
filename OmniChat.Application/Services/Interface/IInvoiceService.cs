@@ -11,4 +11,8 @@ public interface IInvoiceService
     Task<List<Guid>> CreateInvoice(DateTime from, DateTime to);
 
     Task AllocateMoneyToInvoices(Guid invoiceId);
+
+    Task<double> TotalIncomeByTime(DateTime from, DateTime to);
+
+    Task<double> TotalUnpaidAmountByTime(DateTime from, DateTime to);
 }

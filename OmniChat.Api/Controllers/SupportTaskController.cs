@@ -52,5 +52,17 @@ namespace OmniChat.Api.Controllers
                 Data = result
             });
         }
+
+        [HttpGet(ApiEndPointConstant.SupportTaskEndPoint.GetTaskIntentDashboard)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<TaskIntentDashboardResponse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Get Support Task intent và count",
+            Description = "Get Support Task intent và count theo datetime UTC")]
+        public async Task<IActionResult> GetTaskIntentDashboard([FromQuery]DateTime from, DateTime to)
+        {
+            var result = await _supportTaskService.GetTaskIntentDashboardResponsesAsync(from, to);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Task Intent Dashboard Successfully", result);
+            return Ok(response);
+        }
     }
 }

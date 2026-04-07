@@ -1,5 +1,7 @@
 using Amazon.Runtime;
 using Amazon.S3;
+using Catalyst;
+using Catalyst.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -7,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Mosaik.Core;
 using OmniChat.Api.Middlewares;
 using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Channels;
@@ -149,6 +152,12 @@ void ConfigureServices()
     builder.Services.AddScoped<IUnitOfWork<OmniChatDbContext>, UnitOfWork<OmniChatDbContext>>();
     // Register utility services
     builder.Services.AddSingleton<JwtUtil>();
+
+    builder.Services.AddSingleton<Pipeline>(sp => {
+        Storage.Current = new DiskStorage("catalyst-models");
+        Vietnamese.Register();
+        return Pipeline.For(Language.Vietnamese);
+    });
     // Register application services
     RegisterApplicationServices();
     RegisterBackgroundServices();

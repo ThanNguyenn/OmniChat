@@ -23,4 +23,6 @@ public interface IOrderService
     Task<bool> CompleteDeliverdOrderAsync(Guid orderId);
     Task<bool> ReturnOrderPaidAsync(Guid orderId, double amount);
     Task<bool> ReturnOrderUnpaidAsync(Guid orderId, double amount);
+
+    Task<IEnumerable<GetOrderDashBoardByStatus>> GetOrderDashBoardByStatusesAsync(DateTime from, DateTime to);
 }

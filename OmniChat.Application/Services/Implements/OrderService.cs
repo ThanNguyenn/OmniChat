@@ -282,4 +282,38 @@ public class OrderService : BaseService<OrderService>, IOrderService
             return true;
         });
     }
+
+    public async Task<IEnumerable<GetOrderDashBoardByStatus>> GetOrderDashBoardByStatusesAsync(DateTime from, DateTime to)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+
+        var fromDate = from.Date;
+        var toDateExclusive = to.Date.AddDays(1);
+
+        var query = orderRepo.GetQueryable(
+                o => o.OrderDate >= fromDate &&
+                     o.OrderDate < toDateExclusive,
+                asNoTracking: true
+            )
+            .Select(o => new
+            {
+                MappedStatus =
+                    o.Status == OrderStatus.Completed ? OrderStatus.Completed :
+                    o.Status == OrderStatus.Cancelled ? OrderStatus.Cancelled :
+                    (o.Status == OrderStatus.PendingReturn ||
+                     o.Status == OrderStatus.Returned ||
+                     o.Status == OrderStatus.ReturnedDefective)
+                        ? OrderStatus.Returned
+                        : (OrderStatus?)null
+            })
+            .Where(x => x.MappedStatus != null)
+            .GroupBy(x => x.MappedStatus.Value)
+            .Select(g => new GetOrderDashBoardByStatus
+            {
+                Status = g.Key,
+                Count = g.Count()
+            });
+
+        return await query.ToListAsync();
+    }
 }

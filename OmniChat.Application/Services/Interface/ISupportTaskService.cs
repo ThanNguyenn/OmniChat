@@ -17,5 +17,7 @@ namespace OmniChat.Application.Services.Interface
         public  Task<IEnumerable<SupportTasksResponse>> GetSupportTaskOnConversationIdAsync(Guid conversationId);
 
         public  Task<bool> CompleteTaskAsync(Guid taskId);
+
+        Task<IEnumerable<TaskIntentDashboardResponse>> GetTaskIntentDashboardResponsesAsync (DateTime from, DateTime to);
     }
 }
