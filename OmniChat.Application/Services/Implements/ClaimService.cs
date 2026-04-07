@@ -52,14 +52,89 @@ namespace OmniChat.Application.Services.Implements
              });
         }
 
-
-        public async Task<IEnumerable<ClaimDetailResponse>> GetAllClaim()
+        public async Task<ClaimDashboardResponse> GetClaimDashboardAsync()
         {
-            var _repo = _unitOfWork.GetRepository<Claim>();
+            var repo = _unitOfWork.GetRepository<Claim>();
 
-            var claims = await _repo.GetListAsync();
+            var query = repo.GetQueryable();
 
-            return _mapper.Map<IEnumerable<ClaimDetailResponse>>(claims);
+            var pending = await query.CountAsync(c => c.Status == ClaimStatus.Pending);
+
+            var approved = await query.CountAsync(c => c.Status == ClaimStatus.Approved);
+
+            var rejected = await query.CountAsync(c => c.Status == ClaimStatus.Rejected);
+
+            return new ClaimDashboardResponse
+            {
+                PendingClaims = pending,
+                ApprovedClaims = approved,
+                RejectedClaims = rejected
+            };
+        }
+
+        public async Task<PagingResponse<ClaimDetailResponse>> GetPendingClaimAsync(int pageIndex = 1, int pageSize = 10)
+        {
+            var repo = _unitOfWork.GetRepository<Claim>();
+
+            var query = repo.GetQueryable()
+                .Where(c => c.Status == ClaimStatus.Pending);
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(c => c.SubmitDate) 
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var mapped = _mapper.Map<IEnumerable<ClaimDetailResponse>>(items);
+
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return new PagingResponse<ClaimDetailResponse>
+            {
+                Items = mapped,
+                Meta = new PaginationMeta
+                {
+                    CurrentPage = pageIndex,
+                    PageSize = pageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages
+                }
+            };
+        }
+
+
+        public async Task<PagingResponse<ClaimDetailResponse>> GetClaimHistoryAsync(int pageIndex = 1, int pageSize = 10)
+        {
+            var repo = _unitOfWork.GetRepository<Claim>();
+
+            var query = repo.GetQueryable()
+                .Where(c => c.Status != ClaimStatus.Pending);
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(c => c.SubmitDate) 
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var mapped = _mapper.Map<IEnumerable<ClaimDetailResponse>>(items);
+
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return new PagingResponse<ClaimDetailResponse>
+            {
+                Items = mapped,
+                Meta = new PaginationMeta
+                {
+                    CurrentPage = pageIndex,
+                    PageSize = pageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages
+                }
+            };
         }
 
         public async Task<bool> UpdateClaimInforAsync(Guid claimId, UpdateClaimRequest claimRequest)
