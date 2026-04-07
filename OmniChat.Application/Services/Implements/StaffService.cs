@@ -470,4 +470,36 @@ public class StaffService : BaseService<StaffService>, IStaffService
         return shipper;
     }
 
+    public async Task<ShipperDashboardResponse> GetShipperDashboardAsync()
+    {
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+
+        var today = DateTime.UtcNow.Date;
+
+       
+        var activeShippers = await staffRepo.GetQueryable()
+            .CountAsync(s => s.IsActive == true
+                          && s.Status == StaffStatus.Online
+                          && s.Account.Role.Name == "Shipper");
+
+      
+        var deliveringOrders = await orderRepo.GetQueryable()
+            .CountAsync(o => o.DeliveryStatus == DeliveryStatus.Pending
+                          && o.DriverId != null
+                          && o.IsDeleted != true);
+
+        var deliveredToday = await orderRepo.GetQueryable()
+            .CountAsync(o => o.DeliveryStatus == DeliveryStatus.Completed
+                          && o.DeliveriedDate.HasValue
+                          && o.DeliveriedDate.Value.Date == today
+                          && o.IsDeleted != true);
+
+        return new ShipperDashboardResponse
+        {
+            ActiveShippers = activeShippers,
+            DeliveringOrders = deliveringOrders,
+            DeliveredToday = deliveredToday
+        };
+    }
 }

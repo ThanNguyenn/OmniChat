@@ -140,6 +140,7 @@ public class ApiEndPointConstant
         public const string GetShippers = Base + "/shippers";
         public const string AssignOrderToShipper = Base + "/assign-order";
         public const string GetShipperById = Base + "/shippers/{shipperId}";
+        public const string ShipperDashboard = Base + "/shipper-dashboard";
     }
 
     public static class Product
