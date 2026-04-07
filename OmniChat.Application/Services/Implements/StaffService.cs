@@ -140,7 +140,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         return response;
     }
 
-    private static IOrderedQueryable<Staff> OrderBy(IQueryable<Staff> query,string sortBy,bool descending)
+    private static IOrderedQueryable<Staff> OrderBy(IQueryable<Staff> query, string sortBy, bool descending)
     {
         sortBy = sortBy?.Trim().ToLower() ?? "id";
 
@@ -201,7 +201,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
     {
         var staffIntentTypeRepo = _unitOfWork.GetRepository<StaffIntentType>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
-        var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();   
+        var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();
 
         var existingStaff = staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == staffId && s.IsActive != false)
             ?? throw new NotFoundException($"Staff {staffId} not found or inactive");
@@ -285,7 +285,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         {
             TotalDoneTask = currentPerformance?.TaskCompleted ?? 0,
             TotalCreateOrder = totalCreateOrder,
-            AfferageResolveTime = currentPerformance?.AvgTaskHandleTime / 60.0 ?? 0, 
+            AfferageResolveTime = currentPerformance?.AvgTaskHandleTime / 60.0 ?? 0,
             StaffPerformance = CalculatePerformanceScore(currentPerformance)
         };
     }
@@ -301,7 +301,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         return Math.Round((double)performance.TaskCompleted / total * 100, 2);
     }
 
-    public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId,StaffTaskFilterRequest request)
+    public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId, StaffTaskFilterRequest request)
     {
         var repo = _unitOfWork.GetRepository<SupportTask>();
         var page = request.Page <= 0 ? 1 : request.Page;
@@ -337,4 +337,137 @@ public class StaffService : BaseService<StaffService>, IStaffService
             }
         };
     }
+
+    public async Task AssignShipperOrderAsync(Guid shipperId, Guid orderId)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
+
+        var order = await orderRepo.GetByIdAsync(orderId);
+        if (order == null || order.IsDeleted == true)
+        {
+            throw new NotFoundException("Order not found.");
+        }
+
+        var staff = await staffRepo.SingleOrDefaultAsync(
+            predicate: s => s.Id == shipperId,
+            include: q => q.Include(s => s.Account)
+        );
+
+        if (staff == null)
+        {
+            throw new NotFoundException("Staff not found.");
+        }
+
+
+        if (staff.Account.Role.Name != "Shipper")
+        {
+            throw new BadRequestException("Staff is not a shipper.");
+        }
+
+
+        if (staff.IsActive != true)
+        {
+            throw new BadRequestException("Staff is not active.");
+        }
+
+
+        if (staff.Status != StaffStatus.Online)
+        {
+            throw new BadRequestException("Shipper is not online.");
+        }
+
+
+        if (order.DriverId != null)
+        {
+            throw new BadRequestException("Order already has a shipper.");
+        }
+
+        order.DriverId = shipperId;
+
+        orderRepo.Update(order);
+        await _unitOfWork.CommitAsync();
+    }
+
+    public async Task<PagingResponse<ShipperResposne>> GetShippersAsync(int pageIndex = 1, int pageSize = 10)
+    {
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
+
+        var query = staffRepo.GetQueryable()
+            .Where(s => s.Account.Role.Name == "Shipper" && s.IsActive == true)
+            .Select(s => new ShipperResposne
+            {
+                ShipperName = s.Name,
+                ShipperPhone = s.Phone,
+                ShipperStatus = s.Status,
+
+                TotalPendingOrders = s.OrdersAsDriver
+                    .Count(o => o.DeliveryStatus == DeliveryStatus.Pending),
+
+                TotalOrderShipNow = s.OrdersAsDriver
+                    .Count(o => o.Status == OrderStatus.Shipped
+                             && o.DeliveryStatus == DeliveryStatus.Pending),
+
+                TotalOrderShipped = s.OrdersAsDriver
+                    .Count(o => o.DeliveryStatus == DeliveryStatus.Completed)
+            });
+
+        var totalItems = await query.CountAsync();
+
+        var items = await query
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+        return new PagingResponse<ShipperResposne>
+        {
+            Items = items,
+            Meta = new PaginationMeta
+            {
+                CurrentPage = pageIndex,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = totalPages
+            }
+        };
+    }
+
+    public async Task<ShipperResposne> GetShipperByShipperIdAsync(Guid shipperId)
+    {
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
+
+        var shipper = await staffRepo.GetQueryable()
+            .Where(s => s.Id == shipperId
+                     && s.IsActive == true
+                     && s.Account != null
+                     && s.Account.Role != null
+                     && s.Account.Role.Name == "Shipper")
+            .Select(s => new ShipperResposne
+            {
+                ShipperName = s.Name,
+                ShipperPhone = s.Phone,
+                ShipperStatus = s.Status,
+
+                TotalPendingOrders = s.OrdersAsDriver
+                    .Count(o => o.DeliveryStatus == DeliveryStatus.Pending),
+
+                TotalOrderShipNow = s.OrdersAsDriver
+                    .Count(o => o.Status == OrderStatus.Shipped
+                             && o.DeliveryStatus == DeliveryStatus.Pending),
+
+                TotalOrderShipped = s.OrdersAsDriver
+                    .Count(o => o.DeliveryStatus == DeliveryStatus.Completed)
+            })
+            .FirstOrDefaultAsync();
+
+        if (shipper == null)
+        {
+            throw new NotFoundException("Shipper not found");
+        }
+
+        return shipper;
+    }
+
 }
