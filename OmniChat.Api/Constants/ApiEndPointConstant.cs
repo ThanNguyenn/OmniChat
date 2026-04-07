@@ -137,6 +137,9 @@ public class ApiEndPointConstant
         public const string UnassignIntent = "{id}/unassign-intent";
         public const string StaffDashboard = "{id}/dashboard";
         public const string getStaffTasks = "{id}/tasks";
+        public const string GetShippers = Base + "/shippers";
+        public const string AssignOrderToShipper = Base + "/assign-order";
+        public const string GetShipperById = Base + "/shippers/{shipperId}";
     }
 
     public static class Product

@@ -78,7 +78,7 @@ public class StaffController : BaseController<StaffController>
     [SwaggerOperation(
         Summary = "Lấy list thông tin staff theo phòng ban",
         Description = "Dùng cho manager và admin lấy list thông tin staff theo phòng ban.")]
-    public async Task<IActionResult> GetAllStaffsAsync([FromQuery]IEnumerable<Guid> deparmentIds, string? search, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    public async Task<IActionResult> GetAllStaffsAsync([FromQuery] IEnumerable<Guid> deparmentIds, string? search, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _staffService.GetStaffsAsync(
             search,
@@ -149,13 +149,72 @@ public class StaffController : BaseController<StaffController>
     [SwaggerOperation(
        Summary = "Lấy list task của staff",
        Description = "Lấy list task của staff theo filter: IntentTypeId, FromDate, ToFromDate,  pageNumber, pageSize")]
-     public async Task<IActionResult> GetStaffTasksAsync([FromRoute] Guid id, [FromBody] StaffTaskFilterRequest getStaffTasksRequest)
+    public async Task<IActionResult> GetStaffTasksAsync([FromRoute] Guid id, [FromBody] StaffTaskFilterRequest getStaffTasksRequest)
     {
         var result = await _staffService.GetStaffTasksAsync(id, getStaffTasksRequest);
 
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff tasks successfully", result);
 
         return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+
+    [HttpGet(ApiEndPointConstant.Staff.GetShippers)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<ShipperResposne>>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+       Summary = "Lấy list shipper",
+       Description = "Lấy list shipper theo filter: pageIndex, pageSize")]
+
+    public async Task<IActionResult> GetShippers([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+    {
+        var result = await _staffService.GetShippersAsync(pageIndex, pageSize);
+
+        return Ok(new ApiResponse<PagingResponse<ShipperResposne>>
+        {
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Retrieved shippers successfully",
+            IsSuccess = true,
+            Data = result
+        });
+    }
+
+    [HttpPost(ApiEndPointConstant.Staff.AssignOrderToShipper)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [SwaggerOperation(
+       Summary = "Assign order to shipper",
+       Description = "Assign order to shipper by shipperId and orderId")]
+    public async Task<IActionResult> AssignOrderToShipper([FromQuery] Guid shipperId, [FromQuery] Guid orderId)
+    {
+        await _staffService.AssignShipperOrderAsync(shipperId, orderId);
+
+        return Ok(new ApiResponse<object>
+        {
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Assigned order to shipper successfully",
+            IsSuccess = true,
+            Data = null
+        });
+    }
+
+    [HttpGet(ApiEndPointConstant.Staff.GetShipperById)]
+    [ProducesResponseType(typeof(ApiResponse<ShipperResposne>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [SwaggerOperation(
+       Summary = "Lấy thông tin shipper theo id",
+       Description = "Lấy thông tin shipper theo id")]
+    public async Task<IActionResult> GetShipperByIdAsync([FromRoute] Guid shipperId)
+    {
+        var result = await _staffService.GetShipperByShipperIdAsync(shipperId);
+
+        return Ok(new ApiResponse<ShipperResposne>
+        {
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Retrieved shipper successfully",
+            IsSuccess = true,
+            Data = result
+        });
     }
 
 }
