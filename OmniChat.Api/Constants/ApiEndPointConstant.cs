@@ -84,7 +84,7 @@ public class ApiEndPointConstant
         public const string SupportTask = ApiV1 + "/support-task";
         public const string CompleteSupportTask = SupportTask + "/{id}/complete-task";
         public const string GetSupportTaskByConversationId = SupportTask + "/conversation/{conversationId}";
-        public const string GetTaskIntentDashboard = SupportTask + "/{id}/dashboard";
+        public const string GetTaskIntentDashboard = SupportTask + "/dashboard";
     }
 
     public static class SupportConversationEndPoint
