@@ -10,4 +10,5 @@ namespace OmniChat.Application.Services.Interface;
 public interface IProductBrandService
 {
     public Task<IEnumerable<GetAllBrandsResponse>> GetAllProductBrandsAsync();
+    public Task<int> GetTotalBrandsInStockAsync();
 }

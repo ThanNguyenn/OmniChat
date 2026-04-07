@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.Brand;
@@ -24,5 +25,18 @@ public class ProductBrandService : BaseService<ProductBrandService>, IProductBra
             predicate: p => p.IsActive != false,
             selector: e => _mapper.Map<GetAllBrandsResponse>(e)
         );
+    }
+
+    public async Task<int> GetTotalBrandsInStockAsync()
+    {
+        var productRepo = _unitOfWork.GetRepository<Product>();
+
+        var totalBrands = await productRepo.GetQueryable()
+            .Where(p => p.IsActive == true && p.Quantity > 0)
+            .Select(p => p.BrandId)
+            .Distinct()
+            .CountAsync();
+
+        return totalBrands;
     }
 }

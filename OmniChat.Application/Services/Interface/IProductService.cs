@@ -23,4 +23,6 @@ public interface IProductService
     Task AddStockAsync(IEnumerable<AddProductStockRequest> addProductStockRequests);
 
     Task<PagingResponse<GetProductBatchesResponse>> GetProductBatchesAsync(Guid productId, bool? isNewest, int pageNumber = 1, int pageSize = 20);
+
+    public  Task<InventoryDashboardResponse> GetInventoryDashboardAsync();
 } 
