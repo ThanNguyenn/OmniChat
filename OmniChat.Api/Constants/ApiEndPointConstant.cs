@@ -223,4 +223,11 @@ public class ApiEndPointConstant
         public const string Reject = Base + "/{id}/reject";
     }
 
+
+    public static class ConversationWarning
+    {
+        public const string Base = ApiV1 + "/conversation-warnings";
+        public const string GetAll = Base + "/get";
+        public const string GetById = Base + "/{id}/warning";
+    }
 }
