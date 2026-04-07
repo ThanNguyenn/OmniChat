@@ -19,11 +19,13 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _config;
+    private readonly IKeywordService _keywordService;
     private static readonly SemaphoreSlim _assignmentLock = new SemaphoreSlim(1, 1);
-    public TaskAssignmentService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<TaskAssignmentService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IConfiguration config) : base(unitOfWork, logger, mapper, httpContextAccessor)
+    public TaskAssignmentService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<TaskAssignmentService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IConfiguration config, IKeywordService keywordService   ) : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
         _config = config;
         _httpClient = httpClient;
+        _keywordService = keywordService;
     }
 
     public async Task ProcessTask(PredictRequest predictRequest, Guid conversationId)
@@ -227,25 +229,42 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
         var apiKey = _config["AIService:ApiKey"];
         var apiName = _config["AIService:ApiName"];
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+        try
         {
-            Content = JsonContent.Create(predictRequest)
-        };
+            using var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+            {
+                Content = JsonContent.Create(predictRequest)
+            };
 
-        request.Headers.Add(apiName ?? "omni-chat-api-key", apiKey);
-        request.Headers.Add("ngrok-skip-browser-warning", "true");
+            request.Headers.Add(apiName ?? "omni-chat-api-key", apiKey);
+            request.Headers.Add("ngrok-skip-browser-warning", "true");
 
-        var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.SendAsync(request);
+            var rawResponse = await response.Content.ReadAsStringAsync();
 
-        var rawResponse = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Response Status: {StatusCode}", response.StatusCode);
+            _logger.LogInformation("Response Body: {Body}", rawResponse);
 
-        _logger.LogInformation("Response Status: {StatusCode}", response.StatusCode);
-        _logger.LogInformation("Response Headers: {Headers}", response.Headers);
-        _logger.LogInformation("Response Body: {Body}", rawResponse);
+            response.EnsureSuccessStatusCode();
 
-        response.EnsureSuccessStatusCode();
+            var aiResult = JsonSerializer.Deserialize<PredictResponse>(rawResponse);
 
-        return JsonSerializer.Deserialize<PredictResponse>(rawResponse);
+            // Fallback condition
+            if (aiResult?.Details == null || !aiResult.Details.Any(d => d.Predicted))
+            {
+                _logger.LogWarning("AI returned no predicted intents. Falling back to keyword analysis.");
+
+                return await _keywordService.AnalyzeMessageWithKeywordsAsync(predictRequest.Message);
+            }
+
+            return aiResult;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AI analysis failed. Falling back to keyword analysis.");
+
+            return await _keywordService.AnalyzeMessageWithKeywordsAsync(predictRequest.Message);
+        }
     }
 
 }
