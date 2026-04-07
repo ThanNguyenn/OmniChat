@@ -35,4 +35,6 @@ public interface IStaffService
     public Task<PagingResponse<ShipperResposne>> GetShippersAsync(int pageIndex = 1, int pageSize = 10);
 
     public  Task<ShipperResposne> GetShipperByShipperIdAsync(Guid shipperId);
+
+    public  Task<ShipperDashboardResponse> GetShipperDashboardAsync();
 }

@@ -217,4 +217,22 @@ public class StaffController : BaseController<StaffController>
         });
     }
 
+    [HttpGet(ApiEndPointConstant.Staff.ShipperDashboard)]
+    [ProducesResponseType(typeof(ApiResponse<ShipperDashboardResponse>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+       Summary = "Lấy dashboard của shipper",
+       Description = "Lấy dashboard của shipper : ActiveShippers, DeliveringOrders, DeliveredToday ")]
+    public async Task<IActionResult> GetShipperDashboard()
+    {
+        var result = await _staffService.GetShipperDashboardAsync();
+
+        return Ok(new ApiResponse<ShipperDashboardResponse>
+        {
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Retrieved shipper dashboard successfully",
+            IsSuccess = true,
+            Data = result
+        });
+    }
+
 }
