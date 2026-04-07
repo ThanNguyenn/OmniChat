@@ -173,4 +173,22 @@ public class ProductController : BaseController<ProductController>
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get product batches successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
+
+    [HttpGet(ApiEndPointConstant.Product.Dashboard)]
+    [ProducesResponseType(typeof(ApiResponse<InventoryDashboardResponse>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+        Summary = "Inventory Dashboard",
+        Description = "Thống kê tổng sản phẩm, sản phẩm sắp hết hàng và số brand trong kho")]
+    public async Task<IActionResult> GetInventoryDashboardAsync()
+    {
+        var result = await _productService.GetInventoryDashboardAsync();
+
+        return Ok(new ApiResponse<InventoryDashboardResponse>
+        {
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Get Inventory Dashboard Successfully",
+            IsSuccess = true,
+            Data = result
+        });
+    }
 }

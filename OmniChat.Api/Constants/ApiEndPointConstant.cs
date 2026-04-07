@@ -155,6 +155,7 @@ public class ApiEndPointConstant
         public const string GetById = "get/{id}";
         public const string AddStock = "add-stock";
         public const string GetProductBatches = "{id}/batches";
+        public const string Dashboard = "/dashboard";
     }
 
     public static class ClaimEndPoint

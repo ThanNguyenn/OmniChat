@@ -346,4 +346,28 @@ public class ProductService : BaseService<ProductService>, IProductService
     //        selector: e => _mapper.Map<GetProductBatchesResponse>(e)
     //    );
     //}
+
+    public async Task<InventoryDashboardResponse> GetInventoryDashboardAsync()
+    {
+        var productRepo = _unitOfWork.GetRepository<Product>();
+
+        var query = productRepo.GetQueryable();
+
+        var totalProducts = await query.CountAsync();
+
+        var lowStock = await query.CountAsync(p => p.Quantity < 30); 
+
+        var totalBrands = await query
+            .Where(p => p.IsActive == true && p.Quantity > 0)
+            .Select(p => p.BrandId)
+            .Distinct()
+            .CountAsync();
+
+        return new InventoryDashboardResponse
+        {
+            TotalProducts = totalProducts,
+            LowStockProducts = lowStock,
+            TotalBrands = totalBrands
+        };
+    }
 }
