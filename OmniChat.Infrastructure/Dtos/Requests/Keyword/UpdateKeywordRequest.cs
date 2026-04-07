@@ -8,4 +8,5 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Keyword;
 
 public class UpdateKeywordRequest
 {
+    public float Weight { get; set; }
 }
