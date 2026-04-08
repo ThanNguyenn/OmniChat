@@ -18,5 +18,7 @@ namespace OmniChat.Application.Services.Interface
         public  Task<PagingResponse<GetAllCustomerMessageResponse>> GetAllCustomerMessageByCustomerIdAsync(int pageNumber = 1, int pageSize = 20, Guid? customerId = null);
 
         public  Task UpdateCustomerMessageAfterMergeAsync(CustomerProfile source, CustomerProfile target);
+      
+        public Task MarkAsReadByConversationIdAsync(Guid conversationId);
     }
 }
