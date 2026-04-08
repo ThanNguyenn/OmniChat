@@ -268,4 +268,11 @@ public class ApiEndPointConstant
         public const string TotalUnpaid = Base + "/total-unpaid";
 
     }
+
+
+    public static class IntentType
+    {
+        public const string Base = ApiV1 + "/intent-type";
+        public const string GetAll = Base + "/gets";
+    }
 }

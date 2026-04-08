@@ -203,6 +203,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<ICreditNoteService, CreditNoteService>();
     builder.Services.AddScoped<IPostSaleRequestService, PostSaleRequestService>();
     builder.Services.AddScoped<IConversationWarningService, ConversationWarningService>();
+    builder.Services.AddScoped<IIntentTypeService, IntentTypeService>();
 }
 
 void RegisterBackgroundServices()
