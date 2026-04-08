@@ -20,6 +20,8 @@ public class StaffMapper  : Profile
             .ForMember(dest => dest.StaffIntentTypes, opt => opt.Ignore())
             .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-        CreateMap<Staff, GetStaffsResponse>();
+        CreateMap<Staff, GetStaffsResponse>()
+            .ForMember(dest => dest.StaffIntentTypes,
+                opt => opt.MapFrom(src => src.StaffIntentTypes));
     }
 }

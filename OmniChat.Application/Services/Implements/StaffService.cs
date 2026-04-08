@@ -133,6 +133,8 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
             orderBy: q => OrderBy(q, sortBy, descending),
             selector: e => _mapper.Map<GetStaffsResponse>(e),
+            include: k => k.Include(s => s.StaffIntentTypes)
+                    .ThenInclude(sit => sit.IntentType),
             page: pageNumber,
             size: pageSize
         );
