@@ -14,4 +14,6 @@ public class GetOrderItemResponse
 
     public string ProductName { get; set; }
 
+    public string ItemsPrice { get; set; }
+
 }

@@ -25,4 +25,6 @@ public interface IOrderService
     Task<bool> ReturnOrderUnpaidAsync(Guid orderId, double amount);
 
     Task<IEnumerable<GetOrderDashBoardByStatus>> GetOrderDashBoardByStatusesAsync(DateTime from, DateTime to);
+
+    Task<PagingResponse<GetOrderForShipperResponse>> GetOrderForShipperAsync(string? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 }

@@ -1,0 +1,35 @@
+﻿using OmniChat.Infrastructure.Dtos.Responses.OrderItem;
+using OmniChat.Infrastructure.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace OmniChat.Infrastructure.Dtos.Requests.Order;
+
+public class GetOrderForShipperResponse
+{
+
+    public Guid Id { get; set; }
+
+    public  string CustomerName { get; set; }
+
+    public string CustomerPhoneNumber { get; set; }
+
+    public string CustomerAddress { get; set; }
+
+    public string Name { get; set; }
+
+
+    public double TotalAmount { get; set; }
+
+    public DeliveryStatus? DeliveryStatus { get; set; }
+
+    public string Code { get; set; }
+
+    public DateTime? DeliveriedDate { get; set; }
+
+    public IEnumerable<GetOrderItemResponse> OrderItems { get; set; }
+
+}
