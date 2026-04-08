@@ -138,10 +138,23 @@ public class ApiEndPointConstant
         public const string UnassignIntent = "{id}/unassign-intent";
         public const string StaffDashboard = "{id}/dashboard";
         public const string getStaffTasks = "{id}/tasks";
-        public const string GetShippers = "/shippers";
-        public const string AssignOrderToShipper =  "/assign-order";
-        public const string GetShipperById = "/shippers/{shipperId}";
-        public const string ShipperDashboard = "/shipper-dashboard";
+    }
+
+    public static class Shipper
+    {
+        public const string Base = ApiV1 + "/shippers";
+
+        // GET: /api/v1/shippers
+        public const string GetAll = "";
+
+        // GET: /api/v1/shippers/{id}
+        public const string GetById = "{id}";
+
+        // POST: /api/v1/shippers/{id}/assign-order
+        public const string AssignOrder = "{id}/assign-order";
+
+        // GET: /api/v1/shippers/dashboard
+        public const string Dashboard = "dashboard";
     }
 
     public static class Product

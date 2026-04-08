@@ -17,10 +17,13 @@ namespace OmniChat.Application.SignalRHub
     public class SupportConversationHub : Hub
     {
         private readonly ISupportStaffMessageService _supportStaffMessageService;
-
-        public SupportConversationHub(ISupportStaffMessageService supportStaffMessageService)
+        private readonly ICustomerMessageService _customerMessageService;
+        private readonly ISupportConversationService _supportConversationService;
+        public SupportConversationHub(ISupportStaffMessageService supportStaffMessageService, ICustomerMessageService customerMessageService, ISupportConversationService supportConversationService)
         {
             _supportStaffMessageService = supportStaffMessageService;
+            _customerMessageService = customerMessageService;
+            _supportConversationService = supportConversationService;
         }
 
         public override async Task OnConnectedAsync()
@@ -36,10 +39,26 @@ namespace OmniChat.Application.SignalRHub
             await base.OnConnectedAsync();
         }
 
-        // Join the conversation group to receive real-time updates for that conversation
+        // Join the conversation group to receive real-time updates for that conversation and update unread message count in sidebar
         public async Task JoinConversationGroup(Guid conversationId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation:{conversationId}");
+
+            await _customerMessageService.MarkAsReadByConversationIdAsync(conversationId);
+
+            var userId = Context.UserIdentifier;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+                {
+                    ConversationId = conversationId,
+                    UnreadMessage = 0
+                };
+
+                await Clients.User(userId).SendAsync("SidebarUpdated", sidebarUpdate);
+            }
+
         }
 
         // FE : await connection.invoke("JoinConversationGroup", conversationId);
