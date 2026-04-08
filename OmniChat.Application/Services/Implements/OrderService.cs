@@ -316,4 +316,18 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
         return await query.ToListAsync();
     }
+
+    public Task<PagingResponse<GetOrderForShipperResponse>> GetOrderForShipperAsync(string? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
+    {
+
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        var response = orderRepo.GetPagingListAsync<GetOrderForShipperResponse>(
+            predicate: o => string.IsNullOrEmpty(status) || o.DeliveryStatus.ToString()!.Contains(status),
+            orderBy: q => OrderBy(q, sortBy, descending),
+            selector: e => _mapper.Map<GetOrderForShipperResponse>(e),
+            page: pageNumber,
+            size: pageSize);
+
+        return response;
+    }
 }
