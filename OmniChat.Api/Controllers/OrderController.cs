@@ -158,7 +158,7 @@ public class OrderController : BaseController<OrderController>
     }
 
     [HttpGet(ApiEndPointConstant.Order.Dashboard)]
-    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetOrderResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<GetOrderDashBoardByStatus>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
@@ -172,5 +172,21 @@ public class OrderController : BaseController<OrderController>
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order dashboard info retrieved successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
 
+    }
+
+    [HttpGet(ApiEndPointConstant.Order.Dashboard)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetOrderForShipperResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+      Summary = "Lấy order cho shipper",
+      Description = "Lấy order cho shipper theo status Pending hoặc Completed."
+    )]
+    public async Task<IActionResult> GetOrdersForShipper([FromQuery] string? search, [FromQuery] int? pageNumber, [FromQuery] int? pageSize, [FromQuery] string? sortBy, [FromQuery] bool? descending)
+    {
+        var result = await _orderService.GetOrderForShipperAsync(search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "orderdate" , descending ?? true);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders for shipper retrieved successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
     }
 }
