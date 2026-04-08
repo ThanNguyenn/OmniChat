@@ -13,6 +13,7 @@ public class CreateProductRequest
     public string Name { get; set; }
 
     public PackagingType ProductPackagingType { get; set; }
+    public ProductKind ProductKind { get; set; }
 
     public double VolumeMl { get; set; }
 
