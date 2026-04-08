@@ -174,7 +174,7 @@ public class OrderController : BaseController<OrderController>
 
     }
 
-    [HttpGet(ApiEndPointConstant.Order.Dashboard)]
+    [HttpGet(ApiEndPointConstant.Order.Shipper)]
     [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetOrderForShipperResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
