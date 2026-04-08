@@ -65,7 +65,7 @@ namespace OmniChat.Application.SignalRHub
                     avartarUrl = existConversation.AvatarUrl,
                     providerName = existConversation.Providers.ProviderName,
                     LastMessage = lastMessage.Content,
-                    UnreadMessage = 0,
+                    UnreadMessageCount = 0,
                 };
 
                 await Clients.User(userId).SendAsync("SidebarUpdated", sidebarUpdate);

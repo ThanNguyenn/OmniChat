@@ -229,7 +229,7 @@ namespace OmniChat.Application.Services.Resolver
                                 avartarUrl = conversation.AvatarUrl,
                                 providerName = provider.ProviderName,
                                 LastMessage = newMessage.Content,
-                                UnreadMessage = unreadCount,
+                                UnreadMessageCount = unreadCount,
                             };
 
                             await _hubContext.Clients
