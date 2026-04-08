@@ -200,6 +200,7 @@ public class ApiEndPointConstant
         public const string CancelOrder = "{id}/cancel";
         public const string CompleteDeliveredOrder = "{id}/complete-delivery";
         public const string Dashboard = "dashboard";
+        public const string Shipper = "shipper";
     }
 
     public static class FacebookOAuthToken
