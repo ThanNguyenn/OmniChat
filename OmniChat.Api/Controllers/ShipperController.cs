@@ -8,6 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace OmniChat.Api.Controllers
 {
     [ApiController]
+    [Route(ApiEndPointConstant.Shipper.Base)]
     public class ShipperController : BaseController<ShipperController>
     {
         private readonly IStaffService _staffService;
