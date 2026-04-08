@@ -14,6 +14,8 @@ public class IntentTypeMapper : Profile
 {
     public IntentTypeMapper()
     {
+        CreateMap<IntentType, GetsIntentTypeResponse>();
+
         // Create
         CreateMap<StaffIntentType, GetStaffIntentTypeResponse >().ForMember(dest => dest.IntentTypeName, opt => opt.MapFrom(src => src.IntentType.TypeName));
         CreateMap<AssignStaffToIntentTypeRequest, StaffIntentType>();
