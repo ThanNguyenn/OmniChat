@@ -50,7 +50,7 @@ namespace OmniChat.Infrastructure.Models
     public enum ProductKind
     {
         Sugar = 0,
-        OutSugar = 1,
+        NoSugar = 1,
         Yogurt = 2, 
     }
 }
