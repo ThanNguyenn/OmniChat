@@ -85,5 +85,23 @@ namespace OmniChat.Application.Services.Implements
                 messageRepo.Update(msg);
             }
         }
+
+        public async Task MarkAsReadByConversationIdAsync(Guid conversationId)
+        {
+            var unreadMessages = await _unitOfWork.GetRepository<CustomerMessage>()
+                .GetQueryable()
+                .Where(m => m.ConversationId == conversationId && (m.IsRead == false || m.IsRead == null))
+                .ToListAsync();
+
+            if (unreadMessages.Any())
+            {
+                foreach (var msg in unreadMessages)
+                {
+                    msg.IsRead = true;
+                }
+
+                await _unitOfWork.CommitAsync();
+            }
+        }
     }
 }
