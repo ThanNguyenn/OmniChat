@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.VisualBasic;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Exceptions;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +48,12 @@ namespace OmniChat.Application.SignalRHub
 
             await _customerMessageService.MarkAsReadByConversationIdAsync(conversationId);
 
+          var existConversation =  await _supportConversationService.GetSupportConversationByIdAsync(conversationId);
+
+            var lastMessage = existConversation.CustomerMessages
+                .OrderByDescending(m => m.Timestamp)
+                .FirstOrDefault();
+
             var userId = Context.UserIdentifier;
 
             if (!string.IsNullOrEmpty(userId))
@@ -53,7 +61,11 @@ namespace OmniChat.Application.SignalRHub
                 var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                 {
                     ConversationId = conversationId,
-                    UnreadMessage = 0
+                    CustomerName = existConversation.CustomerName,
+                    avartarUrl = existConversation.AvatarUrl,
+                    providerName = existConversation.Providers.ProviderName,
+                    LastMessage = lastMessage.Content,
+                    UnreadMessage = 0,
                 };
 
                 await Clients.User(userId).SendAsync("SidebarUpdated", sidebarUpdate);
