@@ -12,3 +12,4 @@ public class GetOrderDashBoardByStatus
     public OrderStatus Status { get; set; }
     public int Count { get; set; }
 }
+
