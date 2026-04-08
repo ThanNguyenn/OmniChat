@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.SupportConversation;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
@@ -27,10 +29,13 @@ namespace OmniChat.Application.Services.Implements
         private readonly ICustomerProfileService _customerProfileService;
 
         private readonly IMessageKeywordFilterService _messageKeywordFilterService;
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IMessageKeywordFilterService messageKeywordFilterService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        private readonly IHubContext<SupportConversationHub> _hubContext;
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SupportConversationHub> hubContext, IMessageKeywordFilterService messageKeywordFilterService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
             _messageKeywordFilterService = messageKeywordFilterService;
+            _hubContext = hubContext;
             _supportTaskService = supportTaskService;
         }
 
@@ -247,6 +252,7 @@ namespace OmniChat.Application.Services.Implements
             var conversation = await repo.SingleOrDefaultAsync(predicate: sc => sc.Id == conversationId,
                 include: source => source
                     .Include(c => c.CustomerMessages)
+                    .Include(c => c.Providers)
                     .Include(c => c.SupportStaffMessages)
             );
 
@@ -286,6 +292,25 @@ namespace OmniChat.Application.Services.Implements
                 if (result.Highlights.Any() || result.Recommends.Any())
                     message.extractKeywordResponses = result;
             }
+
+
+            var lastMessage = conversation.CustomerMessages
+            .OrderByDescending(m => m.Timestamp)
+            .FirstOrDefault();
+
+            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+            {
+                ConversationId = conversation.Id,
+                CustomerName = conversation.CustomerName,
+                avartarUrl = conversation.AvatarUrl,
+                providerName = conversation.Providers.ProviderName,
+                LastMessage = lastMessage.Content,
+                UnreadMessageCount = 0,
+            };
+
+            await _hubContext.Clients
+                .User(conversation.ActiveStaffId.ToString())
+                .SendAsync("SidebarUpdated", sidebarUpdate);
 
             return new SupportConversationDetailResponse
             {
