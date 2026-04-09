@@ -26,6 +26,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     public async Task<bool> AcceptPostSaleRequestAsync(Guid id)
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
         var postSaleRequest = await postSaleRequestRepo.GetByIdAsync(id) ?? throw new NotFoundException($"Request {id} not found");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -33,7 +34,8 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
 
             postSaleRequest.Status = PostSaleRequestStatus.Approved;
             postSaleRequest.ResolvedTime = DateTime.UtcNow;
-            postSaleRequest.ResolveById = _httpContextAccessor.HttpContext!.User.GetUserId();
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+            postSaleRequest.ResolveById = staff.Id;
             postSaleRequestRepo.Update(postSaleRequest);
             switch (postSaleRequest.Type)
             {
@@ -56,6 +58,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     public async Task<bool> RejectPostSaleRequestAsync(Guid id)
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
         var postSaleRequest = await postSaleRequestRepo.GetByIdAsync(id) ?? throw new NotFoundException($"Request {id} not found");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -63,7 +66,8 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
 
             postSaleRequest.Status = PostSaleRequestStatus.Rejected;
             postSaleRequest.ResolvedTime = DateTime.UtcNow;
-            postSaleRequest.ResolveById = _httpContextAccessor.HttpContext!.User.GetUserId();
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+            postSaleRequest.ResolveById = staff.Id;
             postSaleRequestRepo.Update(postSaleRequest);
             return true;
         });
@@ -72,12 +76,12 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     public async Task<bool> CreatePostSaleRequestAsync(CreatePostSaleRequestRequest request)
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
-
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var postSaleRequest = _mapper.Map<PostSaleRequest>(request);
-
-            postSaleRequest.PresentByStaffId = _httpContextAccessor.HttpContext!.User.GetUserId();
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+            postSaleRequest.PresentByStaffId = staff.Id;
 
             postSaleRequest.Status = PostSaleRequestStatus.Pending;
 

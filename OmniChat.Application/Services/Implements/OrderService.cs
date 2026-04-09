@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
@@ -38,6 +39,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var productBatchRepo = _unitOfWork.GetRepository<ProductBatch>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -67,7 +69,6 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
                 batch.Product.Quantity -= item.Quantity;
 
-
                 order.OrderItems.Add(new OrderItem
                 {
                     ProductBatchId = batch.Id,
@@ -75,6 +76,9 @@ public class OrderService : BaseService<OrderService>, IOrderService
                     Price = batch.Product.Price
                 });
             }
+            //log the creator of the order
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+            order.CreatorId = staff.Id;
             await orderRepo.InsertAsync(order);
         });
 
