@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Models;
+﻿using OmniChat.Infrastructure.Dtos.Responses.Performance;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +19,7 @@ namespace OmniChat.Application.Services.Interface
         public  Task UpdatePerformanceOnConversationCompleteAsync(Guid staffId, int firstResponseTimeSeconds);
 
         public Task CompleteConversationAndTasksAsync(SupportConversation conversation);
+
+        public  Task<TotalAverageResponse> GetTotalAverageAsync(DateTime fromDate, DateTime toDate);
     }
 }

@@ -67,6 +67,7 @@ public class ApiEndPointConstant
     {
         public const string StaffPerformance = ApiV1 + "/staff-performance";
         public const string InitializePerformanceForStaff = StaffPerformance + "/initialize-performance/{staffId}";
+        public const string GetTotalAverage = StaffPerformance + "/total-average";
     }
 
     public static class SupportStaffMessageEndPoint
