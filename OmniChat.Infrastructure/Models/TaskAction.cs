@@ -24,7 +24,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Staff ActionBy { get; set; }
 
-        public Guid ActionToId { get; set; }
+        public Guid? ActionToId { get; set; }
 
         public virtual Staff ActionTo { get; set; }
     }
