@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Claim;
+using OmniChat.Infrastructure.Dtos.Requests.TaskAction;
 using OmniChat.Infrastructure.Dtos.Responses.Claim;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
@@ -21,16 +22,11 @@ namespace OmniChat.Application.Services.Implements
 {
     public class ClaimService : BaseService<ClaimService>, IClaimService
     {
-        private readonly IStaffPerformanceService _staffPerformanceService;
+        private readonly ITaskActionService _taskActionService;
 
-        private readonly ISupportConversationService _supportConversationService;
-
-        private readonly ISupportTaskService _supportTaskService;
-        public ClaimService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<ClaimService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IStaffPerformanceService staffPerformanceService, ISupportConversationService supportConversationService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public ClaimService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<ClaimService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ITaskActionService taskActionService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
-            _staffPerformanceService = staffPerformanceService;
-            _supportConversationService = supportConversationService;
-            _supportTaskService = supportTaskService;
+            _taskActionService = taskActionService;
         }
 
         public async Task<bool> CreateClaimAsync(CreateClaimRequest claimRequest)
@@ -275,20 +271,29 @@ namespace OmniChat.Application.Services.Implements
             {
                 task.CurrentAssignedStaffId = newStaffAssignId;
                 _unitOfWork.GetRepository<SupportTask>().Update(task);
+               await _taskActionService.CreateTaskActionAsync(new TaskActionRequest
+                {
+                    SupportTaskId = task.Id,
+                    Action = TaskActionType.Reassigned,
+                    ActionById = oldStaffId.Value,
+                    ActionToId = newStaffAssignId,
+                    Reason = $"Task reassigned from Staff {oldStaffId} to Staff {newStaffAssignId} due to conversation reassignment"
+                });
             }
 
-            var performanceList = await _unitOfWork.GetRepository<StaffPerformance>()
-             .GetListAsync(predicate: sp => sp.StaffId == oldStaffId);
-
-            var oldStaffPerformance = performanceList
-                .OrderByDescending(sp => sp.CreateDate)
-                .FirstOrDefault();
+            var now = DateTime.UtcNow;
+            var oldStaffPerformance = await _unitOfWork.GetRepository<StaffPerformance>()
+                .SingleOrDefaultAsync(predicate: sp =>
+                    sp.StaffId == oldStaffId &&
+                    sp.FromTime <= now &&
+                    sp.ToTime >= now);
 
             if (oldStaffPerformance != null)
             {
                 oldStaffPerformance.ReassignmentCount += 1;
                 oldStaffPerformance.UpdateDate = DateTime.UtcNow;
                 _unitOfWork.GetRepository<StaffPerformance>().Update(oldStaffPerformance);
+
             }
             else
             {

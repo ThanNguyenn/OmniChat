@@ -14,8 +14,8 @@ namespace OmniChat.Infrastructure.Mappings
     {
         public TaskActionMapper()
         {
-            CreateMap<TaskAction, TaskActionRequest>();
-            CreateMap<TaskActionResponse, TaskAction>();
+            CreateMap<TaskActionRequest, TaskAction>();
+            CreateMap<TaskAction, TaskActionResponse>();
         }
     }
 }

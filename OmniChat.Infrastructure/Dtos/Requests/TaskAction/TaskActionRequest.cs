@@ -17,6 +17,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.TaskAction
 
         public Guid ActionById { get; set; }
 
-        public Guid ActionToId { get; set; }
+        public Guid? ActionToId { get; set; }
     }
 }

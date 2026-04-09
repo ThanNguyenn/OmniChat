@@ -103,7 +103,7 @@ namespace OmniChat.Application.Services.Implements
 
             existSupportTask.Status = SupportTaskStatus.Done;
             existSupportTask.CompleteDate = now;
-
+            repo.Update(existSupportTask);
             await _unitOfWork.CommitAsync();
 
 
@@ -119,11 +119,12 @@ namespace OmniChat.Application.Services.Implements
                     SupportTaskId = existSupportTask.Id,
                      Action  = TaskActionType.Completed,
                      ActionById = existSupportTask.CurrentAssignedStaffId.Value,
-
+                     ActionToId = null,
+                     Reason = $"Task completed by {existSupportTask.CurrentAssignedStaffId.Value}"
                 };
-                await
+                await _taskActionService.CreateTaskActionAsync(newAction);
             }
-
+            
             return true;
         }
 
@@ -135,8 +136,10 @@ namespace OmniChat.Application.Services.Implements
             if (existSupportTask == null)
                 throw new NotFoundException("No SupportTask found");
 
-            if (existSupportTask.Status == SupportTaskStatus.Done)
-                throw new BadRequestException("Task already completed");
+            if (existSupportTask.Status == SupportTaskStatus.Done  ||
+            existSupportTask.Status == SupportTaskStatus.Cancelled ||
+            existSupportTask.Status == SupportTaskStatus.closed)
+                throw new BadRequestException("Task already finalized");
 
             var now = DateTime.UtcNow;
 
@@ -146,7 +149,7 @@ namespace OmniChat.Application.Services.Implements
 
             existSupportTask.Status = SupportTaskStatus.Cancelled;
             existSupportTask.CompleteDate = now;
-
+            repo.Update(existSupportTask);
             await _unitOfWork.CommitAsync();
 
             if (existSupportTask.CurrentAssignedStaffId.HasValue)
@@ -155,6 +158,16 @@ namespace OmniChat.Application.Services.Implements
                     existSupportTask.CurrentAssignedStaffId.Value,
                     handleTime
                 );
+
+                var newAction = new TaskActionRequest
+                {
+                    SupportTaskId = existSupportTask.Id,
+                    Action = TaskActionType.Cancelled,
+                    ActionById = existSupportTask.CurrentAssignedStaffId.Value,
+                    ActionToId = null,
+                    Reason = $"Task cancelled by {existSupportTask.CurrentAssignedStaffId.Value}"
+                };
+                await _taskActionService.CreateTaskActionAsync(newAction);
             }
             return true;
         }

@@ -288,4 +288,11 @@ public class ApiEndPointConstant
         public const string GetById = Base + "/{id}";
 
     }
+
+    public static class TaskActionEndPoint
+    {
+        public const string Base = ApiV1 + "/task-action";
+        public const string GetAll = Base + "/get-all";
+        public const string GetById = Base + "/{id}";
+    }
 }

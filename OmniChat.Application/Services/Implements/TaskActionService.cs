@@ -1,11 +1,13 @@
 ﻿using Amazon.Runtime;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.TaskAction;
 using OmniChat.Infrastructure.Dtos.Responses.TaskAction;
 using OmniChat.Infrastructure.Exceptions;
+using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -23,18 +25,34 @@ namespace OmniChat.Application.Services.Implements
         {
         }
 
-        public async Task<PaginatedResponse<TaskActionResponse>> GetAllTaskActionAsync()
+        public async Task<PagingResponse<TaskActionResponse>> GetAllTaskActionAsync(int pageIndex = 1, int pageSize = 10)
         {
-            var taskActionRepo = _unitOfWork.GetRepository<TaskAction>();
+            var repo = _unitOfWork.GetRepository<TaskAction>();
 
-            var taskActions = await taskActionRepo.GetListAsync();
+            var query = repo.GetQueryable()
+                .OrderByDescending(t => t.CreateDate);
 
-            var response = taskActions.Select(taskAction => _mapper.Map<TaskActionResponse>(taskAction)).ToList();
+            var totalItems = await query.CountAsync();
 
-            return new PaginatedResponse<TaskActionResponse>
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var mapped = _mapper.Map<IEnumerable<TaskActionResponse>>(items);
+
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return new PagingResponse<TaskActionResponse>
             {
-                Items = response,
-                TotalCount = response.Count
+                Items = mapped,
+                Meta = new PaginationMeta
+                {
+                    CurrentPage = pageIndex,
+                    PageSize = pageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages
+                }
             };
         }
 
