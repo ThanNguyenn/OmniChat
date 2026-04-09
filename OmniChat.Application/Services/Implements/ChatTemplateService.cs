@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OmniChat.Application.Services.Implements
@@ -120,10 +121,42 @@ namespace OmniChat.Application.Services.Implements
             );
         }
 
+        public async Task<string> ExpandTemplateCodesAsync(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return message;
+
+            var repo = _unitOfWork.GetRepository<ChatTemplate>();
+
+
+            var pattern = @"\b([A-Za-z]{1,5}\d{1,3})\b";
+            var matches = Regex.Matches(message, pattern)
+                               .Select(m => m.Value)
+                               .Distinct()
+                               .ToList();
+
+            if (!matches.Any()) return message;
+
+           
+            var templates = await repo.GetListAsync(
+                predicate: t => matches.Contains(t.Code),
+                selector: t => new { t.Code, t.Content }
+            );
+
+            var codeMap = templates.ToDictionary(t => t.Code, t => t.Content);
+
+          
+            var result = Regex.Replace(message, pattern, match =>
+                codeMap.TryGetValue(match.Value, out var content) ? content : match.Value
+            );
+
+            return result;
+        }
+
         private void ValidateRequest(ChatTemplateRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 50)
-                throw new BadRequestException("Code is required and must not exceed 50 characters");
+            var codePattern = @"^[A-Za-z]{1,5}\d{1,3}$";
+            if (string.IsNullOrWhiteSpace(request.Code) || !Regex.IsMatch(request.Code, codePattern))
+                throw new BadRequestException("Code must follow format: 1-5 letters + 1-3 digits (e.g. H01, TK002)");
 
             if (string.IsNullOrWhiteSpace(request.Content) || request.Content.Length > 500)
                 throw new BadRequestException("Content is required and must not exceed 500 characters");

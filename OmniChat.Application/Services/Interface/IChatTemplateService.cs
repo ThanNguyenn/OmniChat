@@ -11,18 +11,19 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface IChatTemplateService
     {
-        public  Task<bool> CreateChatTemplateAsync(ChatTemplateRequest request);
+        public Task<bool> CreateChatTemplateAsync(ChatTemplateRequest request);
 
-        public  Task<bool> UpdateChatTemplateAsync(Guid id, ChatTemplateRequest request);
+        public Task<bool> UpdateChatTemplateAsync(Guid id, ChatTemplateRequest request);
 
-        public  Task<bool> DeleteChatTemplateAsync(Guid id);
+        public Task<bool> DeleteChatTemplateAsync(Guid id);
 
-        public  Task<ChatTemplateResponse> GetChatTemplateByIdAsync(Guid id);
+        public Task<ChatTemplateResponse> GetChatTemplateByIdAsync(Guid id);
 
-        public  Task<PagingResponse<ChatTemplateResponse>> GetAllChatTemplateAsync(
+        public Task<PagingResponse<ChatTemplateResponse>> GetAllChatTemplateAsync(
          int pageNumber,
          int pageSize,
          string? search);
 
+        public Task<string> ExpandTemplateCodesAsync(string message);
     }
 }

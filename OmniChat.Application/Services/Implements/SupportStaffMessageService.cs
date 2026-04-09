@@ -34,9 +34,10 @@ namespace OmniChat.Application.Services.Implements
         private readonly ICustomerProfileService _customerProfileService;
         private readonly ISupportConversationService _supportConversationService;
         private readonly IProviderService _providerService;
+        private readonly IChatTemplateService _chatTemplateService;
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration,IHubContext<SupportConversationHub> hubContext, IProviderService providerService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration,IHubContext<SupportConversationHub> hubContext, IProviderService providerService,IChatTemplateService chatTemplateService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _httpClient = httpClient;
             _zaloOAuthService = zaloOAuthService;
@@ -45,6 +46,7 @@ namespace OmniChat.Application.Services.Implements
             _configuration = configuration;
             _hubContext = hubContext;
             _providerService = providerService;
+            _chatTemplateService = chatTemplateService;
         }
 
         public async Task<bool> SendZaloMessageAsync(CreateSupportStaffMessageRequest newSupportMess)
@@ -214,10 +216,12 @@ namespace OmniChat.Application.Services.Implements
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("access_token", accessToken);
 
+            var expandedContent = await _chatTemplateService.ExpandTemplateCodesAsync(newSupportMess.Content);
+
             var payload = new
             {
                 recipient = new { user_id = existCustomerProfile.ZaloSenderId }, // Cấu trúc chuẩn Zalo API v3
-                message = new { text = newSupportMess.Content }
+                message = new { text = expandedContent }
             };
 
             var response = await client.PostAsJsonAsync("https://openapi.zalo.me/v3.0/oa/message/cs", payload);
@@ -254,7 +258,7 @@ namespace OmniChat.Application.Services.Implements
                     {
                         ConversationId = existConversation.Id,
                         CustomerName = existConversation.CustomerName,
-                        LastMessage = newStaffSupportMes.Content
+                        LastMessage = expandedContent
                     });
                 }
 
@@ -262,7 +266,7 @@ namespace OmniChat.Application.Services.Implements
                 await _hubContext.Clients.Group($"conversation:{existConversation.Id}").SendAsync("StaffReceiveMessage", new
                 {
                     SenderType = "Staff",
-                    Content = newStaffSupportMes.Content,
+                    Content = expandedContent,
                     Timestamp = newStaffSupportMes.Timestamp
                 });
             }
@@ -400,12 +404,14 @@ namespace OmniChat.Application.Services.Implements
                 if (string.IsNullOrEmpty(pageAccessToken))
                     throw new BusinessException("Facebook Page Access Token is missing");
 
+                var expandedContent = await _chatTemplateService.ExpandTemplateCodesAsync(newSupportMess.Content);
+
                 // Sử dụng HttpClient tối ưu
                 var url = $"https://graph.facebook.com/v18.0/me/messages?access_token={pageAccessToken}";
                 var body = new
                 {
                     recipient = new { id = existCustomerProfile.FacebookSenderId },
-                    message = new { text = newSupportMess.Content }
+                    message = new { text = expandedContent }
                 };
 
                 // Gửi tin nhắn đến Facebook Meta
@@ -446,7 +452,7 @@ namespace OmniChat.Application.Services.Implements
                             CustomerName = existConversation.CustomerName,
                             avartarUrl = existConversation.AvatarUrl,
                             providerName = provider.ProviderName,
-                            LastMessage = newStaffSupportMes.Content
+                            LastMessage = expandedContent
                         };
                         await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString()).SendAsync("SidebarUpdated", sidebarUpdate);
                     }
@@ -456,7 +462,7 @@ namespace OmniChat.Application.Services.Implements
                     {
                         SenderType = "Staff",
                         SenderId = newStaffSupportMes.StaffId,
-                        Content = newStaffSupportMes.Content,
+                        Content = expandedContent,
                         Timestamp = newStaffSupportMes.Timestamp
                     };
                     await _hubContext.Clients.Group($"conversation:{existConversation.Id}").SendAsync("StaffReceiveMessage", supportConversationMessages);
