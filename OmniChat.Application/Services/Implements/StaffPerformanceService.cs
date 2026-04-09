@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Responses.Performance;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -15,8 +16,17 @@ namespace OmniChat.Application.Services.Implements
 {
     public class StaffPerformanceService : BaseService<StaffPerformanceService>, IStaffPerformanceService
     {
-        public StaffPerformanceService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<StaffPerformanceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly ICustomerMessageService _customerMessageService;
+        private readonly ISupportStaffMessageService _supportStaffMessageService;
+        private readonly ISupportConversationService _supportConversationService;
+        private readonly ISupportTaskService _supportTaskService;
+
+        public StaffPerformanceService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<StaffPerformanceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerMessageService customerMessageService, ISupportStaffMessageService supportStaffMessageService, ISupportConversationService supportConversationService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _customerMessageService = customerMessageService;
+            _supportStaffMessageService = supportStaffMessageService;
+            _supportConversationService = supportConversationService;
+            _supportTaskService = supportTaskService;
         }
 
         public async Task InitializePerformanceForStaffAsync(Guid staffId)
@@ -194,6 +204,98 @@ namespace OmniChat.Application.Services.Implements
             }
 
             await _unitOfWork.CommitAsync();
+        }
+
+        public  async Task<TotalAverageResponse> GetTotalAverageAsync(DateTime fromDate, DateTime toDate)
+        {
+            var perRepo = _unitOfWork.GetRepository<StaffPerformance>();
+            var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
+            var staffMessageRepo = _unitOfWork.GetRepository<SupportStaffMessage>();
+            var supportConversationRepo = _unitOfWork.GetRepository<SupportConversation>();
+            var customerMessageRepo = _unitOfWork.GetRepository<CustomerMessage>();
+
+            var fromTimestamp = new DateTimeOffset(fromDate).ToUnixTimeMilliseconds();
+            var toTimestamp = new DateTimeOffset(toDate).ToUnixTimeMilliseconds();
+
+            var totalCustomerMessages = await customerMessageRepo.CountAsync(
+                predicate: m => m.Timestamp >= fromTimestamp && m.Timestamp <= toTimestamp
+            );
+
+            var conversations = await supportConversationRepo.GetListAsync(
+                predicate: c => c.CreatedDate.HasValue &&
+                                c.CreatedDate.Value >= fromDate &&
+                                c.CreatedDate.Value <= toDate &&
+                                c.FirstResponseAt != null,
+                selector: c => new
+                {
+                    c.CreatedDate,
+                    c.FirstResponseAt,
+                    c.CloseAt
+                }
+            );
+
+            double averageTotalResponseTime  = 0;
+
+            if (conversations.Any())
+            {                
+                averageTotalResponseTime = conversations
+                    .Where(c => c.FirstResponseAt.HasValue && c.CreatedDate.HasValue)
+                    .Select(c => (c.FirstResponseAt!.Value - c.CreatedDate!.Value).TotalSeconds)
+                    .DefaultIfEmpty(0)
+                    .Average();
+            }
+
+            var completedTasks = await supportTaskRepo.GetListAsync(predicate:
+               t => t.Status == SupportTaskStatus.Done &&
+                    t.CompleteDate >= fromDate &&
+                    t.CompleteDate <= toDate &&
+                    t.CreatedAt != null &&
+                    t.CompleteDate != null,
+                    selector: t => new
+                    {
+                        t.CreatedAt,
+                        t.CompleteDate
+                    }
+            );
+
+            double totalAverageTaskComplete = 0;
+            if (completedTasks.Any())
+            {
+                totalAverageTaskComplete = completedTasks
+                    .Select(t => (t.CompleteDate!.Value - t.CreatedAt!.Value).TotalSeconds)
+                    .DefaultIfEmpty(0)
+                    .Average();
+            }
+
+            var closedConversations = await supportConversationRepo.GetListAsync(
+                predicate: c => c.Status == ConversationStatus.Complete &&
+                                c.CloseAt >= fromDate &&
+                                c.CloseAt <= toDate &&
+                                c.CreatedDate != null &&
+                                c.CloseAt != null,
+                selector: c => new
+                {
+                    c.CreatedDate,
+                    c.CloseAt
+                }
+            );
+
+            double totalAverageCompleteConversation = 0;
+            if (closedConversations.Any())
+            {
+                totalAverageCompleteConversation = closedConversations
+                    .Select(c => (c.CloseAt!.Value - c.CreatedDate!.Value).TotalSeconds)
+                    .DefaultIfEmpty(0)
+                    .Average();
+            }
+
+            return new TotalAverageResponse
+            {
+                AverageTotalResponseTime = Math.Round(averageTotalResponseTime, 2),
+                TotalCustomerMessages = totalCustomerMessages,
+                TotalAverageTaskComplete = Math.Round(totalAverageTaskComplete, 2),
+                TotalAverageCompleteConversation = Math.Round(totalAverageCompleteConversation, 2)
+            };
         }
     }
 }

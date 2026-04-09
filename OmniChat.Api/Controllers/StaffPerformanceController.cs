@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Responses.Performance;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -30,6 +31,24 @@ namespace OmniChat.Api.Controllers
                 Message = "Initialize Performance For Staff Successfully",
                 IsSuccess = true,
                 Data = true
+            });
+        }
+
+        [HttpGet(ApiEndPointConstant.StaffPerformanceEndPoint.GetTotalAverage)]
+        [ProducesResponseType(typeof(ApiResponse<TotalAverageResponse>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Lấy tổng hợp hiệu suất trung bình của tất cả nhân viên của role Admin",
+            Description = "Lấy tổng hợp hiệu suất trung bình của tất cả nhân viên trong khoảng thời gian được chỉ định"
+            )]
+        public async Task<IActionResult> GetTotalAverageAsync([FromQuery] DateTime fromDate, [FromQuery] DateTime toDate)
+        {
+            var result = await _staffPerformanceService.GetTotalAverageAsync(fromDate, toDate);
+            return Ok(new ApiResponse<TotalAverageResponse>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Total Average Successfully",
+                IsSuccess = true,
+                Data = result
             });
         }
     }
