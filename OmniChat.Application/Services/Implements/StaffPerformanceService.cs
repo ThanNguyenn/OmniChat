@@ -16,17 +16,11 @@ namespace OmniChat.Application.Services.Implements
 {
     public class StaffPerformanceService : BaseService<StaffPerformanceService>, IStaffPerformanceService
     {
-        private readonly ICustomerMessageService _customerMessageService;
-        private readonly ISupportStaffMessageService _supportStaffMessageService;
-        private readonly ISupportConversationService _supportConversationService;
-        private readonly ISupportTaskService _supportTaskService;
 
-        public StaffPerformanceService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<StaffPerformanceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerMessageService customerMessageService, ISupportStaffMessageService supportStaffMessageService, ISupportConversationService supportConversationService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        public StaffPerformanceService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<StaffPerformanceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
-            _customerMessageService = customerMessageService;
-            _supportStaffMessageService = supportStaffMessageService;
-            _supportConversationService = supportConversationService;
-            _supportTaskService = supportTaskService;
+          
         }
 
         public async Task InitializePerformanceForStaffAsync(Guid staffId)

@@ -37,7 +37,12 @@ namespace OmniChat.Application.Services.Implements
         private readonly IChatTemplateService _chatTemplateService;
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, IZaloOAuthService zaloOAuthService, ICustomerProfileService customerProfileService, ISupportConversationService supportConversationService, IConfiguration configuration,IHubContext<SupportConversationHub> hubContext, IProviderService providerService,IChatTemplateService chatTemplateService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportStaffMessageService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportStaffMessageService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, HttpClient httpClient, 
+            IZaloOAuthService zaloOAuthService, 
+            ICustomerProfileService customerProfileService, 
+            ISupportConversationService supportConversationService,
+            IConfiguration configuration,IHubContext<SupportConversationHub> hubContext,
+            IProviderService providerService,IChatTemplateService chatTemplateService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _httpClient = httpClient;
             _zaloOAuthService = zaloOAuthService;
