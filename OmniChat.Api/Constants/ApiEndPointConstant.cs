@@ -57,13 +57,13 @@ public class ApiEndPointConstant
 
         public const string GetCustomerProfileByConversationId = CustomerProfile + "/{conversationId}";
 
-        public const string CustomerMerge =ApiV1 + "/customer-profile/merge";
+        public const string CustomerMerge = ApiV1 + "/customer-profile/merge";
 
         public const string EnrichCustomerProfile =
            CustomerProfile + "/enrich";
     }
 
-    public  static class StaffPerformanceEndPoint
+    public static class StaffPerformanceEndPoint
     {
         public const string StaffPerformance = ApiV1 + "/staff-performance";
         public const string InitializePerformanceForStaff = StaffPerformance + "/initialize-performance/{staffId}";
@@ -111,7 +111,7 @@ public class ApiEndPointConstant
         public const string ChangePassword = "change-password";
     }
 
-    public static class Account 
+    public static class Account
     {
         public const string Base = ApiV1 + "/accounts";
         public const string Create = "create";
@@ -130,7 +130,7 @@ public class ApiEndPointConstant
     public static class Staff
     {
         public const string Base = ApiV1 + "/staff";
-        public const string Create = "create";  
+        public const string Create = "create";
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
         public const string GetAll = "get";
@@ -160,7 +160,7 @@ public class ApiEndPointConstant
     public static class Product
     {
         public const string Base = ApiV1 + "/products";
-        public const string Create = "create";  
+        public const string Create = "create";
         public const string Update = "update/{id}";
         public const string UpdateImage = "update/{id}/image";
         public const string Delete = "delete/{id}";
@@ -189,7 +189,7 @@ public class ApiEndPointConstant
     public static class Order
     {
         public const string Base = ApiV1 + "/orders";
-        public const string Create = "create";  
+        public const string Create = "create";
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
         public const string GetAll = "get";
@@ -206,9 +206,9 @@ public class ApiEndPointConstant
     public static class FacebookOAuthToken
     {
         public const string Base = ApiV1 + "/facebook-token";
-        public const string Create = Base;          
-        public const string Update = Base + "/{id}"; 
-        public const string Delete = Base + "/{id}"; 
+        public const string Create = Base;
+        public const string Update = Base + "/{id}";
+        public const string Delete = Base + "/{id}";
     }
 
     public static class InstagramOAuthToken
@@ -225,7 +225,7 @@ public class ApiEndPointConstant
         public const string GetAll = "get";
     }
 
-    public static class  Wallet
+    public static class Wallet
     {
         public const string Base = ApiV1 + "/wallets";
         public const string Payment = Base + "/payment";
@@ -262,7 +262,7 @@ public class ApiEndPointConstant
 
     }
 
-    public static class  Invoice
+    public static class Invoice
     {
         public const string Base = ApiV1 + "/invoices";
         public const string TotalRevenue = Base + "/total-revenue";
@@ -275,5 +275,16 @@ public class ApiEndPointConstant
     {
         public const string Base = ApiV1 + "/intent-type";
         public const string GetAll = Base + "/gets";
+    }
+
+    public static class ChatTemplate
+    {
+        public const string Base = ApiV1 + "/chat-templates";
+        public const string Create = Base;           
+        public const string Update = Base + "/{id}"; 
+        public const string Delete = Base + "/{id}"; 
+        public const string GetAll = Base;           
+        public const string GetById = Base + "/{id}";
+
     }
 }

@@ -204,6 +204,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IPostSaleRequestService, PostSaleRequestService>();
     builder.Services.AddScoped<IConversationWarningService, ConversationWarningService>();
     builder.Services.AddScoped<IIntentTypeService, IntentTypeService>();
+    builder.Services.AddScoped<IChatTemplateService, ChatTemplateService>();
 }
 
 void RegisterBackgroundServices()
