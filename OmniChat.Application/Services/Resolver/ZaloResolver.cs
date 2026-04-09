@@ -138,7 +138,10 @@ namespace OmniChat.Application.Services.Resolver
                         ZaloSenderId = zaloEvent.Sender.Id.ToString(),
                         CustomerName = zaloProfile?.DisplayName ?? $"Zalo User {zaloEvent.Sender.Id}",
                         AvatarUrl = zaloProfile?.Avatar,
-                        PhoneNumber = zaloProfile?.SharedInfo?.Phone,
+                        PhoneNumber = !string.IsNullOrWhiteSpace(zaloProfile?.SharedInfo?.Phone)
+                          && zaloProfile.SharedInfo.Phone != "0"
+                          ? zaloProfile.SharedInfo.Phone
+                          : null,
                     }
                 );
 
@@ -248,7 +251,7 @@ namespace OmniChat.Application.Services.Resolver
                         avartarUrl = conversation.AvatarUrl,
                         providerName = provider.ProviderName,
                         LastMessage = newMessage.Content,
-                        UnreadMessage = unreadCount,
+                        UnreadMessageCount = unreadCount,
                     };
 
                     await _hubContext.Clients

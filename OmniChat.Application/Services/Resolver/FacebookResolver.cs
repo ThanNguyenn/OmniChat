@@ -128,6 +128,7 @@ namespace OmniChat.Application.Services.Resolver
                                 FacebookSenderId = messaging.sender.id,
                                 CustomerName = $"{fbUser?.FirstName} {fbUser?.LastName}".Trim(),
                                 AvatarUrl = fbUser?.ProfilePic,
+                                PhoneNumber = null,
                             }
                         );
 
@@ -229,7 +230,7 @@ namespace OmniChat.Application.Services.Resolver
                                 avartarUrl = conversation.AvatarUrl,
                                 providerName = provider.ProviderName,
                                 LastMessage = newMessage.Content,
-                                UnreadMessage = unreadCount,
+                                UnreadMessageCount = unreadCount,
                             };
 
                             await _hubContext.Clients

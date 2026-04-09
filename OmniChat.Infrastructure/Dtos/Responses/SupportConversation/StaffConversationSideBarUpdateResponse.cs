@@ -18,7 +18,7 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
 
         public string LastMessage { get; set; } = null!;
 
-        public int? UnreadMessage { get; set; }
+        public int? UnreadMessageCount { get; set; }
 
         public DateTime UpdateDate { get; set; } = DateTime.UtcNow;
     }
