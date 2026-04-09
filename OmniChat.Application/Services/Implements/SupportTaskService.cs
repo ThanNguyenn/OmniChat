@@ -119,6 +119,7 @@ namespace OmniChat.Application.Services.Implements
                     SupportTaskId = existSupportTask.Id,
                      Action  = TaskActionType.Completed,
                      ActionById = existSupportTask.CurrentAssignedStaffId.Value,
+
                 };
                 await
             }
