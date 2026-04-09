@@ -18,6 +18,8 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task UpdatePerformanceOnConversationCompleteAsync(Guid staffId, int firstResponseTimeSeconds);
 
+        public  Task UpdatePerformanceOnTaskCancelAsync(Guid staffId, int handleTimeSeconds);
+
         public Task CompleteConversationAndTasksAsync(SupportConversation conversation);
 
         public  Task<TotalAverageResponse> GetTotalAverageAsync(DateTime fromDate, DateTime toDate);

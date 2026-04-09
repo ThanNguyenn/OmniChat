@@ -132,6 +132,26 @@ namespace OmniChat.Application.Services.Implements
             await _unitOfWork.CommitAsync();
         }
 
+        public async Task UpdatePerformanceOnTaskCancelAsync(Guid staffId, int handleTimeSeconds)
+        {
+            var now = DateTime.UtcNow;
+            var repo = _unitOfWork.GetRepository<StaffPerformance>();
+            var performance = await repo.SingleOrDefaultAsync(
+                predicate: x => x.StaffId == staffId &&
+                                x.FromTime <= now &&
+                                x.ToTime >= now
+            );
+            if (performance == null)
+            {
+                _logger.LogWarning("No active performance found for staff {StaffId}", staffId);
+                return;
+            }
+            performance.CancelledCount += 1;
+            performance.UpdateDate = now;
+            repo.Update(performance);
+            await _unitOfWork.CommitAsync();
+        }
+
         public async Task UpdatePerformanceOnConversationCompleteAsync(Guid staffId, int firstResponseTimeSeconds)
         {
             var now = DateTime.UtcNow;
