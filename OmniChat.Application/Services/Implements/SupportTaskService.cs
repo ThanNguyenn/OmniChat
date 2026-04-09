@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.TaskAction;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -19,10 +20,12 @@ namespace OmniChat.Application.Services.Implements
     public class SupportTaskService : BaseService<SupportTaskService>, ISupportTaskService
     {
         private readonly IStaffPerformanceService _staffPerformanceService;
+        private readonly ITaskActionService _taskActionService;
 
-        public SupportTaskService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportTaskService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IStaffPerformanceService staffPerformanceService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportTaskService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportTaskService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IStaffPerformanceService staffPerformanceService, ITaskActionService taskActionService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _staffPerformanceService = staffPerformanceService;
+            _taskActionService = taskActionService;
         }
 
         public async Task<IEnumerable<SupportTask>> GetDoneSupportTaskByConversationIdAsync(Guid conversationId)
@@ -46,9 +49,9 @@ namespace OmniChat.Application.Services.Implements
 
             var activeStatuses = new[]
             {
-        SupportTaskStatus.Done,
-        SupportTaskStatus.InProgress,
-        SupportTaskStatus.PendingReassign
+                SupportTaskStatus.Done,
+                SupportTaskStatus.InProgress,
+                SupportTaskStatus.PendingReassign
               };
 
             var supportTasks = await repo.GetListAsync(
@@ -110,8 +113,48 @@ namespace OmniChat.Application.Services.Implements
                     existSupportTask.CurrentAssignedStaffId.Value,
                     handleTime
                 );
+                
+                var newAction = new TaskActionRequest
+                {
+                    SupportTaskId = existSupportTask.Id,
+                     Action  = TaskActionType.Completed,
+                     ActionById = existSupportTask.CurrentAssignedStaffId.Value,
+                };
+                await
             }
 
+            return true;
+        }
+
+        public async Task<bool> CancelSupportTaskAsync(Guid taskId)
+        {
+            var repo = _unitOfWork.GetRepository<SupportTask>();
+            var existSupportTask = await repo.GetByIdAsync(taskId);
+
+            if (existSupportTask == null)
+                throw new NotFoundException("No SupportTask found");
+
+            if (existSupportTask.Status == SupportTaskStatus.Done)
+                throw new BadRequestException("Task already completed");
+
+            var now = DateTime.UtcNow;
+
+            var handleTime = existSupportTask.CreatedAt.HasValue
+              ? (int)(now - existSupportTask.CreatedAt.Value).TotalSeconds
+              : 0;
+
+            existSupportTask.Status = SupportTaskStatus.Cancelled;
+            existSupportTask.CompleteDate = now;
+
+            await _unitOfWork.CommitAsync();
+
+            if (existSupportTask.CurrentAssignedStaffId.HasValue)
+            {
+               await _staffPerformanceService.UpdatePerformanceOnTaskCancelAsync(
+                    existSupportTask.CurrentAssignedStaffId.Value,
+                    handleTime
+                );
+            }
             return true;
         }
 
