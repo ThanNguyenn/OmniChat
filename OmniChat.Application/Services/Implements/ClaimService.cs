@@ -194,7 +194,7 @@ namespace OmniChat.Application.Services.Implements
             });
         }
 
-        public async Task<PagingResponse<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId, int pageIndex = 1, int pageSize = 10)
+        public async Task<PagingResponse<ClaimDetailResponse>> GetClaimsByStaffIdAsync(Guid staffId, int pageIndex = 1, int pageSize = 10)
         {
             var repo = _unitOfWork.GetRepository<Claim>();
             var query = repo.GetQueryable()
@@ -211,10 +211,10 @@ namespace OmniChat.Application.Services.Implements
                 .Take(pageSize)
                 .ToListAsync();
 
-            var mapped = _mapper.Map<IEnumerable<StaffClaimResponse>>(items);
+            var mapped = _mapper.Map<IEnumerable<ClaimDetailResponse>>(items);
             var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
-            return new PagingResponse<StaffClaimResponse>
+            return new PagingResponse<ClaimDetailResponse>
             {
                 Items = mapped,
                 Meta = new PaginationMeta
