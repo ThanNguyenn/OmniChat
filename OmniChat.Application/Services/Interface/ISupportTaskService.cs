@@ -18,6 +18,6 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task<bool> CompleteTaskAsync(Guid taskId);
 
-        Task<IEnumerable<TaskIntentDashboardResponse>> GetTaskIntentDashboardResponsesAsync (DateTime from, DateTime to);
+        Task<IEnumerable<DashboardMonthResponse>> GetTaskIntentDashboardResponsesAsync(string year);
     }
 }

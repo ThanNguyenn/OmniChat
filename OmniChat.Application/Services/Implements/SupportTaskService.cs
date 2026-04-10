@@ -113,18 +113,18 @@ namespace OmniChat.Application.Services.Implements
                     existSupportTask.CurrentAssignedStaffId.Value,
                     handleTime
                 );
-                
+
                 var newAction = new TaskActionRequest
                 {
                     SupportTaskId = existSupportTask.Id,
-                     Action  = TaskActionType.Completed,
-                     ActionById = existSupportTask.CurrentAssignedStaffId.Value,
-                     ActionToId = null,
-                     Reason = $"Task completed by {existSupportTask.CurrentAssignedStaffId.Value}"
+                    Action = TaskActionType.Completed,
+                    ActionById = existSupportTask.CurrentAssignedStaffId.Value,
+                    ActionToId = null,
+                    Reason = $"Task completed by {existSupportTask.CurrentAssignedStaffId.Value}"
                 };
                 await _taskActionService.CreateTaskActionAsync(newAction);
             }
-            
+
             return true;
         }
 
@@ -136,7 +136,7 @@ namespace OmniChat.Application.Services.Implements
             if (existSupportTask == null)
                 throw new NotFoundException("No SupportTask found");
 
-            if (existSupportTask.Status == SupportTaskStatus.Done  ||
+            if (existSupportTask.Status == SupportTaskStatus.Done ||
             existSupportTask.Status == SupportTaskStatus.Cancelled ||
             existSupportTask.Status == SupportTaskStatus.closed)
                 throw new BadRequestException("Task already finalized");
@@ -154,10 +154,10 @@ namespace OmniChat.Application.Services.Implements
 
             if (existSupportTask.CurrentAssignedStaffId.HasValue)
             {
-               await _staffPerformanceService.UpdatePerformanceOnTaskCancelAsync(
-                    existSupportTask.CurrentAssignedStaffId.Value,
-                    handleTime
-                );
+                await _staffPerformanceService.UpdatePerformanceOnTaskCancelAsync(
+                     existSupportTask.CurrentAssignedStaffId.Value,
+                     handleTime
+                 );
 
                 var newAction = new TaskActionRequest
                 {
@@ -172,24 +172,73 @@ namespace OmniChat.Application.Services.Implements
             return true;
         }
 
-        public async Task<IEnumerable<TaskIntentDashboardResponse>> GetTaskIntentDashboardResponsesAsync(DateTime from, DateTime to)
+        public async Task<IEnumerable<DashboardMonthResponse>> GetTaskIntentDashboardResponsesAsync(string year)
         {
+            var yearInt = int.Parse(year);
+
+            var from = new DateTime(yearInt, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var to = new DateTime(yearInt, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+
             var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
 
-            var query = supportTaskRepo.GetQueryable(
-                predicate: t => t.CreatedAt.HasValue &&
-                                t.CreatedAt.Value.Date >= from.Date &&
-                                t.CreatedAt.Value.Date <= to.Date,
-                asNoTracking: true
-            )
-            .GroupBy(t => t.IntentType.TypeName)
-            .Select(g => new TaskIntentDashboardResponse
-            {
-                IntentName = g.Key,
-                TaskCount = g.Count()
-            });
+            var rawData = await supportTaskRepo.GetQueryable(
+                    t => t.CreatedAt.HasValue &&
+                         t.CreatedAt.Value >= from &&
+                         t.CreatedAt.Value <= to,
+                    asNoTracking: true
+                )
+                .GroupBy(t => new
+                {
+                    Month = t.CreatedAt.Value.Month,
+                    Intent = t.IntentType.TypeName
+                })
+                .Select(g => new
+                {
+                    g.Key.Month,
+                    g.Key.Intent,
+                    Count = g.Count()
+                })
+                .ToListAsync();
 
-            return await query.ToListAsync();
+            var intents = new List<string>
+            {
+                "POST_SALE_CHANGE",
+                "ORDER_STATUS",
+                "PAYMENT",
+                "PRE_SALE",
+                "ORDER_CREATION"
+            };
+
+            var lookup = rawData.ToDictionary(
+                x => (x.Month, x.Intent),
+                x => x.Count
+            );
+
+            var result = new List<DashboardMonthResponse>();
+
+            for (int month = 1; month <= 12; month++)
+            {
+                var monthIntents = new List<TaskIntentDashboardResponse>();
+
+                foreach (var intent in intents)
+                {
+                    lookup.TryGetValue((month, intent), out var count);
+
+                    monthIntents.Add(new TaskIntentDashboardResponse
+                    {
+                        IntentName = intent,
+                        TaskCount = count
+                    });
+                }
+
+                result.Add(new DashboardMonthResponse
+                {
+                    Month = month,
+                    Intents = monthIntents
+                });
+            }
+
+            return result;
         }
     }
 }
