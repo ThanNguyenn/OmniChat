@@ -16,7 +16,13 @@ public class OrderItemMapper : Profile
     {
         CreateMap<AddOrderItemRequest, OrderItem>();
 
-        CreateMap<OrderItem, GetOrderItemResponse>().ForMember(dest => dest.ProductName,
-                 opt => opt.MapFrom(src => src.ProductBatch.Product.Name));
+        CreateMap<OrderItem, GetOrderItemResponse>()
+            .ForMember(dest => dest.ProductName,
+                opt => opt.MapFrom(src => src.ProductBatch.Product.Name))
+            .ForMember(dest => dest.ItemsPrice, opt => opt.Ignore())
+            .AfterMap((src, dest) =>
+            {
+                dest.ItemsPrice = src.ProductBatch.Product.Price * dest.Quantity;
+            });
     }
 }

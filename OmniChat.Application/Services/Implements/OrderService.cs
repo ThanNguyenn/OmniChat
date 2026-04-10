@@ -174,7 +174,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
     public async Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
-        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include( q => q.CustomerProfile).Include(q => q.OrderItems)).FirstOrDefaultAsync();
+        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include( q => q.CustomerProfile).Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
         return _mapper.Map<GetOrderResponse>(response); 
     }
 
