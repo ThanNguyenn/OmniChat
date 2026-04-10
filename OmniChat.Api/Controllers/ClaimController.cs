@@ -152,26 +152,16 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetByStaffId)]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<StaffClaimResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<StaffClaimResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
-            summary: "Lấy Claim theo StaffId",
-            description: "Lấy tất cả Claim của một nhân viên dựa trên StaffId"
-            )]
-        public async Task<IActionResult> GetByStaffIdAsync([FromRoute] Guid staffId)
+        Summary = "Lấy Claim theo StaffId",
+        Description = "Lấy tất cả Claim của một nhân viên dựa trên StaffId"
+        )]
+        public async Task<IActionResult> GetByStaffIdAsync([FromRoute] Guid staffId, [FromQuery] int pageIndex = 1,[FromQuery] int pageSize = 10)
         {
-            var claims = await _claimService.GetClaimsByStaffIdAsync(staffId);
-            if (claims == null || !claims.Any())
-            {
-                return NotFound(new ApiResponse<object>
-                {
-                    StatusCode = StatusCodes.Status404NotFound,
-                    Message = "No claims found for the specified StaffId",
-                    IsSuccess = false,
-                    Data = null
-                });
-            }
-            return Ok(new ApiResponse<IEnumerable<StaffClaimResponse>>
+            var claims = await _claimService.GetClaimsByStaffIdAsync(staffId, pageIndex, pageSize);
+            return Ok(new ApiResponse<PagingResponse<StaffClaimResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Get Claims by StaffId Successfully",

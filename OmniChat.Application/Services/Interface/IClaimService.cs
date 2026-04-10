@@ -19,7 +19,7 @@ namespace OmniChat.Application.Services.Interface
 
         public Task<PagingResponse<ClaimDetailResponse>> GetClaimHistoryAsync(int pageIndex = 1, int pageSize = 10);
 
-        public  Task<IEnumerable<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId);
+        public Task<PagingResponse<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId, int pageIndex = 1, int pageSize = 10);
 
         public  Task<bool> UpdateClaimInforAsync(Guid claimId, UpdateClaimRequest claimRequest);
 

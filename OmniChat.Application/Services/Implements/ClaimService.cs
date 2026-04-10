@@ -194,20 +194,37 @@ namespace OmniChat.Application.Services.Implements
             });
         }
 
-        public async Task<IEnumerable<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId)
+        public async Task<PagingResponse<StaffClaimResponse>> GetClaimsByStaffIdAsync(Guid staffId, int pageIndex = 1, int pageSize = 10)
         {
             var repo = _unitOfWork.GetRepository<Claim>();
+            var query = repo.GetQueryable()
+                .Where(c => c.StaffId == staffId);
 
-            var claims = await repo.GetListAsync(
-                predicate: x => x.StaffId == staffId,
-                include: q => q.Include(x => x.ClaimType),
-                orderBy: q => q.OrderByDescending(x => x.SubmitDate)
-            );
+            var totalItems = await query.CountAsync();
 
-            if (!claims.Any())
+            if (totalItems == 0)
                 throw new NotFoundException("No claims found for this staff");
 
-            return _mapper.Map<IEnumerable<StaffClaimResponse>>(claims);
+            var items = await query
+                .OrderByDescending(c => c.SubmitDate)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var mapped = _mapper.Map<IEnumerable<StaffClaimResponse>>(items);
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return new PagingResponse<StaffClaimResponse>
+            {
+                Items = mapped,
+                Meta = new PaginationMeta
+                {
+                    CurrentPage = pageIndex,
+                    PageSize = pageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages
+                }
+            };
         }
 
         public async Task ReAssignStaffAsync(Guid newStaffAssignId, Guid conversationReAssignId)
