@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
+using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
@@ -11,11 +12,12 @@ namespace OmniChat.Api.Controllers;
 public class InvoiceController : BaseController<InvoiceController>
 {
     private readonly IInvoiceService _invoiceService;
-
-    public InvoiceController(ILogger<InvoiceController> logger, IInvoiceService invoiceService) : base(logger)
+    private readonly InvoiceJobRunner _runner;
+    public InvoiceController(ILogger<InvoiceController> logger, IInvoiceService invoiceService, InvoiceJobRunner runner) : base(logger)
 
     {
         _invoiceService = invoiceService;
+        _runner = runner;
     }
 
 
@@ -31,8 +33,8 @@ public class InvoiceController : BaseController<InvoiceController>
     public async Task<IActionResult> TotalRevenueAsync([FromQuery] DateTime from, DateTime to)
     {
         var result = await _invoiceService.TotalIncomeByTime(from, to);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Total revenue calculated successfully", result);
-        return StatusCode(StatusCodes.Status201Created, response);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Total revenue calculated successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
     }
 
 
@@ -48,9 +50,15 @@ public class InvoiceController : BaseController<InvoiceController>
     public async Task<IActionResult> TotalUnpaidAsync([FromQuery] DateTime from, DateTime to)
     {
         var result = await _invoiceService.TotalUnpaidAmountByTime(from, to);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Total unpaid calculated successfully", result);
-        return StatusCode(StatusCodes.Status201Created, response);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Total unpaid calculated successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [HttpPost(ApiEndPointConstant.IntentType.Base + "run")]
+    public async Task<IActionResult> Run([FromQuery] DateTime? from, [FromQuery] DateTime? to)
+    {
+        await _runner.RunAsync(from, to);
+        return Ok();
+    }
 
 }

@@ -96,15 +96,16 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
         {
             var orders = await orderRepo.GetListAsync(predicate: o =>
                 o.OrderDate >= from &&
-                o.OrderDate < to &&
+                o.OrderDate <= to &&
                 o.DeliveryStatus == DeliveryStatus.Completed &&
                 o.InvoiceId == null &&
                 !(o.IsDeleted ?? false)
             );
-
+            _logger.LogInformation("Orders found: {count}", orders.Count);
             if (!orders.Any())
+            {
                 return;
-
+            }
             var customerIds = orders.Select(o => o.CustomerId).Distinct().ToList();
 
             var existingInvoices = await invoiceRepo.GetListAsync(predicate: i =>

@@ -207,6 +207,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IChatTemplateService, ChatTemplateService>();
     builder.Services.AddScoped<ITaskActionService, TaskActionService>();
     builder.Services.AddScoped<ITaskCancelReasonService, TaskCancelReasonService>();
+    builder.Services.AddScoped<InvoiceJobRunner>();
 }
 
 void RegisterBackgroundServices()
