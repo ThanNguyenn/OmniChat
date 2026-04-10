@@ -13,6 +13,8 @@ public class GetAllOrdersResponse
 
     public Guid CustomerId { get; set; }
 
+    public string CustomerName { get; set; }
+
     public DateTime OrderDate { get; set; }
 
     public string Name { get; set; }
