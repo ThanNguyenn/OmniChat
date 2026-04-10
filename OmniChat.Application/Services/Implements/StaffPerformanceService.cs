@@ -220,95 +220,91 @@ namespace OmniChat.Application.Services.Implements
             await _unitOfWork.CommitAsync();
         }
 
-        public  async Task<TotalAverageResponse> GetTotalAverageAsync(DateTime fromDate, DateTime toDate)
+        public async Task<MonthlyAverageResponse> GetMonthlyAverageAsync(int year)
         {
-            var perRepo = _unitOfWork.GetRepository<StaffPerformance>();
             var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
-            var staffMessageRepo = _unitOfWork.GetRepository<SupportStaffMessage>();
             var supportConversationRepo = _unitOfWork.GetRepository<SupportConversation>();
             var customerMessageRepo = _unitOfWork.GetRepository<CustomerMessage>();
 
-            var fromTimestamp = new DateTimeOffset(fromDate).ToUnixTimeMilliseconds();
-            var toTimestamp = new DateTimeOffset(toDate).ToUnixTimeMilliseconds();
+            var yearStart = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var yearEnd = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+            var fromTimestamp = new DateTimeOffset(yearStart).ToUnixTimeMilliseconds();
+            var toTimestamp = new DateTimeOffset(yearEnd).ToUnixTimeMilliseconds();
 
-            var totalCustomerMessages = await customerMessageRepo.CountAsync(
-                predicate: m => m.Timestamp >= fromTimestamp && m.Timestamp <= toTimestamp
+          
+            var allCustomerMessages = await customerMessageRepo.GetListAsync(
+                predicate: m => m.Timestamp >= fromTimestamp && m.Timestamp <= toTimestamp,
+                selector: m => new { m.Timestamp }
             );
 
-            var conversations = await supportConversationRepo.GetListAsync(
+            var allConversations = await supportConversationRepo.GetListAsync(
                 predicate: c => c.CreatedDate.HasValue &&
-                                c.CreatedDate.Value >= fromDate &&
-                                c.CreatedDate.Value <= toDate &&
+                                c.CreatedDate.Value >= yearStart &&
+                                c.CreatedDate.Value <= yearEnd &&
                                 c.FirstResponseAt != null,
-                selector: c => new
-                {
-                    c.CreatedDate,
-                    c.FirstResponseAt,
-                    c.CloseAt
-                }
+                selector: c => new { c.CreatedDate, c.FirstResponseAt }
             );
 
-            double averageTotalResponseTime  = 0;
-
-            if (conversations.Any())
-            {                
-                averageTotalResponseTime = conversations
-                    .Where(c => c.FirstResponseAt.HasValue && c.CreatedDate.HasValue)
-                    .Select(c => (c.FirstResponseAt!.Value - c.CreatedDate!.Value).TotalSeconds)
-                    .DefaultIfEmpty(0)
-                    .Average();
-            }
-
-            var completedTasks = await supportTaskRepo.GetListAsync(predicate:
-               t => t.Status == SupportTaskStatus.Done &&
-                    t.CompleteDate >= fromDate &&
-                    t.CompleteDate <= toDate &&
-                    t.CreatedAt != null &&
-                    t.CompleteDate != null,
-                    selector: t => new
-                    {
-                        t.CreatedAt,
-                        t.CompleteDate
-                    }
+            var allCompletedTasks = await supportTaskRepo.GetListAsync(
+                predicate: t => t.Status == SupportTaskStatus.Done &&
+                                t.CompleteDate >= yearStart &&
+                                t.CompleteDate <= yearEnd &&
+                                t.CreatedAt != null &&
+                                t.CompleteDate != null,
+                selector: t => new { t.CreatedAt, t.CompleteDate }
             );
 
-            double totalAverageTaskComplete = 0;
-            if (completedTasks.Any())
-            {
-                totalAverageTaskComplete = completedTasks
-                    .Select(t => (t.CompleteDate!.Value - t.CreatedAt!.Value).TotalSeconds)
-                    .DefaultIfEmpty(0)
-                    .Average();
-            }
-
-            var closedConversations = await supportConversationRepo.GetListAsync(
+            var allClosedConversations = await supportConversationRepo.GetListAsync(
                 predicate: c => c.Status == ConversationStatus.Complete &&
-                                c.CloseAt >= fromDate &&
-                                c.CloseAt <= toDate &&
+                                c.CloseAt >= yearStart &&
+                                c.CloseAt <= yearEnd &&
                                 c.CreatedDate != null &&
                                 c.CloseAt != null,
-                selector: c => new
-                {
-                    c.CreatedDate,
-                    c.CloseAt
-                }
+                selector: c => new { c.CreatedDate, c.CloseAt }
             );
 
-            double totalAverageCompleteConversation = 0;
-            if (closedConversations.Any())
-            {
-                totalAverageCompleteConversation = closedConversations
-                    .Select(c => (c.CloseAt!.Value - c.CreatedDate!.Value).TotalSeconds)
-                    .DefaultIfEmpty(0)
-                    .Average();
-            }
+           
+            var messagesByMonth = allCustomerMessages
+                .GroupBy(m => DateTimeOffset.FromUnixTimeMilliseconds(m.Timestamp).UtcDateTime.Month)
+                .ToDictionary(g => g.Key, g => g.Count());
 
-            return new TotalAverageResponse
+            var conversationsByMonth = allConversations
+                .Where(c => c.FirstResponseAt.HasValue && c.CreatedDate.HasValue)
+                .GroupBy(c => c.CreatedDate!.Value.Month)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(c => (c.FirstResponseAt!.Value - c.CreatedDate!.Value).TotalSeconds).Average()
+                );
+
+            var tasksByMonth = allCompletedTasks
+                .GroupBy(t => t.CompleteDate!.Value.Month)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(t => (t.CompleteDate!.Value - t.CreatedAt!.Value).TotalSeconds).Average()
+                );
+
+            var closedConversationsByMonth = allClosedConversations
+                .GroupBy(c => c.CloseAt!.Value.Month)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(c => (c.CloseAt!.Value - c.CreatedDate!.Value).TotalSeconds).Average()
+                );
+
+         
+            var monthlyData = Enumerable.Range(1, 12).Select(month => new MonthlyAverageItem
             {
-                AverageTotalResponseTime = Math.Round(averageTotalResponseTime, 2),
-                TotalCustomerMessages = totalCustomerMessages,
-                TotalAverageTaskComplete = Math.Round(totalAverageTaskComplete, 2),
-                TotalAverageCompleteConversation = Math.Round(totalAverageCompleteConversation, 2)
+                Month = month,
+                Year = year,
+                TotalCustomerMessages = messagesByMonth.GetValueOrDefault(month, 0),
+                AverageTotalResponseTime = Math.Round(conversationsByMonth.GetValueOrDefault(month, 0), 2),
+                TotalAverageTaskComplete = Math.Round(tasksByMonth.GetValueOrDefault(month, 0), 2),
+                TotalAverageCompleteConversation = Math.Round(closedConversationsByMonth.GetValueOrDefault(month, 0), 2)
+            }).ToList();
+
+            return new MonthlyAverageResponse
+            {
+                Year = year,
+                MonthlyData = monthlyData
             };
         }
     }

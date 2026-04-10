@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
@@ -22,7 +23,7 @@ namespace OmniChat.Api.Controllers
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
         Summary = "Complete Support Task",
-        Description = "Hoàn thành Support Task bằng Task Id")]
+        Description = "Complete Support Task bằng Task Id")]
         public async Task<IActionResult> CompleteTask(Guid id)
         {
             var result = await _supportTaskService.CompleteTaskAsync(id);
@@ -33,6 +34,22 @@ namespace OmniChat.Api.Controllers
                 IsSuccess = true,
                 Data = result
             });
+        }
+
+        [HttpPatch(ApiEndPointConstant.SupportTaskEndPoint.CancelSupportTask)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+
+        [SwaggerOperation(
+            Summary = "Cancel Support Task",
+            Description = "Cancel Support Task bằng Task Id và lý do hủy"
+            )]
+        public async Task<IActionResult> CancelSupportTaskAsync(
+        [FromRoute] Guid id,
+        [FromBody] TaskCancelReasonRequest cancelReasonRequest)
+        {
+            var result = await _supportTaskService.CancelSupportTaskAsync(id, cancelReasonRequest);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cancel Support Task successfully", result);
+            return StatusCode(StatusCodes.Status200OK, response);
         }
 
         [HttpGet(ApiEndPointConstant.SupportTaskEndPoint.GetSupportTaskByConversationId)]

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.TaskAction;
+using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -21,11 +22,11 @@ namespace OmniChat.Application.Services.Implements
     {
         private readonly IStaffPerformanceService _staffPerformanceService;
         private readonly ITaskActionService _taskActionService;
-
+     
         public SupportTaskService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportTaskService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IStaffPerformanceService staffPerformanceService, ITaskActionService taskActionService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _staffPerformanceService = staffPerformanceService;
-            _taskActionService = taskActionService;
+            _taskActionService = taskActionService;   
         }
 
         public async Task<IEnumerable<SupportTask>> GetDoneSupportTaskByConversationIdAsync(Guid conversationId)
@@ -107,6 +108,7 @@ namespace OmniChat.Application.Services.Implements
             await _unitOfWork.CommitAsync();
 
 
+
             if (existSupportTask.CurrentAssignedStaffId.HasValue)
             {
                 await _staffPerformanceService.UpdatePerformanceOnTaskCompleteAsync(
@@ -128,7 +130,7 @@ namespace OmniChat.Application.Services.Implements
             return true;
         }
 
-        public async Task<bool> CancelSupportTaskAsync(Guid taskId)
+        public async Task<bool> CancelSupportTaskAsync(Guid taskId, TaskCancelReasonRequest cancelReasonRequest)
         {
             var repo = _unitOfWork.GetRepository<SupportTask>();
             var existSupportTask = await repo.GetByIdAsync(taskId);
@@ -142,16 +144,25 @@ namespace OmniChat.Application.Services.Implements
                 throw new BadRequestException("Task already finalized");
 
             var now = DateTime.UtcNow;
-
             var handleTime = existSupportTask.CreatedAt.HasValue
-              ? (int)(now - existSupportTask.CreatedAt.Value).TotalSeconds
-              : 0;
+                ? (int)(now - existSupportTask.CreatedAt.Value).TotalSeconds
+                : 0;
 
+            
             existSupportTask.Status = SupportTaskStatus.Cancelled;
             existSupportTask.CompleteDate = now;
             repo.Update(existSupportTask);
+
+          
+            cancelReasonRequest.SupportTaskId = taskId;
+            var cancelReasonRepo = _unitOfWork.GetRepository<TaskCancelReason>();
+            var cancelReason = _mapper.Map<TaskCancelReason>(cancelReasonRequest);
+            await cancelReasonRepo.InsertAsync(cancelReason);
+
+            
             await _unitOfWork.CommitAsync();
 
+          
             if (existSupportTask.CurrentAssignedStaffId.HasValue)
             {
                 await _staffPerformanceService.UpdatePerformanceOnTaskCancelAsync(
@@ -169,6 +180,7 @@ namespace OmniChat.Application.Services.Implements
                 };
                 await _taskActionService.CreateTaskActionAsync(newAction);
             }
+
             return true;
         }
 

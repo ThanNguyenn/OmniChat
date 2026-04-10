@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OmniChat.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using OmniChat.Infrastructure.Persistence;
 namespace OmniChat.Infrastructure.Migrations
 {
     [DbContext(typeof(OmniChatDbContext))]
-    partial class OmniChatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410152220_FixIsRemider")]
+    partial class FixIsRemider
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
