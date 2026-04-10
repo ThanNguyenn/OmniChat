@@ -67,7 +67,7 @@ public class ApiEndPointConstant
     {
         public const string StaffPerformance = ApiV1 + "/staff-performance";
         public const string InitializePerformanceForStaff = StaffPerformance + "/initialize-performance/{staffId}";
-        public const string GetTotalAverage = StaffPerformance + "/total-average";
+        public const string GetMonthlyAverage = StaffPerformance + "/monthly-average";
     }
 
     public static class SupportStaffMessageEndPoint
@@ -84,6 +84,7 @@ public class ApiEndPointConstant
     {
         public const string SupportTask = ApiV1 + "/support-task";
         public const string CompleteSupportTask = SupportTask + "/{id}/complete-task";
+        public const string CancelSupportTask = SupportTask + "/{id}/cancel";
         public const string GetSupportTaskByConversationId = SupportTask + "/conversation/{conversationId}";
         public const string GetTaskIntentDashboard = SupportTask + "/dashboard";
     }
@@ -294,5 +295,12 @@ public class ApiEndPointConstant
         public const string Base = ApiV1 + "/task-action";
         public const string GetAll = Base + "/get-all";
         public const string GetById = Base + "/{id}";
+    }
+
+    public static class TaskCancelReasonEndPoint
+    {
+        public const string Base = ApiV1 + "/task-cancel-reasons";
+        public const string GetAllPaging = Base + "/paging";
+        public const string GetBySupportTaskId = Base + "/support-task/{supportTaskId}";
     }
 }

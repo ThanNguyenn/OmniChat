@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
+﻿using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
+using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,8 @@ namespace OmniChat.Application.Services.Interface
         public  Task<IEnumerable<SupportTasksResponse>> GetSupportTaskOnConversationIdAsync(Guid conversationId);
 
         public  Task<bool> CompleteTaskAsync(Guid taskId);
+
+        public  Task<bool> CancelSupportTaskAsync(Guid taskId, TaskCancelReasonRequest cancelReasonRequest);
 
         Task<IEnumerable<TaskIntentDashboardResponse>> GetTaskIntentDashboardResponsesAsync (DateTime from, DateTime to);
     }
