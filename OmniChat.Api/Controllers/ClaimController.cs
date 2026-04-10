@@ -152,7 +152,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetByStaffId)]
-        [ProducesResponseType(typeof(ApiResponse<PagingResponse<StaffClaimResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<ClaimDetailResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
         Summary = "Lấy Claim theo StaffId",
@@ -161,7 +161,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetByStaffIdAsync([FromRoute] Guid staffId, [FromQuery] int pageIndex = 1,[FromQuery] int pageSize = 10)
         {
             var claims = await _claimService.GetClaimsByStaffIdAsync(staffId, pageIndex, pageSize);
-            return Ok(new ApiResponse<PagingResponse<StaffClaimResponse>>
+            return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Get Claims by StaffId Successfully",
