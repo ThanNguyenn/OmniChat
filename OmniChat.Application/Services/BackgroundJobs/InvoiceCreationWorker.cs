@@ -33,27 +33,18 @@ public class InvoiceCreationWorker : BackgroundService
             if (delay > TimeSpan.Zero)
                 await Task.Delay(delay, stoppingToken);
 
-            using var scope = _scopeFactory.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<InvoiceService>();
-
-            List<Guid> customerIds = new();
-
             try
             {
-                var (from, to) = GetInvoiceRange();
-                customerIds = await service.CreateInvoice(from, to);
+                using var scope = _scopeFactory.CreateScope();
+                var runner = scope.ServiceProvider.GetRequiredService<InvoiceJobRunner>();
+
+                await runner.RunAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Invoice creation failed");
+                _logger.LogError(ex, "Invoice job failed");
 
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
-                continue;
-            }
-
-            foreach (var customerId in customerIds)
-            {
-                await service.AllocateMoneyToInvoices(customerId);
             }
         }
     }
