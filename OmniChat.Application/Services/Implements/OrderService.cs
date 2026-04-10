@@ -78,6 +78,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             }
             //log the creator of the order
             var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+            order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
             order.CreatorId = staff.Id;
             await orderRepo.InsertAsync(order);
         });
@@ -170,9 +171,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
             return _mapper.Map<TResponse>(order);
         });
     }
-    public Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId)
+    public async Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId)
     {
-        return GetOrderByIdAsync<GetOrderResponse>(orderId);
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include( q => q.CustomerProfile).Include(q => q.OrderItems)).FirstOrDefaultAsync();
+        return _mapper.Map<GetOrderResponse>(response); 
     }
 
     public Task<GetPostSaleOrderResponse> GetPostSaleOrderByIdAsync(Guid orderId)

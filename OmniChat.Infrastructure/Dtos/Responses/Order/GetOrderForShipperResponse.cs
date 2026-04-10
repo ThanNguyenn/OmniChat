@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OmniChat.Infrastructure.Dtos.Requests.Order;
+namespace OmniChat.Infrastructure.Dtos.Responses.Order;
 
 public class GetOrderForShipperResponse
 {
