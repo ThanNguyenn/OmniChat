@@ -151,7 +151,33 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     var diff = now - convo.LastStaffMessageAt.Value;
                     bool needUpdate = false;
 
-                    if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
+                    //if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
+                    //{
+                    //    _logger.LogInformation("Conversation close");
+                    //    convo.Status = ConversationStatus.Complete;
+                    //    convo.CloseAt = now;
+                    //    needUpdate = true;
+
+                    //    using var taskScope = _serviceProvider.CreateScope();
+                    //    var performanceService = taskScope.ServiceProvider
+                    //        .GetRequiredService<IStaffPerformanceService>();
+                    //    await performanceService.CompleteConversationAndTasksAsync(convo);
+                    //}
+                    //else if (diff.TotalHours >= 23 && !convo.ReminderSent)
+                    //{
+                    //    _logger.LogInformation("Conversation send reminder");
+                    //    using var sendScope = _serviceProvider.CreateScope();
+                    //    var messageService = sendScope.ServiceProvider
+                    //        .GetRequiredService<ISupportStaffMessageService>();
+
+                    //    await SendReminder(convo, messageService);
+                    //    convo.ReminderSent = true;
+                    //    needUpdate = true;
+                    //}
+
+                    if (diff.TotalHours >= 24
+                    && convo.ReminderSent == true
+                    && CustomerNotReplied(convo))
                     {
                         _logger.LogInformation("Conversation close");
                         convo.Status = ConversationStatus.Complete;
@@ -161,11 +187,13 @@ namespace OmniChat.Application.Services.BackgroundJobs
                         using var taskScope = _serviceProvider.CreateScope();
                         var performanceService = taskScope.ServiceProvider
                             .GetRequiredService<IStaffPerformanceService>();
+
                         await performanceService.CompleteConversationAndTasksAsync(convo);
                     }
-                    else if (diff.TotalHours >= 23 && !convo.ReminderSent)
+                    else if (diff.TotalHours >= 23 && convo.ReminderSent != true)
                     {
                         _logger.LogInformation("Conversation send reminder");
+
                         using var sendScope = _serviceProvider.CreateScope();
                         var messageService = sendScope.ServiceProvider
                             .GetRequiredService<ISupportStaffMessageService>();

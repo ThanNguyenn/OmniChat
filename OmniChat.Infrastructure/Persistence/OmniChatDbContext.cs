@@ -273,6 +273,10 @@ namespace OmniChat.Infrastructure.Persistence
              .Property(x => x.IsRead)
              .HasDefaultValueSql("false");
 
+            // default vaule ReminderSent = false
+            modelBuilder.Entity<SupportConversation>()
+            .Property(s => s.ReminderSent)
+            .HasDefaultValueSql("false");
 
             // deafult value FraudFlag = false
             modelBuilder.Entity<PostSaleRequest>()
