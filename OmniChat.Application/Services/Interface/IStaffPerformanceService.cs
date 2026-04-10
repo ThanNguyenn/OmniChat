@@ -22,6 +22,6 @@ namespace OmniChat.Application.Services.Interface
 
         public Task CompleteConversationAndTasksAsync(SupportConversation conversation);
 
-        public  Task<TotalAverageResponse> GetTotalAverageAsync(DateTime fromDate, DateTime toDate);
+        public  Task<MonthlyAverageResponse> GetMonthlyAverageAsync(int year);
     }
 }

@@ -34,22 +34,18 @@ namespace OmniChat.Api.Controllers
             });
         }
 
-        [HttpGet(ApiEndPointConstant.StaffPerformanceEndPoint.GetTotalAverage)]
-        [ProducesResponseType(typeof(ApiResponse<TotalAverageResponse>), StatusCodes.Status200OK)]
+        [HttpGet(ApiEndPointConstant.StaffPerformanceEndPoint.GetMonthlyAverage)]
+        [ProducesResponseType(typeof(ApiResponse<MonthlyAverageResponse>), StatusCodes.Status200OK)]
         [SwaggerOperation(
-            Summary = "Lấy tổng hợp hiệu suất trung bình của tất cả nhân viên của role Admin",
-            Description = "Lấy tổng hợp hiệu suất trung bình của tất cả nhân viên trong khoảng thời gian được chỉ định"
+            Summary = "Lấy tổng hợp hiệu suất trung bình của tất cả nhân viên theo năm của role Admin",
+            Description = "Lấy tổng hợp hiệu suất trung bình của tất cả nhân viên trong năm được chỉ định"
             )]
-        public async Task<IActionResult> GetTotalAverageAsync([FromQuery] DateTime fromDate, [FromQuery] DateTime toDate)
+        public async Task<IActionResult> GetMonthlyAverageAsync([FromQuery] int? year)
         {
-            var result = await _staffPerformanceService.GetTotalAverageAsync(fromDate, toDate);
-            return Ok(new ApiResponse<TotalAverageResponse>
-            {
-                StatusCode = StatusCodes.Status200OK,
-                Message = "Get Total Average Successfully",
-                IsSuccess = true,
-                Data = result
-            });
+            var targetYear = year ?? DateTime.UtcNow.Year;
+            var result = await _staffPerformanceService.GetMonthlyAverageAsync(targetYear);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get monthly average successfully", result);
+            return StatusCode(StatusCodes.Status200OK, response);
         }
     }
 }
