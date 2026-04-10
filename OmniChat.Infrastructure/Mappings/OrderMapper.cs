@@ -20,7 +20,8 @@ public class OrderMapper : Profile
             .ForMember(dest => dest.OrderItems, opt => opt.Ignore());
         CreateMap<UpdateOrderRequest, Order>().ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-        CreateMap<Order, GetAllOrdersResponse>();
+        CreateMap<Order, GetAllOrdersResponse>().ForMember(dest => dest.CustomerName,
+                 opt => opt.MapFrom(src => src.CustomerProfile.CustomerName));
         CreateMap<Order, GetOrderResponse>().ForMember(dest => dest.CustomerName,
                  opt => opt.MapFrom(src => src.CustomerProfile.CustomerName)).ForMember(dest => dest.CustomerPhoneNumber,
                  opt => opt.MapFrom(src => src.CustomerProfile.PhoneNumber)).ForMember(dest => dest.CustomerEmail,

@@ -106,9 +106,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var response = orderRepo.GetPagingListAsync<GetAllOrdersResponse>(
-            predicate: o => string.IsNullOrEmpty(search) || o.Code.Contains(search),
+            predicate: o => string.IsNullOrEmpty(search) || o.Code.Contains(search) || o.CustomerProfile.CustomerName.Contains(search),
             orderBy: q => OrderBy(q, sortBy, descending),
             selector: e => _mapper.Map<GetAllOrdersResponse>(e),
+            include: q => q
+                .Include(o => o.CustomerProfile),
             page: pageNumber,
             size: pageSize);
 
