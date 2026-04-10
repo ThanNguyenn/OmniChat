@@ -23,7 +23,7 @@ public class InvoiceJobRunner
 
     public async Task RunAsync(DateTime? from = null, DateTime? to = null)
     {
-        var end = to ?? DateTime.UtcNow.Date;
+        var end = to ?? DateTime.UtcNow;
         var start = from ?? end.AddDays(-7);
 
         List<Guid> customerIds;
