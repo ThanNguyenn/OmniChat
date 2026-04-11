@@ -21,5 +21,7 @@ namespace OmniChat.Application.Services.Interface
         public  Task<bool> SendFacebookMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
 
         public  Task<bool> SendInstagramMesageAsync(CreateSupportStaffMessageRequest newSupportMess);
+
+        public  Task SendSystemMessageToExternalAsync(Guid conversationId, string guideMessage);
     }
 }
