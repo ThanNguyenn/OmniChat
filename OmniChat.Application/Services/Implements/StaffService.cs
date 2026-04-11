@@ -303,14 +303,13 @@ public class StaffService : BaseService<StaffService>, IStaffService
         return Math.Round((double)performance.TaskCompleted / total * 100, 2);
     }
 
-    public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(
-     Guid staffId,
-     StaffTaskFilterRequest request = null)
+    public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync( Guid staffId,StaffTaskFilterRequest request = null)
     {
         var page = (request?.Page ?? 1) <= 0 ? 1 : (request?.Page ?? 1);
         var pageSize = (request?.PageSize ?? 10) <= 0 ? 10 : (request?.PageSize ?? 10);
         var taskName = request?.TaskName?.Trim().ToLower();
 
+       
         DateTime? fromDate = null;
         if (request?.FromDate.HasValue == true)
         {
@@ -328,15 +327,17 @@ public class StaffService : BaseService<StaffService>, IStaffService
         var result = await repo.GetPagingListAsync(
             predicate: t =>
                 t.CurrentAssignedStaffId == staffId &&
-               
-                (!request.IntentTypeId.HasValue || t.IntentTypeId == request.IntentTypeId) &&
-             
-                (string.IsNullOrEmpty(taskName) || (t.IntentType != null && t.IntentType.TypeName.ToLower().Contains(taskName))) &&
-              
-                ((!fromDate.HasValue && !toDate.HasValue) ||
-                 (t.CompleteDate.HasValue && t.CompleteDate >= fromDate && t.CompleteDate < toDate)),
 
-            orderBy: q => q.OrderByDescending(t => t.Id), 
+           
+                (!request.IntentTypeId.HasValue || t.IntentTypeId == request.IntentTypeId) &&
+
+              
+                (string.IsNullOrEmpty(taskName) || (t.IntentType != null && t.IntentType.TypeName.ToLower().Contains(taskName))) &&
+
+                (!fromDate.HasValue || (t.CreatedAt.HasValue && t.CreatedAt >= fromDate)) &&
+                (!toDate.HasValue || (t.CreatedAt.HasValue && t.CreatedAt < toDate)),
+
+            orderBy: q => q.OrderByDescending(t => t.CreatedAt), 
             include: q => q
                 .Include(t => t.IntentType)
                 .Include(t => t.SupportConversation)
