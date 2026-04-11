@@ -184,19 +184,44 @@ namespace OmniChat.Application.Services.Implements
             return true;
         }
 
-        public async Task<IEnumerable<DashboardMonthResponse>> GetTaskIntentDashboardResponsesAsync(string year)
+        public async Task<IEnumerable<DashboardMonthResponse>> GetTaskIntentDashboardResponsesAsync(string input)
         {
-            var yearInt = int.Parse(year);
-
-            var from = new DateTime(yearInt, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            var to = new DateTime(yearInt, 12, 31, 23, 59, 59, DateTimeKind.Utc);
-
             var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
+
+            bool isYear = input.Length == 4;
+
+            int year;
+            int? month = null;
+
+            if (isYear)
+            {
+                year = int.Parse(input);
+            }
+            else
+            {
+                var parts = input.Split('/');
+                month = int.Parse(parts[0]);
+                year = int.Parse(parts[1]);
+            }
+
+            DateTime from;
+            DateTime to;
+
+            if (isYear)
+            {
+                from = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddYears(1);
+            }
+            else
+            {
+                from = new DateTime(year, month.Value, 1, 0, 0, 0, DateTimeKind.Utc);
+                to = from.AddMonths(1);
+            }
 
             var rawData = await supportTaskRepo.GetQueryable(
                     t => t.CreatedAt.HasValue &&
                          t.CreatedAt.Value >= from &&
-                         t.CreatedAt.Value <= to,
+                         t.CreatedAt.Value < to,   // IMPORTANT: use < instead of <=
                     asNoTracking: true
                 )
                 .GroupBy(t => new
@@ -213,28 +238,32 @@ namespace OmniChat.Application.Services.Implements
                 .ToListAsync();
 
             var intents = new List<string>
-            {
-                "POST_SALE_CHANGE",
-                "ORDER_STATUS",
-                "PAYMENT",
-                "PRE_SALE",
-                "ORDER_CREATION"
-            };
+    {
+        "POST_SALE_CHANGE",
+        "ORDER_STATUS",
+        "PAYMENT",
+        "PRE_SALE",
+        "ORDER_CREATION"
+    };
 
             var lookup = rawData.ToDictionary(
                 x => (x.Month, x.Intent),
                 x => x.Count
             );
 
+            var monthsToProcess = isYear
+                ? Enumerable.Range(1, 12)
+                : new[] { month.Value };
+
             var result = new List<DashboardMonthResponse>();
 
-            for (int month = 1; month <= 12; month++)
+            foreach (var m in monthsToProcess)
             {
                 var monthIntents = new List<TaskIntentDashboardResponse>();
 
                 foreach (var intent in intents)
                 {
-                    lookup.TryGetValue((month, intent), out var count);
+                    lookup.TryGetValue((m, intent), out var count);
 
                     monthIntents.Add(new TaskIntentDashboardResponse
                     {
@@ -245,7 +274,7 @@ namespace OmniChat.Application.Services.Implements
 
                 result.Add(new DashboardMonthResponse
                 {
-                    Month = month,
+                    Month = m,
                     Intents = monthIntents
                 });
             }

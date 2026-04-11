@@ -7,6 +7,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
+using OmniChat.Infrastructure.Dtos.Responses.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
@@ -125,7 +126,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             predicate: o => o.CustomerId == customerId &&
                             (string.IsNullOrEmpty(search) || o.Code.Contains(search)),
             orderBy: q => OrderBy(q, sortBy, descending),
-            include: q => q
+            include: q => q.Include(o => o.CustomerProfile)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductBatch)
                         .ThenInclude(pb => pb.Product),
@@ -181,10 +182,13 @@ public class OrderService : BaseService<OrderService>, IOrderService
         return _mapper.Map<GetOrderResponse>(response); 
     }
 
-    public Task<GetPostSaleOrderResponse> GetPostSaleOrderByIdAsync(Guid orderId)
+    public async Task<GetPostSaleOrderResponse> GetPostSaleOrderByIdAsync(Guid orderId)
     {
-        return GetOrderByIdAsync<GetPostSaleOrderResponse>(orderId);
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
+        return _mapper.Map<GetPostSaleOrderResponse>(response);
     }
+        
 
     public async Task<bool> UpdateOrderAsync(Guid orderId, UpdateOrderRequest updateOrderRequest)
     {
@@ -293,38 +297,70 @@ public class OrderService : BaseService<OrderService>, IOrderService
         });
     }
 
-    public async Task<IEnumerable<GetOrderDashBoardByStatus>> GetOrderDashBoardByStatusesAsync(DateTime from, DateTime to)
+    public async Task<IEnumerable<DashboardOrderYearResponse>> GetDashboardAsync(string input)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
 
-        var fromDate = from.Date;
-        var toDateExclusive = to.Date.AddDays(1);
+        var results = new List<DashboardOrderYearResponse>();
 
-        var query = orderRepo.GetQueryable(
-                o => o.OrderDate >= fromDate &&
-                     o.OrderDate < toDateExclusive,
-                asNoTracking: true
-            )
-            .Select(o => new
+        bool isYear = input.Length == 4;
+
+        int year;
+        int? month = null;
+
+        if (isYear)
+        {
+            year = int.Parse(input);
+        }
+        else
+        {
+            var parts = input.Split('/');
+            month = int.Parse(parts[0]);
+            year = int.Parse(parts[1]);
+        }
+
+        var monthsToProcess = isYear
+            ? Enumerable.Range(1, 12)
+            : new[] { month.Value };
+
+        foreach (var m in monthsToProcess)
+        {
+            var fromDate = DateTime.SpecifyKind(new DateTime(year, m, 1), DateTimeKind.Utc);
+            var toDateExclusive = fromDate.AddMonths(1);
+
+            var data = await orderRepo.GetQueryable(
+                    o => o.OrderDate >= fromDate &&
+                         o.OrderDate < toDateExclusive,
+                    asNoTracking: true
+                )
+                .Select(o => new
+                {
+                    MappedStatus =
+                        o.Status == OrderStatus.Completed ? OrderStatus.Completed :
+                        o.Status == OrderStatus.Cancelled ? OrderStatus.Cancelled :
+                        (o.Status == OrderStatus.PendingReturn ||
+                         o.Status == OrderStatus.Returned ||
+                         o.Status == OrderStatus.ReturnedDefective)
+                            ? OrderStatus.Returned
+                            : (OrderStatus?)null
+                })
+                .Where(x => x.MappedStatus != null)
+                .GroupBy(x => x.MappedStatus.Value)
+                .Select(g => new GetOrderDashBoardByStatus
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            results.Add(new DashboardOrderYearResponse
             {
-                MappedStatus =
-                    o.Status == OrderStatus.Completed ? OrderStatus.Completed :
-                    o.Status == OrderStatus.Cancelled ? OrderStatus.Cancelled :
-                    (o.Status == OrderStatus.PendingReturn ||
-                     o.Status == OrderStatus.Returned ||
-                     o.Status == OrderStatus.ReturnedDefective)
-                        ? OrderStatus.Returned
-                        : (OrderStatus?)null
-            })
-            .Where(x => x.MappedStatus != null)
-            .GroupBy(x => x.MappedStatus.Value)
-            .Select(g => new GetOrderDashBoardByStatus
-            {
-                Status = g.Key,
-                Count = g.Count()
+                Month = $"{m:D2}/{year}",
+                Status = data
             });
+        }
 
-        return await query.ToListAsync();
+        return results;
     }
 
     public Task<PagingResponse<GetOrderForShipperResponse>> GetOrderForShipperAsync(string? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
