@@ -201,7 +201,6 @@ namespace OmniChat.Application.Services.Implements
 
             //   await _unitOfWork.CommitAsync();
             //    return true;
-            _logger.LogInformation("[ZALO-SEND] Start sending message | ConversationId={ConversationId}", newSupportMess.SupportConversationId);
 
             // 1. Tạo tin nhắn và kiểm tra điều kiện
             var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
@@ -623,6 +622,35 @@ namespace OmniChat.Application.Services.Implements
                page: pageNumber,
                size: pageSize
                );
+        }
+
+
+        public async Task SendSystemMessageToExternalAsync(Guid conversationId, string guideMessage)
+        {
+            var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
+            var systemId = Guid.Parse("00000000-0000-0000-0000-000000000000");
+
+            var systemMessageRequest = new CreateSupportStaffMessageRequest
+            {
+                Content = guideMessage,
+                StaffId = systemId,
+                SupportConversationId = conversationId,
+            };
+
+            var zaloId = Guid.Parse("bb4a4a44-4b03-442f-9a5e-a43ad45391a0");
+
+            var facebookId = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
+
+            var existConver = await conversationRepo.GetByIdAsync(conversationId);
+
+            if (existConver.ProvidersId == zaloId)
+            {
+                await SendZaloMessageAsync(systemMessageRequest);
+            }
+            else if (existConver.ProvidersId == facebookId)
+            {
+                await SendFacebookMesageAsync(systemMessageRequest);
+            }
         }
     }
 }

@@ -87,16 +87,24 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             var text = string.Join(" ", messages.Select(x => x.ToString()));
                             _logger.LogInformation("[AGGREGATION] Calling AI for Customer: {Id}", customerId);
 
-                            await taskService.ProcessTask(new PredictRequest { Message = text }, conversation.Id);
+                           var haveActiveStaff = await taskService.ProcessTask(new PredictRequest { Message = text }, conversation.Id);
 
-                          
                             var updatedConv = await conversationService.GetSupportConversationByIdAsync(conversation.Id);
+
+
 
                             if (updatedConv?.ActiveStaffId != null)
                             {
                                 _logger.LogInformation("[AGGREGATION] Staff assigned: {Staff}. Sending Link...", updatedConv.ActiveStaffId);
                               
                                 await mergeService.SendFormLinkIfNeededAsync(updatedConv);
+                            }
+                            else
+                            {
+                                _logger.LogInformation("[AGGREGATION] No staff found for conversation: {Id}. Sending system guide.", conversation.Id);
+                                string guideMessage = "Vui lòng nhập các tin nhắn liên quan như : Đặt Hàng , tư vấn sản phẩm, kiểm tra trạng thái đơn hàng, kiểm tra công nợ !";
+                                var messageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
+                                await messageService.SendSystemMessageToExternalAsync(updatedConv.Id, guideMessage);
                             }
 
                            
