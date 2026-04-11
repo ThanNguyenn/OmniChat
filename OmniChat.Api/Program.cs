@@ -208,6 +208,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<ITaskActionService, TaskActionService>();
     builder.Services.AddScoped<ITaskCancelReasonService, TaskCancelReasonService>();
     builder.Services.AddScoped<InvoiceJobRunner>();
+    builder.Services.AddScoped<IDraftOrderService, DraftOrderService>();
 }
 
 void RegisterBackgroundServices()

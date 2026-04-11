@@ -11,7 +11,7 @@ class IntentClassifier:
         self.thresholds = Settings.THRESHOLDS
 
         self.tokenizer = AutoTokenizer.from_pretrained(Settings.BASE_MODEL)
-        self.model = AutoModelForSequenceClassification.from_pretrained(Settings.MODEL_PATH)
+        self.model = AutoModelForSequenceClassification.from_pretrained(Settings.PREDICT_MODEL_PATH)
         self.model.to(self.device)
         self.model.eval()
 

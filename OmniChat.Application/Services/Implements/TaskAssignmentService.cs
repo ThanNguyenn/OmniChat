@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime.Internal;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,16 +27,21 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
         _keywordService = keywordService;
     }
 
-    public async Task ProcessTask(PredictRequest predictRequest, Guid conversationId)
+    public async Task<bool> ProcessTask(PredictRequest predictRequest, Guid conversationId)
     {
-        var predict = await AnalyzeAsync(predictRequest);
+        var (predict, hasIntent) = await AnalyzeAsync(predictRequest);
 
-        if (predict == null) return;
+        // Return false if no intent was detected or the result is null
+        if (!hasIntent || predict == null)
+        {
+            return false;
+        }
+
         var isSuccessfullyCreatingTask = await CreateTaskAsync(predict, conversationId);
         if (!isSuccessfullyCreatingTask)
         {
             _logger.LogWarning("No tasks created for conversation {ConversationId} after intent analysis", conversationId);
-            return;
+            return true; // Return true because prediction technically succeeded, even if task creation failed
         }
 
         var assigned = await AssignStaffToConversationAsync(conversationId);
@@ -46,6 +50,8 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
         {
             await ProcessWaitingQueueAsync();
         }
+
+        return true; // Success case
     }
 
     public async Task ProcessWaitingQueueAsync()
@@ -120,7 +126,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
             if (tasks.Any())
                 await taskRepo.InsertRangeAsync(tasks);
-        });
+        }); 
         return true;
     }
 
@@ -223,7 +229,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
         return true;
     }
-    private async Task<PredictResponse?> AnalyzeAsync(PredictRequest predictRequest)
+    private async Task<(PredictResponse? Response, bool HasIntent)> AnalyzeAsync(PredictRequest predictRequest)
     {
         var apiUrl = _config["AIService:BaseUrl"];
         var apiKey = _config["AIService:ApiKey"];
@@ -249,22 +255,20 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
             var aiResult = JsonSerializer.Deserialize<PredictResponse>(rawResponse);
 
-            // Fallback condition
-            if (aiResult?.Details == null || !aiResult.Details.Any(d => d.Predicted))
+            if (aiResult?.Details != null && aiResult.Details.Any(d => d.Predicted))
             {
-                _logger.LogWarning("AI returned no predicted intents. Falling back to keyword analysis.");
-
-                return await _keywordService.AnalyzeMessageWithKeywordsAsync(predictRequest.Message);
+                return (aiResult, true);
             }
-
-            return aiResult;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "AI analysis failed. Falling back to keyword analysis.");
-
-            return await _keywordService.AnalyzeMessageWithKeywordsAsync(predictRequest.Message);
         }
-    }
 
+        var fallback = await _keywordService.AnalyzeMessageWithKeywordsAsync(predictRequest.Message);
+        bool hasIntent = fallback?.Details != null && fallback.Details.Any(d => d.Predicted);
+
+        return (fallback, hasIntent);
+    }
 }
+

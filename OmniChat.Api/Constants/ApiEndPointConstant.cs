@@ -192,6 +192,7 @@ public class ApiEndPointConstant
     {
         public const string Base = ApiV1 + "/orders";
         public const string Create = "create";
+        public const string AutoDraft = "auto-draft";
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
         public const string GetAll = "get";
