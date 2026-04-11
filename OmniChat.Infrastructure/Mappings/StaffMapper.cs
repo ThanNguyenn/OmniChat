@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using OmniChat.Infrastructure.Dtos.Requests.Staff;
 using OmniChat.Infrastructure.Dtos.Responses.Staff;
+using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
@@ -23,5 +24,14 @@ public class StaffMapper  : Profile
         CreateMap<Staff, GetStaffsResponse>()
             .ForMember(dest => dest.StaffIntentTypes,
                 opt => opt.MapFrom(src => src.StaffIntentTypes));
+      
+        CreateMap<SupportTask, StaffSupportTaskResponse>()
+                    .ForMember(dest => dest.IntentTypeName,
+                        opt => opt.MapFrom(src => src.IntentType != null ? src.IntentType.TypeName : null))
+                    .ForMember(dest => dest.CustomerName,
+                        opt => opt.MapFrom(src => (src.SupportConversation != null && src.SupportConversation.Staff != null)
+                            ? src.SupportConversation.Staff.Name : "N/A"))
+                   .ForMember(dest => dest.CompletedAt, opt => opt.MapFrom(src => src.CompleteDate))
+                   .ForMember(dest => dest.Status,opt => opt.MapFrom(src => src.Status.ToString()));
     }
 }

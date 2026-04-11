@@ -303,4 +303,13 @@ public class ApiEndPointConstant
         public const string GetAllPaging = Base + "/paging";
         public const string GetBySupportTaskId = Base + "/support-task/{supportTaskId}";
     }
+
+    public static class FeedBackEndPoint
+    {
+        public const string Base = ApiV1 + "/feedbacks";
+        public const string GetAll = Base;
+        public const string Create = Base + "/conversation/{conversationId}";
+        public const string GetById = Base + "/{id}";
+        public const string GetByStaffId = Base + "/staff/{id}";
+    }
 }

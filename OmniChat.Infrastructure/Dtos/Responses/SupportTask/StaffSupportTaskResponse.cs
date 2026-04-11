@@ -10,10 +10,12 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportTask
     public class StaffSupportTaskResponse
     {
         public string IntentTypeName { get; set; }
-        
+
+        public string Status { get; set; }
+
         public string CustomerName { get; set; }
 
-        public DateTime CompletedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
 
     }
 }

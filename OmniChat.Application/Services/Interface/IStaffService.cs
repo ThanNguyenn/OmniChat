@@ -22,7 +22,7 @@ public interface IStaffService
 
     public Task<StaffDassboardResponse> GetStaffDassboardByIdAsync(Guid staffId);
 
-    public Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId, StaffTaskFilterRequest request);
+    public  Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId,StaffTaskFilterRequest request = null);
 
     Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(string? search = null, IEnumerable<Guid>? deparmentIds = null, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 
