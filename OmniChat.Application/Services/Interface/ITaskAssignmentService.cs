@@ -11,7 +11,7 @@ namespace OmniChat.Application.Services.Interface;
 
 public interface ITaskAssignmentService
 {
-    Task ProcessTask(PredictRequest predictRequest, Guid conversationId);
+    Task<bool> ProcessTask(PredictRequest predictRequest, Guid conversationId);
     Task ProcessWaitingQueueAsync();
 
 }
