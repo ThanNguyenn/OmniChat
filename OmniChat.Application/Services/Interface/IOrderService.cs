@@ -12,7 +12,7 @@ namespace OmniChat.Application.Services.Interface;
 
 public interface IOrderService
 {
-    Task<bool> CreateOrderAsync(CreateOrderRequest createOrderRequest);
+    Task<bool> CreateOrderAsync(CreateOrderRequest createOrderRequest); 
     Task<bool> DeleteOrderAsync(Guid orderId);
     Task<bool> UpdateOrderAsync(Guid orderId, UpdateOrderRequest updateOrderRequest);
     Task<PagingResponse<GetOrderResponse>> GetOrdersByCustomerIdAsync(Guid customerId, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);

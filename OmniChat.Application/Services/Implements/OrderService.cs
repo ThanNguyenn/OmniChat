@@ -77,7 +77,8 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 });
             }
             //log the creator of the order
-            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+
+                var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
             order.CreatorId = staff.Id;
             await orderRepo.InsertAsync(order);

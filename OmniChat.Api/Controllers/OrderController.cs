@@ -16,14 +16,16 @@ namespace OmniChat.Api.Controllers;
 public class OrderController : BaseController<OrderController>
 {
     private readonly IOrderService _orderService;
+    private readonly IDraftOrderService _draftOrderService;
 
-    public OrderController(ILogger<OrderController> logger, IOrderService orderService) : base(logger)
+    public OrderController(ILogger<OrderController> logger, IOrderService orderService, IDraftOrderService draftOrderService) : base(logger)
     {
         _orderService = orderService;
+        _draftOrderService = draftOrderService;
     }
 
     [HttpPost(ApiEndPointConstant.Order.Create)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
@@ -37,6 +39,20 @@ public class OrderController : BaseController<OrderController>
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
+    [HttpPost(ApiEndPointConstant.Order.AutoDraft)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+    Summary = "Tạo mới draft order",
+    Description = "Tạo mới draft order")]
+    public async Task<IActionResult> CreateDraftOrder([FromBody] DraftOrderRequest createOrderRequest)
+    {
+        var result = await _draftOrderService.CreateDraftOrderAsync(createOrderRequest.CustomerId, createOrderRequest.Message);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Order created successfully", result);
+        return StatusCode(StatusCodes.Status201Created, response);
+    }
     //[HttpPost(ApiEndPointConstant.Order.Update)]
     //[ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     //[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
