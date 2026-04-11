@@ -271,7 +271,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var performanceRepo = _unitOfWork.GetRepository<StaffPerformance>();
 
-        // Lấy performance current month
+     
         var currentPerformance = await performanceRepo.SingleOrDefaultAsync(
             predicate: x => x.StaffId == staffId &&
                             x.FromTime <= now &&
@@ -303,26 +303,44 @@ public class StaffService : BaseService<StaffService>, IStaffService
         return Math.Round((double)performance.TaskCompleted / total * 100, 2);
     }
 
-    public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId, StaffTaskFilterRequest request)
+    public async Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(
+     Guid staffId,
+     StaffTaskFilterRequest request = null)
     {
+        var page = (request?.Page ?? 1) <= 0 ? 1 : (request?.Page ?? 1);
+        var pageSize = (request?.PageSize ?? 10) <= 0 ? 10 : (request?.PageSize ?? 10);
+        var taskName = request?.TaskName?.Trim().ToLower();
+
+        DateTime? fromDate = null;
+        if (request?.FromDate.HasValue == true)
+        {
+            fromDate = DateTime.SpecifyKind(request.FromDate.Value.Date, DateTimeKind.Utc);
+        }
+
+        DateTime? toDate = null;
+        if (request?.ToDate.HasValue == true)
+        {
+            toDate = DateTime.SpecifyKind(request.ToDate.Value.Date.AddDays(1), DateTimeKind.Utc);
+        }
+
         var repo = _unitOfWork.GetRepository<SupportTask>();
-        var page = request.Page <= 0 ? 1 : request.Page;
-        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-        var fromDate = request.FromDate?.Date;
-        var toDate = request.ToDate?.Date.AddDays(1);
 
         var result = await repo.GetPagingListAsync(
             predicate: t =>
                 t.CurrentAssignedStaffId == staffId &&
-                t.Status == SupportTaskStatus.Done &&
-                t.CompleteDate != null &&
-                (!fromDate.HasValue || t.CompleteDate >= fromDate) &&
-                (!toDate.HasValue || t.CompleteDate < toDate) &&
-                (!request.IntentTypeId.HasValue || t.IntentTypeId == request.IntentTypeId),
-            orderBy: q => q.OrderByDescending(t => t.CompleteDate),
+               
+                (!request.IntentTypeId.HasValue || t.IntentTypeId == request.IntentTypeId) &&
+             
+                (string.IsNullOrEmpty(taskName) || (t.IntentType != null && t.IntentType.TypeName.ToLower().Contains(taskName))) &&
+              
+                ((!fromDate.HasValue && !toDate.HasValue) ||
+                 (t.CompleteDate.HasValue && t.CompleteDate >= fromDate && t.CompleteDate < toDate)),
+
+            orderBy: q => q.OrderByDescending(t => t.Id), 
             include: q => q
                 .Include(t => t.IntentType)
-                .Include(t => t.SupportConversation),
+                .Include(t => t.SupportConversation)
+                    .ThenInclude(sc => sc.Staff),
             page: page,
             size: pageSize
         );

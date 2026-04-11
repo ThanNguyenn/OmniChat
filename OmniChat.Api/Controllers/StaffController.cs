@@ -147,14 +147,14 @@ public class StaffController : BaseController<StaffController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [SwaggerOperation(
-       Summary = "Lấy list task của staff",
-       Description = "Lấy list task của staff theo filter: IntentTypeId, FromDate, ToFromDate,  pageNumber, pageSize")]
-    public async Task<IActionResult> GetStaffTasksAsync([FromRoute] Guid id, [FromBody] StaffTaskFilterRequest getStaffTasksRequest)
+    Summary = "Lấy list task của staff",
+    Description = "Filter theo: TaskName, IntentTypeId, FromDate, ToDate, Page, PageSize. Tất cả đều optional trừ staffId trên route.")]
+    public async Task<IActionResult> GetStaffTasksAsync(
+    [FromRoute] Guid id,
+    [FromBody] StaffTaskFilterRequest? request)
     {
-        var result = await _staffService.GetStaffTasksAsync(id, getStaffTasksRequest);
-
+        var result = await _staffService.GetStaffTasksAsync(id, request);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff tasks successfully", result);
-
         return StatusCode(StatusCodes.Status200OK, response);
     }
 }
