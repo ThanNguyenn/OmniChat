@@ -39,18 +39,26 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
 
         foreach (var item in parsedItems)
         {
-            var allocations = await ResolveBatchesAsync(item);
-
-            foreach (var (batchId, qty) in allocations)
+            try
             {
-                orderItems.Add(new AddOrderItemRequest
+                var allocations = await ResolveBatchesAsync(item);
+
+                foreach (var (batchId, qty) in allocations)
                 {
-                    ProductBatchId = batchId,
-                    Quantity = qty
-                });
+                    orderItems.Add(new AddOrderItemRequest
+                    {
+                        ProductBatchId = batchId,
+                        Quantity = qty
+                    });
+                }
+            }
+            catch (BusinessException)
+            {
+                continue;
             }
         }
-
+        if (orderItems.Count == 0)
+            return false;
         var request = new CreateOrderRequest
         {
             CustomerId = customerId,
@@ -61,102 +69,225 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
         return await _orderService.CreateOrderAsync(request);
     }
 
-    private static Regex quantityRegex = new Regex(@"(\d+)\s*(c|chai|ch)\b", RegexOptions.Compiled);
+    private static Regex quantityRegex = new Regex(@"(\d+)\s*(chai|c|ch)\b", RegexOptions.Compiled);
     private static Regex volumeRegex = new Regex(@"(180|190|490|880|1760)\s*(ml)?|nhi|nua lit|1 lit|2 lit", RegexOptions.Compiled);
     private static Regex kindRegex = new Regex(@"(khong duong|ko duong|kd|co duong|duong|sua chua)", RegexOptions.Compiled);
     private static Regex brandRegex = new Regex(@"(long thanh|lothamilk|lt milk|lotha milk)", RegexOptions.Compiled);
-
     public List<DraftOrderItem> Parse(string raw)
     {
-        string text = Normalize(raw);
+        var text = Normalize(raw);
 
-        var segments = Regex.Split(text, @"[,;]|\band\b")
-                            .Where(s => !string.IsNullOrWhiteSpace(s))
-                            .ToList();
+        text = ExpandAllFormats(text);
+
+        var segments = SplitSegments(text);
 
         var results = new List<DraftOrderItem>();
 
         foreach (var seg in segments)
         {
-            var item = ParseSegment(seg.Trim());
-            if (item != null)
-                results.Add(item);
+            var items = ParseSegment(seg);
+            results.AddRange(items);
+        }
+
+        return results;
+    }
+    private List<DraftOrderItem> ParseSegment(string segment)
+    {
+        var results = new List<DraftOrderItem>();
+
+        var matches = Regex.Matches(segment,
+            @"(?:
+            (?<qty>\d+)\s*(chai|c|ch)?\s*(?<vol>180|190|490|880|1760)\s*ml? |
+            (?<vol2>180|190|490|880|1760)\s*ml?\s*(?<qty2>\d+) |
+            (?<vol3>180|190|490|880|1760)\s+(?<qty3>\d+)\s*(c|chai|ch)
+        )",
+            RegexOptions.IgnorePatternWhitespace);
+
+        foreach (Match m in matches)
+        {
+            string vol =
+                m.Groups["vol"].Success ? m.Groups["vol"].Value :
+                m.Groups["vol2"].Success ? m.Groups["vol2"].Value :
+                m.Groups["vol3"].Value;
+
+            int qty =
+                m.Groups["qty"].Success ? int.Parse(m.Groups["qty"].Value) :
+                m.Groups["qty2"].Success ? int.Parse(m.Groups["qty2"].Value) :
+                int.Parse(m.Groups["qty3"].Value);
+
+            var window = segment.Substring(m.Index, Math.Min(30, segment.Length - m.Index));
+
+            var item = new DraftOrderItem
+            {
+                Quantity = qty,
+                Volume = NormalizeVolume(vol),
+                Brand = "long thanh",
+                Kind = DetectKind(window)
+            };
+
+            results.Add(item);
         }
 
         return results;
     }
 
-    private DraftOrderItem ParseSegment(string text)
+    private string DetectKind(string text)
     {
-        var item = new DraftOrderItem();
+        if (Regex.IsMatch(text, @"(sua chua|^y\b)"))
+            return "yogurt";
 
-        // Volume
-        var vMatch = volumeRegex.Match(text);
-        if (vMatch.Success)
-        {
-            item.Volume = NormalizeVolume(vMatch.Value);
+        if (Regex.IsMatch(text, @"(kd|khong duong|k duong)"))
+            return "no_sugar";
 
-            text = text.Replace(vMatch.Value, " ");
-        }
-        // Quantity
-        var qMatch = quantityRegex.Match(text);
+        if (Regex.IsMatch(text, @"duong"))
+            return "sugar";
 
-        if (qMatch.Success)
-        {
-            item.Quantity = int.Parse(qMatch.Groups[1].Value);
-            item.Unit = NormalizeUnit(qMatch.Groups[2].Value);
-        }
-        else
-        {
-            var matches = Regex.Matches(text, @"\b\d+\b");
-            if (matches.Count > 0)
-            {
-                item.Quantity = int.Parse(matches[matches.Count - 1].Value);
-                item.Unit = "chai";
-            }
-        }
+        return "sugar";
+    }
+   
 
-        // Kind
-        var kMatch = kindRegex.Match(text);
-        if (kMatch.Success)
-        {
-            item.Kind = NormalizeKind(kMatch.Value);
-        }
+    private string DetectBrand(string text)
+    {
+        var match = brandRegex.Match(text);
 
-        // Brand
-        var bMatch = brandRegex.Match(text);
-        if (bMatch.Success)
-        {
-            item.Brand = NormalizeBrand(bMatch.Value);
-        }
-
-        // --- Defaults ---
-        if (item.Brand == null)
-            item.Brand = "long thanh";
-
-        if (item.Kind == null)
-            item.Kind = "sugar";
-
-        if (item.Quantity <= 0 && item.Volume == null)
+        if (!match.Success)
             return null;
 
-        return item;
+        return NormalizeBrand(match.Value);
     }
 
-    // --- Normalization helpers ---
+    private List<string> SplitSegments(string input)
+    {
+        var text = Regex.Replace(input, @"\s+", " ");
 
+        return Regex.Split(text,
+            @"(?=(\d+\s*(chai|c|ch)?\s*(180|190|490|880|1760)))")
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+    }
+    private string ExpandAllFormats(string input)
+    {
+        input = ExpandDotFormat(input);
+        input = ExpandColonFormat(input);
+        input = ExpandInlineCompact(input);
+        return input;
+    }
+    private string ExpandInlineCompact(string text)
+    {
+        return Regex.Replace(text,
+            @"(\d{3,4})\s+((\d+\s*c.*?)+)",
+            m =>
+            {
+                var volume = m.Groups[1].Value;
+                var rest = m.Groups[2].Value;
+
+                var matches = Regex.Matches(rest, @"(\d+)\s*c(?:\s*(kd|k duong|duong))?");
+
+                var results = new List<string>();
+
+                foreach (Match x in matches)
+                {
+                    var qty = x.Groups[1].Value;
+                    var kindRaw = x.Groups[2].Value;
+
+                    var kind = Regex.IsMatch(kindRaw, @"kd|k duong")
+                        ? "kd"
+                        : "duong";
+
+                    results.Add($"{qty} chai {volume}ml {kind}");
+                }
+
+                return string.Join(" ", results);
+            });
+    }
+    private string ExpandColonFormat(string text)
+    {
+        return Regex.Replace(text,
+            @"(st|sc)(\d{3,4})\s*:\s*([^\n]+)",
+            m =>
+            {
+                var prefix = m.Groups[1].Value;
+                var volume = m.Groups[2].Value;
+                var parts = m.Groups[3].Value.Split(',');
+
+                var results = new List<string>();
+
+                foreach (var p in parts)
+                {
+                    var qtyMatch = Regex.Match(p, @"\d+");
+                    if (!qtyMatch.Success) continue;
+
+                    var qty = qtyMatch.Value;
+
+                    if (prefix == "sc")
+                    {
+                        results.Add($"{qty} chai {volume}ml sua chua");
+                    }
+                    else
+                    {
+                        var kind = Regex.IsMatch(p, @"(kd|it duong|it dg)")
+                            ? "kd"
+                            : "duong";
+
+                        results.Add($"{qty} chai {volume}ml {kind}");
+                    }
+                }
+
+                return string.Join(" ", results);
+            });
+    }
+    private string ExpandDotFormat(string text)
+    {
+        return Regex.Replace(text,
+            @"(\d{3,4})ml\.\.\.([^\n]+)",
+            m =>
+            {
+                var volume = m.Groups[1].Value;
+                var parts = m.Groups[2].Value.Split("...");
+
+                var results = new List<string>();
+
+                foreach (var p in parts)
+                {
+                    var qtyMatch = Regex.Match(p, @"\d+");
+                    if (!qtyMatch.Success) continue;
+
+                    var qty = qtyMatch.Value;
+
+                    var kind = Regex.IsMatch(p, @"(kd|it dg|it duong)")
+                        ? "kd"
+                        : "duong";
+
+                    results.Add($"{qty} chai {volume}ml {kind}");
+                }
+
+                return string.Join(" ", results);
+            });
+    }
     private string Normalize(string input)
     {
         string text = input.ToLower();
 
-        // remove accents
         text = RemoveDiacritics(text);
 
-        // spacing fixes
-        text = Regex.Replace(text, @"(\d)([a-z])", "$1 $2");
-        text = Regex.Replace(text, @"([a-z])(\d)", "$1 $2");
+        // fix spacing
+        text = Regex.Replace(text, @"(\d)(\p{L})", "$1 $2");
+        text = Regex.Replace(text, @"(\p{L})(\d)", "$1 $2");
 
-        return text;
+        // normalize common variants
+        text = text.Replace("kđ", "kd");
+        text = text.Replace("it duong", "kd");
+        text = text.Replace("k duong", "kd");
+        text = text.Replace("it dg", "kd");
+
+        // unify separators
+        text = text.Replace("\n", " ");
+        text = text.Replace("\r", " ");
+
+        text = Regex.Replace(text, @"\s+", " ");
+
+        return text.Trim();
     }
 
     private string RemoveDiacritics(string text)

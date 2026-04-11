@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Responses.Invoice;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -168,8 +169,47 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             .Distinct()
             .ToList();
     }
+    public async Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalIncomeAsync(string input)
+    {
+        bool isYear = input.Length == 4;
 
-    public async Task<double> TotalIncomeByTime(DateTime from, DateTime to)
+        int year;
+        int? month = null;
+
+        if (isYear)
+        {
+            year = int.Parse(input);
+        }
+        else
+        {
+            var parts = input.Split('/');
+            month = int.Parse(parts[0]);
+            year = int.Parse(parts[1]);
+        }
+
+        var monthsToProcess = isYear
+            ? Enumerable.Range(1, 12)
+            : new[] { month.Value };
+
+        var result = new List<DashBoardInvoiceByYearResponse>();
+
+        foreach (var m in monthsToProcess)
+        {
+            var from = new DateTime(year, m, 1, 0, 0, 0, DateTimeKind.Utc);
+            var to = from.AddMonths(1);
+
+            var total = await TotalIncomeByTime(from, to);
+
+            result.Add(new DashBoardInvoiceByYearResponse
+            {
+                Month = $"{m:D2}/{year}",
+                TotalAmount = total
+            });
+        }
+
+        return result;
+    }
+    private async Task<double> TotalIncomeByTime(DateTime from, DateTime to)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
@@ -187,8 +227,49 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             .SumAsync(i => (double?)i.PaidAmount) ?? 0;
     }
 
+    public async Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalUnpaidAsync(string input)
+    {
+        bool isYear = input.Length == 4;
 
-    public async Task<double> TotalUnpaidAmountByTime(DateTime from, DateTime to)
+        int year;
+        int? month = null;
+
+        if (isYear)
+        {
+            year = int.Parse(input);
+        }
+        else
+        {
+            var parts = input.Split('/');
+            month = int.Parse(parts[0]);
+            year = int.Parse(parts[1]);
+        }
+
+        var monthsToProcess = isYear
+            ? Enumerable.Range(1, 12)
+            : new[] { month.Value };
+
+        var result = new List<DashBoardInvoiceByYearResponse>();
+
+        foreach (var m in monthsToProcess)
+        {
+            var from = new DateTime(year, m, 1, 0, 0, 0, DateTimeKind.Utc);
+            var to = from.AddMonths(1);
+
+            var total = await TotalUnpaidAmountByTime(from, to);
+
+            result.Add(new DashBoardInvoiceByYearResponse
+            {
+                Month = $"{m:D2}/{year}",
+                TotalAmount = total
+            });
+        }
+
+        return result;
+    }
+
+
+    private async Task<double> TotalUnpaidAmountByTime(DateTime from, DateTime to)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
