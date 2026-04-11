@@ -2,6 +2,7 @@
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Responses.Invoice;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -22,37 +23,38 @@ public class InvoiceController : BaseController<InvoiceController>
 
 
     [HttpGet(ApiEndPointConstant.Invoice.TotalRevenue)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<DashBoardInvoiceByYearResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
         Summary = "TotalRevenue",
-        Description = "TotalRevenue")]
-    public async Task<IActionResult> TotalRevenueAsync([FromQuery] DateTime from, DateTime to)
+        Description = "TotalRevenue. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng ")]
+    public async Task<IActionResult> TotalRevenueAsync([FromQuery] string period)
     {
-        var result = await _invoiceService.TotalIncomeByTime(from, to);
+        var result = await _invoiceService.GetTotalIncomeAsync(period);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Total revenue calculated successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
 
     [HttpGet(ApiEndPointConstant.Invoice.TotalUnpaid)]
-    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<DashBoardInvoiceByYearResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
         Summary = "TotalUnpaid",
-        Description = "TotalUnpaid")]
-    public async Task<IActionResult> TotalUnpaidAsync([FromQuery] DateTime from, DateTime to)
+        Description = "TotalUnpaid. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng ")]
+    public async Task<IActionResult> TotalUnpaidAsync([FromQuery] string period)
     {
-        var result = await _invoiceService.TotalUnpaidAmountByTime(from, to);
+        var result = await _invoiceService.GetTotalUnpaidAsync(period);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Total unpaid calculated successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
+
 
     [HttpPost(ApiEndPointConstant.IntentType.Base + "run")]
     public async Task<IActionResult> Run([FromQuery] DateTime? from, [FromQuery] DateTime? to)

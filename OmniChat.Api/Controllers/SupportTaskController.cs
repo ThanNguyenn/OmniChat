@@ -74,10 +74,10 @@ namespace OmniChat.Api.Controllers
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<DashboardMonthResponse>>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Get Support Task intent và count",
-            Description = "Get Support Task intent và count theo datetime UTC")]
-        public async Task<IActionResult> GetTaskIntentDashboard([FromQuery]string year)
+            Description = "Get Support Task intent và count theo datetime UTC. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng ")]
+        public async Task<IActionResult> GetTaskIntentDashboard([FromQuery]string period)
         {
-            var result = await _supportTaskService.GetTaskIntentDashboardResponsesAsync(year);
+            var result = await _supportTaskService.GetTaskIntentDashboardResponsesAsync(period);
             var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Task Intent Dashboard Successfully", result);
             return Ok(response);
         }

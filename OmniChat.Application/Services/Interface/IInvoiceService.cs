@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Dtos.Responses.Invoice;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,7 @@ public interface IInvoiceService
 
     Task AllocateMoneyToInvoices(Guid invoiceId);
 
-    Task<double> TotalIncomeByTime(DateTime from, DateTime to);
 
-    Task<double> TotalUnpaidAmountByTime(DateTime from, DateTime to);
+    Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalIncomeAsync(string input);
+    Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalUnpaidAsync(string input);
 }
