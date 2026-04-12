@@ -65,17 +65,32 @@ namespace OmniChat.Application.Services.Implements
         }
 
         // call when call getConversationDetail Api
-        public async Task UpdateNotificationIsReadAsync(Guid conversationId) 
+        public async Task UpdateNotificationIsReadAsync(Guid conversationId)
+        {
+            var notificationRepo = _unitOfWork.GetRepository<Notification>();           
+            var notifications = await notificationRepo.GetListAsync(
+                predicate: x => x.ConversationId == conversationId && x.IsRead == false
+            );
+            if (notifications.Any())
+            {            
+                foreach (var item in notifications)
+                {
+                    item.IsRead = true;
+                }
+              
+                notificationRepo.UpdateRange(notifications);             
+                await _unitOfWork.CommitAsync();
+            }
+        }
+
+        public async Task DeleteNofiticationIsReadAsync()
         {
             var notificationRepo = _unitOfWork.GetRepository<Notification>();
+            var notifications = await notificationRepo.GetListAsync(
+                predicate: x =>  x.IsRead == true
+            );
 
-            var notifications = await notificationRepo.GetListAsync(predicate: x => x.ConversationId == conversationId && x.IsRead == false);
-
-            foreach (var item in notifications)
-            {
-              item.IsRead = true;
-                notificationRepo.Update(item);
-            }
+            notificationRepo.DeleteRange(notifications);
             await _unitOfWork.CommitAsync();
         }
     }

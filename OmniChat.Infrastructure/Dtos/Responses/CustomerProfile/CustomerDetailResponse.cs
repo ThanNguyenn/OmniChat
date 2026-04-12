@@ -10,6 +10,8 @@ namespace OmniChat.Infrastructure.Dtos.Responses.CustomerProfile
     {
         public Guid Id { get; set; }
 
+        public string AvatarUrl { get; set; }
+
         public string CustomerName { get; set; }
 
         public string? CustomerPhone { get; set; }

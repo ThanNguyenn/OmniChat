@@ -16,5 +16,7 @@ namespace OmniChat.Application.Services.Interface
 
         public  Task UpdateNotificationIsReadAsync(Guid conversationId);
 
+        public  Task DeleteNofiticationIsReadAsync();
+
     }
 }
