@@ -68,14 +68,14 @@ namespace OmniChat.Api.Controllers
         [HttpPost(ApiEndPointConstant.FeedBackEndPoint.Create)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-        [SwaggerOperation(
-         Summary = "Nhận feedback từ form của khách hàng",
-         Description = "Khách hàng gửi phản hồi sau cuộc hội thoại. StaffId và FormUrl được tự động lấy từ hệ thống.")]
-        public async Task<IActionResult> CreateFeedBack(
-         [FromRoute] Guid conversationId,
-         [FromBody] FeedBackRequest request)
+        [SwaggerOperation(Summary = "Nhận feedback từ form của khách hàng",
+            Description ="Nhận feed back từ customer gửi về thông qua form gửi từ vercel"
+            )]
+        public async Task<IActionResult> CreateFeedBack([FromRoute] Guid conversationId, [FromBody] FeedBackRequest request)
         {
-            var formUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
+            var vercelUrl = "https://omnichar-feedback-form.vercel.app";
+            var formUrl = $"{vercelUrl}?conversationId={conversationId}";
+
             var success = await _feedBackService.ErichFeedBackFormAsync(conversationId, request, formUrl);
 
             return StatusCode(StatusCodes.Status201Created, new ApiResponse<bool>
@@ -84,6 +84,24 @@ namespace OmniChat.Api.Controllers
                 Message = "Gửi phản hồi thành công",
                 IsSuccess = success,
                 Data = success
+            });
+        }
+
+        [HttpGet(ApiEndPointConstant.FeedBackEndPoint.GetLink)]
+        [SwaggerOperation(Summary = "Tạo link url feedback cho customer",
+            Description = "Sử dụng conversationId để tạo feedback url gửi cho khách hàng"
+            )]
+        public IActionResult GenerateFeedbackLink([FromRoute] Guid conversationId)
+        {
+            var vercelUrl = "https://omnichar-feedback-form.vercel.app"; 
+            var feedbackLink = $"{vercelUrl}?conversationId={conversationId}";
+
+            return Ok(new ApiResponse<string>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Khởi tạo link feedback thành công",
+                IsSuccess = true,
+                Data = feedbackLink
             });
         }
     }
