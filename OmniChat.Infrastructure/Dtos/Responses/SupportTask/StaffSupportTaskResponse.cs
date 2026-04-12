@@ -9,6 +9,8 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportTask
 {
     public class StaffSupportTaskResponse
     {
+        public Guid Id { get; set; }
+
         public string IntentTypeName { get; set; }
 
         public string Status { get; set; }
