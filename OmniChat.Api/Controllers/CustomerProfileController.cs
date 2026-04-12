@@ -51,7 +51,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.CustomerProfileEndPoint.GetCustomerProfileByConversationId)]
-        [ProducesResponseType(typeof(ApiResponse<PagingResponse<CustomerDetailResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<CustomerDetailResponse>), StatusCodes.Status200OK)]
         [SwaggerOperation(
             Summary = "Lấy Profile của Customer có bằng conversationId",
             Description = "Lấy Profile của Customer  customer Profile bằng conversationId cho staff"
