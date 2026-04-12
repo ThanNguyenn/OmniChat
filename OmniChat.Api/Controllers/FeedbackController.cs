@@ -86,5 +86,22 @@ namespace OmniChat.Api.Controllers
                 Data = success
             });
         }
+
+        [HttpGet(ApiEndPointConstant.FeedBackEndPoint.GetLink)]
+        public IActionResult GenerateFeedbackLink([FromRoute] Guid conversationId)
+        {
+         
+            var vercelUrl = "https://your-feedback-form.vercel.app";
+
+            var feedbackLink = $"{vercelUrl}?conversationId={conversationId}";
+
+            return Ok(new ApiResponse<string>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Khởi tạo link feedback thành công",
+                IsSuccess = true,
+                Data = feedbackLink
+            });
+        }
     }
 }
