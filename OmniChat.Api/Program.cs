@@ -210,6 +210,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IFeedBackService, FeedBackService>();
     builder.Services.AddScoped<InvoiceJobRunner>();
     builder.Services.AddScoped<IDraftOrderService, DraftOrderService>();
+    builder.Services.AddScoped<INotificationService,NotificationService>();
 }
 
 void RegisterBackgroundServices()

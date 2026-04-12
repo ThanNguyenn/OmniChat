@@ -10,7 +10,9 @@ using OmniChat.Application.SignalRHub;
 using OmniChat.Application.Webhooks.Zalo.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
+using OmniChat.Infrastructure.Dtos.Requests.Notification;
 using OmniChat.Infrastructure.Dtos.Requests.SupportConversation;
+using OmniChat.Infrastructure.Dtos.Responses.Notification;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -43,6 +45,8 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly IChatAggregationService _chatAggregationService;
 
+        private readonly INotificationService _notificationService;
+
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
         public ZaloResolver(
@@ -59,6 +63,7 @@ namespace OmniChat.Application.Services.Resolver
             IConfiguration configuration,
             IMessageKeywordFilterService messageKeywordFilterService,
             IChatAggregationService chatAggregationService,
+            INotificationService notificationService,
              IHubContext<SupportConversationHub> hubContext
             ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
@@ -70,6 +75,7 @@ namespace OmniChat.Application.Services.Resolver
             _zaloUserService = zaloUserService;
             _supportConversationService = supportConversationService;
             _chatAggregationService = chatAggregationService;
+            _notificationService = notificationService;
             _hubContext = hubContext;
             _messageKeywordFilterService = messageKeywordFilterService;
         }
@@ -275,6 +281,28 @@ namespace OmniChat.Application.Services.Resolver
                     await _hubContext.Clients
                         .Group($"conversation:{conversation.Id}")
                         .SendAsync("CustomerReceiveMessage", supportConversationMessages);
+
+                    var notification = new NotificationRequest
+                    {
+                        ConversationId = conversation.Id,
+                        MessageText = newMessage.Content,
+                        IsRead = false,
+                        StaffId = conversation.ActiveStaffId,
+                    };
+
+                    await _notificationService.CreateNotificationAsync(notification);
+
+                    var notificationResponse = new NotificationResponse
+                    {
+                        CustomerName = customerProfile.CustomerName,
+                        ImageUrl = conversation.AvatarUrl,
+                        Message = newMessage.Content,
+                        ProviderName = provider.ProviderName,
+                        TimeStamp = newMessage.Timestamp,
+                    };
+                    await _hubContext.Clients
+                    .User(conversation.ActiveStaffId.ToString())
+                    .SendAsync("ReceiveNotification", notificationResponse);
                 }
             }
             else

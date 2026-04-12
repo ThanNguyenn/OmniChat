@@ -30,11 +30,14 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly IMessageKeywordFilterService _messageKeywordFilterService;
 
+        private readonly INotificationService _notificationService;
+
         private readonly IHubContext<SupportConversationHub> _hubContext;
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SupportConversationHub> hubContext, IMessageKeywordFilterService messageKeywordFilterService, ISupportTaskService supportTaskService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SupportConversationHub> hubContext, IMessageKeywordFilterService messageKeywordFilterService, ISupportTaskService supportTaskService,INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
             _messageKeywordFilterService = messageKeywordFilterService;
+            _supportTaskService = supportTaskService;
             _hubContext = hubContext;
             _supportTaskService = supportTaskService;
         }
@@ -312,6 +315,8 @@ namespace OmniChat.Application.Services.Implements
                 .User(conversation.ActiveStaffId.ToString())
                 .SendAsync("SidebarUpdated", sidebarUpdate);
 
+            await _notificationService.UpdateNotificationIsReadAsync(conversationId);
+
             return new SupportConversationDetailResponse
             {
                 Id = conversation.Id,
@@ -403,6 +408,7 @@ namespace OmniChat.Application.Services.Implements
                     .Where(st => st.Status == SupportTaskStatus.Done)
                     .Select(st => new CompleteSupportConversationHistoryResponse
                     {
+                        Id = sc.Id,
                         ProviderName = sc.Providers.ProviderName,
                         Status = sc.Status,
                         CompleteDate = st.CompleteDate ?? DateTime.UtcNow,
