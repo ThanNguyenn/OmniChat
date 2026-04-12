@@ -36,29 +36,32 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<IEnumerable<NotificationResponse>> GetNotificationsByStaffIdAsync(Guid staffId)
         {
-            var converRepo = _unitOfWork.GetRepository<SupportConversation>();
+           
+            var notificationRepo = _unitOfWork.GetRepository<Notification>();
 
-            var staffConversations = await converRepo.GetListAsync(
-           predicate: x => x.ActiveStaffId == staffId,
-            include: source => source
-            .Include(c => c.Providers)
-            .Include(c => c.CustomerMessages.Where(m => m.IsRead == false))
+            
+            var notifications = await notificationRepo.GetListAsync(
+                predicate: n => n.StaffId == staffId && n.IsRead == false,
+                include: source => source
+                    .Include(n => n.SupportConversation)
+                        .ThenInclude(sc => sc.Providers),
+                orderBy: q => q.OrderByDescending(n => n.CreatedDate) 
             );
 
+         
+            var response = notifications.Select(n => new NotificationResponse
+            {
+                Message = n.MessageText,
+                CustomerName = n.SupportConversation?.CustomerName ?? "Unknown",
+                ImageUrl = n.SupportConversation?.AvatarUrl,
+                ProviderName = n.SupportConversation?.Providers?.ProviderName ?? "Unknown",
+                CreatedDate = n.CreatedDate ?? DateTime.UtcNow,
+                TimeStamp = n.CreatedDate.HasValue
+                            ? new DateTimeOffset(n.CreatedDate.Value).ToUnixTimeMilliseconds()
+                            : 0
+            });
 
-            var unreadNotifications = staffConversations
-                    .SelectMany(c => c.CustomerMessages.Select(m => new NotificationResponse
-                    {
-                        Message = m.Content,
-                        CustomerName = c.CustomerName,
-                        ImageUrl = c.AvatarUrl,
-                        ProviderName = c.Providers?.ProviderName ?? "Unknown",
-                        TimeStamp = m.Timestamp
-                    }))
-                    .OrderByDescending(n => n.TimeStamp) // Sắp xếp tin nhắn mới nhất lên đầu
-                    .ToList();
-
-            return unreadNotifications;
+            return response;
         }
 
         // call when call getConversationDetail Api
