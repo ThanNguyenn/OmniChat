@@ -312,6 +312,6 @@ public class ApiEndPointConstant
         public const string Create = Base + "/conversation/{conversationId}";
         public const string GetById = Base + "/{id}";
         public const string GetByStaffId = Base + "/staff/{id}";
-        public const string GetLink = Base + "/generate-link/{conversationId}"
+        public const string GetLink = Base + "/generate-link/{conversationId}";
     }
 }
