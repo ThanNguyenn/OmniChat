@@ -53,7 +53,7 @@ namespace OmniChat.Api.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.SupportTaskEndPoint.GetSupportTaskByConversationId)]
-        [ProducesResponseType(typeof(ApiResponse<IEnumerable<SupportTasksResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<ConversationTaskResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
         Summary = "Get Support Task Inprocess, Reassign, Done On Conversation",
@@ -61,7 +61,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetSupportTaskByConversationId(Guid conversationId)
         {
             var result = await _supportTaskService.GetSupportTaskOnConversationIdAsync(conversationId);
-            return Ok(new ApiResponse<IEnumerable<SupportTasksResponse>>
+            return Ok(new ApiResponse<IEnumerable<ConversationTaskResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Get Support Task Successfully",

@@ -44,7 +44,7 @@ namespace OmniChat.Application.Services.Implements
             return supportTasks;
         }
 
-        public async Task<IEnumerable<SupportTasksResponse>> GetSupportTaskOnConversationIdAsync(Guid conversationId)
+        public async Task<IEnumerable<ConversationTaskResponse>> GetSupportTaskOnConversationIdAsync(Guid conversationId)
         {
             var repo = _unitOfWork.GetRepository<SupportTask>();
 
@@ -63,9 +63,9 @@ namespace OmniChat.Application.Services.Implements
 
 
             if (!supportTasks.Any())
-                return Enumerable.Empty<SupportTasksResponse>();
+                return Enumerable.Empty<ConversationTaskResponse>();
 
-            return _mapper.Map<IEnumerable<SupportTasksResponse>>(supportTasks);
+            return _mapper.Map<IEnumerable<ConversationTaskResponse>>(supportTasks);
         }
 
 
