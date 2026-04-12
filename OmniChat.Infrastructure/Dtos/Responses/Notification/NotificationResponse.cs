@@ -18,5 +18,7 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Notification
         public string ProviderName { get; set; }
 
         public long TimeStamp  { get; set; }
+
+        public DateTime CreatedDate { get; set; }
     }
 }
