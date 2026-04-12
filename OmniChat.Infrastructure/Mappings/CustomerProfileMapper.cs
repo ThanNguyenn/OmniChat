@@ -35,6 +35,10 @@ namespace OmniChat.Infrastructure.Mappings
 
             CreateMap<CustomerProfile, CustomerDetailResponse>()
                 .ForMember(
+                dest => dest.AvatarUrl,
+                opt => opt.MapFrom(src => src.AvatarUrl) 
+               )
+                .ForMember(
               dest => dest.CustomerName,
               opt => opt.MapFrom(src => src.CustomerName) 
                 )
