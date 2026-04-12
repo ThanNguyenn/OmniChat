@@ -314,4 +314,10 @@ public class ApiEndPointConstant
         public const string GetByStaffId = Base + "/staff/{id}";
         public const string GetLink = Base + "/generate-link/{conversationId}";
     }
+
+    public static class NotificationEndPoint
+    {
+        public const string Base = ApiV1 + "/notifications";
+        public const string GetUnRead = Base + "/unread/{staffId}";
+    }
 }

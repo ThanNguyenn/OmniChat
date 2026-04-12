@@ -10,7 +10,9 @@ using OmniChat.Application.SignalRHub;
 using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
+using OmniChat.Infrastructure.Dtos.Requests.Notification;
 using OmniChat.Infrastructure.Dtos.Requests.SupportConversation;
+using OmniChat.Infrastructure.Dtos.Responses.Notification;
 using OmniChat.Infrastructure.Dtos.Responses.SupportConversation;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -42,9 +44,11 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly IChatAggregationService _chatAggregationService;
 
+        private readonly INotificationService _notificationService;
+
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService, IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService, ICustomerMergeService customerMergeService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService, IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService, ICustomerMergeService customerMergeService, INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
@@ -56,6 +60,7 @@ namespace OmniChat.Application.Services.Resolver
             _supportConversationService = supportConversationService;
             _chatAggregationService = chatAggregationService;
             _customerMergeService = customerMergeService;
+            _notificationService = notificationService;
         }
 
         public async Task FacebookWebhookLogic(FaceBookWebhookPayload faceBookWebhookPayload)
@@ -254,6 +259,28 @@ namespace OmniChat.Application.Services.Resolver
                             await _hubContext.Clients
                                 .Group($"conversation:{conversation.Id}")
                                 .SendAsync("CustomerReceiveMessage", supportConversationMessages);
+
+                            var notification = new NotificationRequest
+                            {
+                                ConversationId = conversation.Id,
+                                MessageText = newMessage.Content,
+                                IsRead = false,
+                                StaffId = conversation.ActiveStaffId,
+                            };
+
+                            await _notificationService.CreateNotificationAsync(notification);
+
+                            var notificationResponse = new NotificationResponse
+                            {
+                                CustomerName = customerProfile.CustomerName,
+                                ImageUrl = conversation.AvatarUrl,
+                                Message = newMessage.Content,
+                                ProviderName = provider.ProviderName,
+                                TimeStamp = newMessage.Timestamp,
+                            };
+                            await _hubContext.Clients
+                            .User(conversation.ActiveStaffId.ToString())
+                            .SendAsync("ReceiveNotification", notificationResponse);
                         }
                     }
                     else

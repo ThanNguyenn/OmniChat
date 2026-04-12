@@ -8,6 +8,8 @@ namespace OmniChat.Infrastructure.Dtos.Responses.CustomerProfile
 {
     public class CustomerDetailResponse
     {
+        public Guid Id { get; set; }
+
         public string? CustomerPhone { get; set; }
 
         public string? Email { get; set; }

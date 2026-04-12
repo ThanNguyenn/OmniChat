@@ -9,6 +9,7 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
 {
     public class CompleteSupportConversationHistoryResponse
     {
+        public Guid Id {  get; set; }
         public string ProviderName { get; set; } // Get provide Name 
 
         public ConversationStatus Status { get; set; } // CompleteConversation
