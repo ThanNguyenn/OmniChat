@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.Invoice;
+using OmniChat.Infrastructure.Dtos.Responses.Product;
+using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -285,4 +287,46 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             )
             .SumAsync(i => (double?)(i.Total - i.PaidAmount - i.DeductedAmount)) ?? 0;
     }
+
+    public async Task<PagingResponse<GetInvoicesResponse>> GetInvoicesAsync(Guid? customerId, InvoiceStatus? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
+    {
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
+        var response = await invoiceRepo.GetPagingListAsync<GetInvoicesResponse>(
+                    predicate: p =>
+                        (customerId == null || p.CustomerId == customerId) &&
+                        (status == null || p.InvoiceStatus == status),
+                    orderBy: q => OrderBy(q, sortBy, descending),
+                    selector: e => _mapper.Map<GetInvoicesResponse>(e),
+                    page: pageNumber,
+                    size: pageSize, include: i => i.Include(x => x.CustomerProfile)
+                );
+        return response;
+    }
+
+    private static IOrderedQueryable<Invoice> OrderBy(IQueryable<Invoice> query, string sortBy, bool descending)
+    {
+        sortBy = sortBy?.Trim().ToLower() ?? "id";
+
+        return (sortBy, descending) switch
+        {
+            ("startdate", false) => query.OrderBy(s => s.StartedDate),
+            ("startdate", true) => query.OrderByDescending(s => s.StartedDate),
+             ("endeddate", false) => query.OrderBy(s => s.EndedDate),
+            ("endeddate", true) => query.OrderByDescending(s => s.EndedDate),
+             ("total", false) => query.OrderBy(s => s.Total),
+            ("total", true) => query.OrderByDescending(s => s.Total),
+             ("status", false) => query.OrderBy(s => s.InvoiceStatus),
+            ("status", true) => query.OrderByDescending(s => s.InvoiceStatus),
+            (_, false) => query.OrderBy(s => s.Id),
+            (_, true) => query.OrderByDescending(s => s.Id)
+        };
+    }
+    public async Task<GetInvoiceResponse> GetInvoiceAsync(Guid invoiceId)
+    {
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
+        var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: a => a.Id == invoiceId, include: i => i.Include(x => x.CustomerProfile));
+        return _mapper.Map<GetInvoiceResponse>(invoice);
+    }
+
+
 }

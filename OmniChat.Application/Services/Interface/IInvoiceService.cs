@@ -1,4 +1,6 @@
 ﻿using OmniChat.Infrastructure.Dtos.Responses.Invoice;
+using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,4 +18,8 @@ public interface IInvoiceService
 
     Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalIncomeAsync(string input);
     Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalUnpaidAsync(string input);
+
+    Task<PagingResponse<GetInvoicesResponse>> GetInvoicesAsync(Guid? customerId, InvoiceStatus? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
+
+    Task<GetInvoiceResponse> GetInvoiceAsync(Guid invoiceId);
 }
