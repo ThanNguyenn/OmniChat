@@ -211,6 +211,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<InvoiceJobRunner>();
     builder.Services.AddScoped<IDraftOrderService, DraftOrderService>();
     builder.Services.AddScoped<INotificationService,NotificationService>();
+    builder.Services.AddScoped<ISheetExportService, SheetExportService>();
 }
 
 void RegisterBackgroundServices()

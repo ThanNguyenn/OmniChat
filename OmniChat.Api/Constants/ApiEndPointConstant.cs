@@ -270,6 +270,7 @@ public class ApiEndPointConstant
         public const string Base = ApiV1 + "/invoices";
         public const string TotalRevenue = Base + "/total-revenue";
         public const string TotalUnpaid = Base + "/total-unpaid";
+        public const string ExportToExcel = Base + "/{id}/export";
 
     }
 

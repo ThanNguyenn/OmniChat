@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting.Internal;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Interface;
@@ -14,11 +15,15 @@ public class InvoiceController : BaseController<InvoiceController>
 {
     private readonly IInvoiceService _invoiceService;
     private readonly InvoiceJobRunner _runner;
-    public InvoiceController(ILogger<InvoiceController> logger, IInvoiceService invoiceService, InvoiceJobRunner runner) : base(logger)
+    private readonly ISheetExportService _sheetExportService;
+    private readonly IWebHostEnvironment _hostingEnvironment;
+    public InvoiceController(ILogger<InvoiceController> logger, IInvoiceService invoiceService, InvoiceJobRunner runner, ISheetExportService sheetExportService, IWebHostEnvironment hostingEnvironment) : base(logger)
 
     {
         _invoiceService = invoiceService;
         _runner = runner;
+        _sheetExportService = sheetExportService;
+        _hostingEnvironment = hostingEnvironment;
     }
 
 
@@ -56,11 +61,23 @@ public class InvoiceController : BaseController<InvoiceController>
     }
 
 
-    [HttpPost(ApiEndPointConstant.IntentType.Base + "run")]
+    [HttpPost(ApiEndPointConstant.Invoice.Base + "run")]
     public async Task<IActionResult> Run([FromQuery] DateTime? from, [FromQuery] DateTime? to)
     {
         await _runner.RunAsync(from, to);
         return Ok();
+    }
+
+    [HttpGet(ApiEndPointConstant.Invoice.ExportToExcel)]
+    public async Task<IActionResult> ExportToExcel([FromRoute] Guid id)
+    {
+        var templatePath = Path.Combine(_hostingEnvironment.WebRootPath, "templates", "SheetTemplate.xlsx");
+        var fileContent = await _sheetExportService.ExportInvoiceToExcelAsync(id, templatePath);
+        return File(
+            fileContent.content,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileContent.filename
+        );
     }
 
 }

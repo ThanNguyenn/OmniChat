@@ -38,7 +38,9 @@ public class InvoiceCreationWorker : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 var runner = scope.ServiceProvider.GetRequiredService<InvoiceJobRunner>();
 
-                await runner.RunAsync();
+                var (from, to) = GetInvoiceRange();
+
+                await runner.RunAsync(from, to);
             }
             catch (Exception ex)
             {
@@ -47,6 +49,18 @@ public class InvoiceCreationWorker : BackgroundService
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
             }
         }
+    }
+    private (DateTime from, DateTime to) GetInvoiceRange()
+    {
+        var now = DateTime.UtcNow.Date;
+
+        int dayOfWeek = (int)now.DayOfWeek;
+        if (dayOfWeek == 0) dayOfWeek = 7;
+
+        var monday = now.AddDays(-(dayOfWeek - 1));
+        var sunday = monday.AddDays(6);
+
+        return (monday, sunday);
     }
 
     private DateTime GetNextSundayNight()
@@ -62,11 +76,4 @@ public class InvoiceCreationWorker : BackgroundService
         return nextSunday;
     }
 
-    private (DateTime from, DateTime to) GetInvoiceRange()
-    {
-        var to = DateTime.UtcNow.Date;
-        var from = to.AddDays(-7);
-
-        return (from, to);
-    }
 }
