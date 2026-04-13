@@ -16,7 +16,7 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? StartedDate { get; set; } = DateTime.UtcNow;
 
-        public DateTime? EndedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? EndedDate { get; set; }
 
         public double Total {  get; set; }
 
@@ -24,7 +24,7 @@ namespace OmniChat.Infrastructure.Models
 
         public InvoiceMethod InvoiceMethod { get; set; }
 
-        public DateTime? CompletedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CompletedDate { get; set; }
 
         public DateTime CreateAt { get; set; }
 
