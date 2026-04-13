@@ -40,6 +40,7 @@ namespace OmniChat.Application.Services.Implements
             _supportTaskService = supportTaskService;
             _hubContext = hubContext;
             _supportTaskService = supportTaskService;
+            _notificationService = notificationService;
         }
 
         public async Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId)
