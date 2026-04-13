@@ -12,7 +12,13 @@ public class ProductMapper : Profile
         CreateMap<CreateProductRequest, Product>();
         CreateMap<UpdateProductRequest, Product>().ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-        CreateMap<Product, GetAllProductsResponse>();
-        CreateMap<Product, GetProductResponse>();       
+        CreateMap<Product, GetAllProductsResponse>().ForMember(dest => dest.Brand,
+                opt => opt.MapFrom(src => src.Brand.Name));
+
+        CreateMap<Product, GetAllProductsCreateOrderResponse>().ForMember(dest => dest.Brand,
+                opt => opt.MapFrom(src => src.Brand.Name));
+
+        CreateMap<Product, GetProductResponse>().ForMember(dest => dest.Brand,
+                opt => opt.MapFrom(src => src.Brand.Name));
     }
 }

@@ -17,6 +17,7 @@ public class GetAllProductsCreateOrderResponse
 
     public double VolumeMl { get; set; }
 
+    public Guid BrandId { get; set; }
     public string Brand { get; set; }
 
     public string Code { get; set; }

@@ -120,6 +120,7 @@ public class ProductService : BaseService<ProductService>, IProductService
                 predicate: p => p.IsActive != false && (string.IsNullOrEmpty(search) || p.Name.Contains(search) || p.Code.Contains(search)),
                 orderBy: q => OrderBy(q, sortBy, descending),
                 selector: e => _mapper.Map<GetAllProductsResponse>(e),
+                include: q => q.Include(p => p.Brand),
                 page: pageNumber,
                 size: pageSize
                 );
@@ -140,6 +141,7 @@ public class ProductService : BaseService<ProductService>, IProductService
                 (!request.VolumeMl.HasValue || p.VolumeMl == request.VolumeMl) &&
                 (!request.BrandId.HasValue || p.BrandId == request.BrandId),
             orderBy: q => q.OrderBy(p => p.ProductKind),
+            include: q => q.Include(p => p.Brand),
             selector: e => _mapper.Map<GetAllProductsCreateOrderResponse>(e)
         );
         return response;
@@ -173,7 +175,7 @@ public class ProductService : BaseService<ProductService>, IProductService
         var productRepo = _unitOfWork.GetRepository<Product>();
         var product = await productRepo.SingleOrDefaultAsync(
             predicate: p => p.Id == productId && p.IsActive != false,
-            include: query => query.Include(p => p.ProductBatches)
+            include: query => query.Include(p => p.ProductBatches).Include(p => p.Brand)
         ) ?? throw new NotFoundException($"Product {productId} not found");
         var response = _mapper.Map<GetProductResponse>(product);
         return response;
