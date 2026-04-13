@@ -136,7 +136,7 @@ public class SheetExportService : BaseService<SheetExportService>, ISheetExportS
         return invoice;
     }
 
-    private async Task<double> CalculateDebt(Guid currentId, , Guid customerId)
+    private async Task<double> CalculateDebt(Guid currentId, Guid customerId)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
         var invoices = await invoiceRepo.GetListAsync(
