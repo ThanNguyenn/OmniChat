@@ -88,8 +88,8 @@ public class InvoiceController : BaseController<InvoiceController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
-        Summary = "Lấy danh sách product",
-        Description = "Lấy danh sách product có phân trang, tìm kiếm theo từ khóa, và sắp xếp theo field chỉ định."
+        Summary = "Lấy danh sách Invoice",
+        Description = "Lấy danh sách Invoice có phân trang, và sắp xếp theo field chỉ định."
     )]
     public async Task<IActionResult> GetAllProducts([FromQuery] Guid? invoiceId, InvoiceStatus? status, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
@@ -105,4 +105,20 @@ public class InvoiceController : BaseController<InvoiceController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [HttpGet(ApiEndPointConstant.Invoice.GetById)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetInvoicesResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy Invoice theo Id",
+        Description = "Lấy Invoice theo Id."
+    )]
+    public async Task<IActionResult> GetInvoiceById([FromRoute] Guid id)
+    {
+        var result = await _invoiceService.GetInvoiceAsync(id);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get invoice by id successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+
+    }
 }
