@@ -163,8 +163,8 @@ public class ProductService : BaseService<ProductService>, IProductService
             ("volumeml", true) => query.OrderByDescending(s => s.VolumeMl),
             ("price", false) => query.OrderBy(s => s.Price),
             ("price", true) => query.OrderByDescending(s => s.Price),
-            ("brand", false) => query.OrderBy(s => s.Brand),
-            ("brand", true) => query.OrderByDescending(s => s.Brand),
+            ("brand", false) => query.OrderBy(s => s.Brand.Name),
+            ("brand", true) => query.OrderByDescending(s => s.Brand.Name),
             (_, false) => query.OrderBy(s => s.Id),
             (_, true) => query.OrderByDescending(s => s.Id)
         };

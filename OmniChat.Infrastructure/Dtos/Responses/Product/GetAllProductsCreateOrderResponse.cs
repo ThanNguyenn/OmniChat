@@ -16,7 +16,7 @@ public class GetAllProductsCreateOrderResponse
     public PackagingType ProductPackagingType { get; set; }
 
     public double VolumeMl { get; set; }
-
+    public ProductKind ProductKind { get; set; }
     public Guid BrandId { get; set; }
     public string Brand { get; set; }
 
