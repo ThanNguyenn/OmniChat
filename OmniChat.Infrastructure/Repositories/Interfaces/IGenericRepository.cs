@@ -32,9 +32,9 @@ public interface IGenericRepository<T> : IDisposable where T : class
     Task<T> GetByIdAsync(Guid id);
 
     IQueryable<T> GetQueryable(
-        Expression<Func<T, bool>> predicate = null,
-        Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null,
-        bool asNoTracking = false);
+         Expression<Func<T, bool>> predicate = null,
+         Func<IQueryable<T>, IQueryable<T>> include = null,
+         bool asNoTracking = false);
 
     Task<PagingResponse<T>> GetPagingListAsync(
         Expression<Func<T, bool>> predicate = null,

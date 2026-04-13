@@ -51,6 +51,13 @@ public class SheetExportService : BaseService<SheetExportService>, ISheetExportS
         }
         //products
         var productMap = GetProductMap();
+
+        var returnedQtyByOrderItem = invoice.Orders
+            .SelectMany(o => o.PostSaleRequests)
+            .SelectMany(ps => ps.PostSaleItems)
+            .GroupBy(pi => pi.OrderItemId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
         foreach (var order in invoice.Orders)
         {
             if (!order.OrderDate.HasValue)
@@ -80,12 +87,19 @@ public class SheetExportService : BaseService<SheetExportService>, ISheetExportS
                 if (!cell.IsEmpty())
                     current = cell.GetValue<int>();
 
-                cell.Value = current + item.Quantity;
+                returnedQtyByOrderItem.TryGetValue(item.Id, out var returnedQty);
+
+                var effectiveQty = item.Quantity - returnedQty;
+
+                if (effectiveQty <= 0)
+                    continue;
+
+                cell.Value = current + effectiveQty;
             }
         }
 
         //debt
-        var debt = await CalculateDebt(invoice.Id);
+        var debt = await CalculateDebt(invoice.Id, invoice.CustomerId);
         ws.Cell("AB12").Value = debt;
 
         //deducted amount
@@ -102,11 +116,27 @@ public class SheetExportService : BaseService<SheetExportService>, ISheetExportS
     private async Task<Invoice> FetchData(Guid invoiceId)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
-        var invoice = await invoiceRepo.GetQueryable(predicate: i => i.Id == invoiceId, include: q => q.Include(i => i.CustomerProfile).Include(i => i.Orders).ThenInclude(o => o.OrderItems).ThenInclude(oi => oi.ProductBatch).ThenInclude(pb => pb.Product).ThenInclude(p => p.Brand).Include(i => i.Orders).ThenInclude(o => o.CreditNotes), asNoTracking: true).AsSplitQuery().FirstOrDefaultAsync() ?? throw new NotFoundException($"Invoice {invoiceId} not found");
+        var invoice = await invoiceRepo.GetQueryable(
+            predicate: i => i.Id == invoiceId, 
+            include: q => q
+                .Include(i => i.CustomerProfile)
+
+                .Include(i => i.Orders)
+                    .ThenInclude(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductBatch)
+                            .ThenInclude(pb => pb.Product)
+                                .ThenInclude(p => p.Brand)
+
+                .Include(i => i.Orders)
+                    .ThenInclude(o => o.PostSaleRequests
+                        .Where(ps => ps.Status == PostSaleRequestStatus.Approved &&
+                                     ps.Type == PostSaleRequestType.Return))
+                        .ThenInclude(ps => ps.PostSaleItems),
+            asNoTracking: true).AsSplitQuery().FirstOrDefaultAsync() ?? throw new NotFoundException($"Invoice {invoiceId} not found");
         return invoice;
     }
 
-    private async Task<double> CalculateDebt(Guid currentId)
+    private async Task<double> CalculateDebt(Guid currentId, , Guid customerId)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
         var invoices = await invoiceRepo.GetListAsync(
