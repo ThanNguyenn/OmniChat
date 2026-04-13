@@ -205,7 +205,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         var staffRepo = _unitOfWork.GetRepository<Staff>();
         var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();
 
-        var existingStaff = staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == staffId && s.IsActive != false)
+        var existingStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == staffId && s.IsActive != false)
             ?? throw new NotFoundException($"Staff {staffId} not found or inactive");
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>

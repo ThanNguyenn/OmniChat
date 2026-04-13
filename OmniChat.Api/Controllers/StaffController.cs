@@ -121,7 +121,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> UnassignIntentFromStaffAsync([FromRoute] Guid id, [FromBody] AssignStaffToIntentTypeRequest assignIntentRequests)
     {
         var result = await _staffService.UnassignIntentFromStaffAsync(id, assignIntentRequests);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Assign intent to staff successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Unassign intent for staff successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
 
     }
