@@ -167,9 +167,9 @@ public class ProductController : BaseController<ProductController>
         Summary = "Lấy danh sách product batch",
         Description = "Lấy danh sách product batch có phân trang, có filter lấy batch mới nhất."
     )]
-    public async Task<IActionResult> GetProductBatches([FromRoute] Guid productId, [FromQuery]int? pageNumber, int? pageSize, bool? isNewest)
+    public async Task<IActionResult> GetProductBatches([FromRoute] Guid id, [FromQuery]int? pageNumber, int? pageSize, bool? isNewest)
     {
-        var result = await _productService.GetProductBatchesAsync(productId, isNewest, pageNumber ?? 1, pageSize ?? 20);
+        var result = await _productService.GetProductBatchesAsync(id, isNewest, pageNumber ?? 1, pageSize ?? 20);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get product batches successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
