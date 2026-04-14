@@ -91,7 +91,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetTaskStatusDashboard([FromQuery] string year, [FromQuery] SupportTaskStatus status)
         {
             var result = await _supportTaskService.GetTaskTotalByStatusDashboardAsync(year, status);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Task Intent Dashboard Successfully", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Task status Dashboard Successfully", result);
             return Ok(response);
         }
     }
