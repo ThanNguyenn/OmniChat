@@ -33,7 +33,7 @@ public class AuthController : BaseController<AuthController>
     {
         var result = await _authService.LoginAsync(loginRequest);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Login successful", result);
-        return StatusCode(StatusCodes.Status200OK, result);
+        return StatusCode(StatusCodes.Status200OK, response);
     }
 
     [HttpPost(ApiEndPointConstant.Auth.ChangePassword)]
