@@ -22,5 +22,7 @@ namespace OmniChat.Application.Services.Interface
         Task<IEnumerable<DashboardMonthResponse>> GetTaskIntentDashboardResponsesAsync(string year);
         public  Task<bool> CancelSupportTaskAsync(Guid taskId, TaskCancelReasonRequest cancelReasonRequest);
 
+        public  Task<IEnumerable<DashboardMonthResponse>> GetTaskTotalByStatusDashboardAsync(string input, SupportTaskStatus status);
+
     }
 }

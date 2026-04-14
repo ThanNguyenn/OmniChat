@@ -19,5 +19,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
         SearchOrderHistory = 0,
         SearchProduct = 1,
         SearchCustomerInfo = 2,
+        AutoCreateOrder = 3,
     }
 }

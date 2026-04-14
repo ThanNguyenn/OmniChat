@@ -23,7 +23,10 @@ public class StaffMapper  : Profile
 
         CreateMap<Staff, GetStaffsResponse>()
             .ForMember(dest => dest.StaffIntentTypes,
-                opt => opt.MapFrom(src => src.StaffIntentTypes));
+                opt => opt.MapFrom(src => src.StaffIntentTypes))
+            .ForMember(dest => dest.AvatarUrl,
+               opt => opt.MapFrom(src => src.Account != null ? src.Account.AvatarUrl : null))
+            ;
 
         CreateMap<SupportTask, StaffSupportTaskResponse>()
              .ForMember(dest => dest.IntentTypeName,

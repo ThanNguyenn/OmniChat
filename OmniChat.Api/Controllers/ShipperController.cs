@@ -43,7 +43,7 @@ namespace OmniChat.Api.Controllers
         [SwaggerOperation(
            Summary = "Assign order to shipper",
            Description = "Assign order to shipper by shipperId and orderId")]
-        public async Task<IActionResult> AssignOrderToShipper([FromQuery] Guid id, [FromQuery] Guid orderId)
+        public async Task<IActionResult> AssignOrderToShipper([FromRoute] Guid id, [FromQuery] Guid orderId)
         {
             await _staffService.AssignShipperOrderAsync(id, orderId);
 

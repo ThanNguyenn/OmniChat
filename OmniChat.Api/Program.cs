@@ -225,6 +225,7 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<ChatAggregationWorker>();
     builder.Services.AddHostedService<ConversationWarningWorker>();
     builder.Services.AddHostedService<NotificationCleanupWorker>();
+    builder.Services.AddHostedService<CleanupWarningWorker>();
 }
 
 

@@ -18,6 +18,8 @@ public class GetStaffsResponse
 
     public string Phone { get; set; }
 
+    public string? AvatarUrl { get; set; }
+
     public StaffStatus Status { get; set; }
 
     //staff performance metrics
