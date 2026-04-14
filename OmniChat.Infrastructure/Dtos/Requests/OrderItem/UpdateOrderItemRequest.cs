@@ -8,4 +8,5 @@ namespace OmniChat.Infrastructure.Dtos.Requests.OrderItem;
 
 public class UpdateOrderItemRequest
 {
+    public int Quantity { get; set; }
 }
