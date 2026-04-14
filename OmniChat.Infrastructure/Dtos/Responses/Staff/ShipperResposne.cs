@@ -9,6 +9,8 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Staff
 {
     public class ShipperResposne
     {
+        public Guid Id { get; set; }
+
         public string ShipperName { get; set; }
 
         public StaffStatus ShipperStatus { get; set; }

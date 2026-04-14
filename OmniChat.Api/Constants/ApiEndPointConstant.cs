@@ -87,6 +87,7 @@ public class ApiEndPointConstant
         public const string CancelSupportTask = SupportTask + "/{id}/cancel";
         public const string GetSupportTaskByConversationId = SupportTask + "/conversation/{conversationId}";
         public const string GetTaskIntentDashboard = SupportTask + "/dashboard";
+        public const string GetTaskStatus = SupportTask + "/get-task-status";
     }
 
     public static class SupportConversationEndPoint
@@ -226,6 +227,7 @@ public class ApiEndPointConstant
     {
         public const string Base = ApiV1 + "/brands";
         public const string GetAll = "get";
+        public const string GetProductBrand = "{id}/product";
     }
 
     public static class Wallet

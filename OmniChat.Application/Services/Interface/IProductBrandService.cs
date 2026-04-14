@@ -11,4 +11,5 @@ public interface IProductBrandService
 {
     public Task<IEnumerable<GetAllBrandsResponse>> GetAllProductBrandsAsync();
     public Task<int> GetTotalBrandsInStockAsync();
+    public  Task<ProductBrandResponse> GetTotalProductByBrandIdAsync(Guid brandId);
 }

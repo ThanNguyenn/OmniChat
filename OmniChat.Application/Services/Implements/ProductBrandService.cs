@@ -39,4 +39,48 @@ public class ProductBrandService : BaseService<ProductBrandService>, IProductBra
 
         return totalBrands;
     }
+
+    public async Task<ProductBrandResponse> GetTotalProductByBrandIdAsync(Guid brandId)
+    {
+        var brandRepo = _unitOfWork.GetRepository<Brand>();
+        var now = DateTime.UtcNow;
+
+        var exitBrand = await brandRepo.SingleOrDefaultAsync(
+            predicate: x => x.Id == brandId,
+            include: x => x.Include(b => b.Products)
+        );
+
+        if (exitBrand == null) return null;
+
+       
+        var validProducts = exitBrand.Products
+            .Where(p => p.CreateDate.HasValue &&
+                        p.CreateDate.Value.AddDays(p.LifeSpan) > now)
+            .ToList();
+
+        var response = new ProductBrandResponse
+        {
+        
+            TotalProduct = validProducts.Sum(p => p.Quantity),
+
+            ProductKinds = validProducts
+                .GroupBy(p => p.ProductKind)
+                .Select(kindGroup => new ProductKindDetail
+                {
+                    KindName = kindGroup.Key.ToString(),
+                    Volumes = kindGroup
+                        .GroupBy(v => v.VolumeMl)
+                        .OrderBy(v => v.Key) 
+                        .Select(volumeGroup => new ProductVolumeDetail
+                        {
+                            Volume = volumeGroup.Key,
+                            Quantity = volumeGroup.Sum(x => x.Quantity)
+                        })
+                        .ToList()
+                })
+                .ToList()
+        };
+
+        return response;
+    }
 }

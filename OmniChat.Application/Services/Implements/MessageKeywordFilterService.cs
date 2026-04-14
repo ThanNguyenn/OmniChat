@@ -37,6 +37,10 @@ namespace OmniChat.Application.Services.Implements
             new(@"\bOD\d{6}\b",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly Regex OrderFlexibleRegex =
+      new(@"(\d+)\s*(chai|cái|ly|bịch|ml|lít|kđ|đường)",
+      RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public async Task<ExtractKeywordResponse> ExtractKeywords(string content, List<string>? productNames = null)
         {
             var result = new ExtractKeywordResponse();
@@ -47,6 +51,16 @@ namespace OmniChat.Application.Services.Implements
 
             var customerProfileRepo = _unitOfWork.GetRepository<CustomerProfile>();
 
+            // auto create order
+            var matches = OrderFlexibleRegex.Matches(content);
+            if (matches.Count >= 2)
+            {
+                result.Recommends.Add(new IsRecommentOnMesssageResponse
+                {
+                    RecommendType = RecommendType.AutoCreateOrder,
+                    Data = null
+                });
+            }
             // Phone
             var phoneNumbers = PhoneRegex.Matches(content)
                  .Select(m => m.Value)
