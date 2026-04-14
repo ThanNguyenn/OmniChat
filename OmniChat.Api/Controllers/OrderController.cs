@@ -180,7 +180,7 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
         Summary = "Lấy order dashboard info",
-        Description = "Lấy order dashboard info theo datetime UTC. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng  "
+        Description = "Lấy order dashboard info theo datetime UTC. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng. Status là returned, cancelled completed "
     )]
     public async Task<IActionResult> GetOrderDashboardInfo([FromQuery] IEnumerable<string>? status, [FromQuery] string input)
     {
