@@ -24,7 +24,7 @@ public interface IOrderService
     Task<bool> ReturnOrderPaidAsync(Guid orderId, double amount);
     Task<bool> ReturnOrderUnpaidAsync(Guid orderId, double amount);
 
-    Task<IEnumerable<DashboardOrderYearResponse>> GetDashboardAsync(string input);
+    Task<IEnumerable<DashboardOrderYearResponse>> GetDashboardAsync(IEnumerable<string>? status,string input);
 
     Task<PagingResponse<GetOrderForShipperResponse>> GetOrderForShipperAsync(string? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 }

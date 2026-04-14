@@ -182,9 +182,9 @@ public class OrderController : BaseController<OrderController>
         Summary = "Lấy order dashboard info",
         Description = "Lấy order dashboard info theo datetime UTC. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng  "
     )]
-    public async Task<IActionResult> GetOrderDashboardInfo([FromQuery] string input)
+    public async Task<IActionResult> GetOrderDashboardInfo([FromQuery] IEnumerable<string>? status, [FromQuery] string input)
     {
-        var result = await _orderService.GetDashboardAsync(input);
+        var result = await _orderService.GetDashboardAsync(status, input);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order dashboard info retrieved successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
 

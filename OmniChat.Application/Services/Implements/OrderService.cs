@@ -297,7 +297,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
         });
     }
 
-    public async Task<IEnumerable<DashboardOrderYearResponse>> GetDashboardAsync(string input)
+    public async Task<IEnumerable<DashboardOrderYearResponse>> GetDashboardAsync(IEnumerable<string>? status, string input)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
 
@@ -323,28 +323,53 @@ public class OrderService : BaseService<OrderService>, IOrderService
             ? Enumerable.Range(1, 12)
             : new[] { month.Value };
 
+        HashSet<OrderStatus>? statusFilter = null;
+
+        if (status != null && status.Any())
+        {
+            statusFilter = status
+                .Select(s => s.Trim().ToLower())
+                .Select(s => s switch
+                {
+                    "completed" => OrderStatus.Completed,
+                    "cancelled" => OrderStatus.Cancelled,
+                    "returned" => OrderStatus.Returned,
+                    _ => (OrderStatus?)null
+                })
+                .Where(s => s.HasValue)
+                .Select(s => s.Value)
+                .ToHashSet();
+        }
+
         foreach (var m in monthsToProcess)
         {
             var fromDate = DateTime.SpecifyKind(new DateTime(year, m, 1), DateTimeKind.Utc);
             var toDateExclusive = fromDate.AddMonths(1);
 
-            var data = await orderRepo.GetQueryable(
-                    o => o.OrderDate >= fromDate &&
-                         o.OrderDate < toDateExclusive,
-                    asNoTracking: true
-                )
-                .Select(o => new
-                {
-                    MappedStatus =
-                        o.Status == OrderStatus.Completed ? OrderStatus.Completed :
-                        o.Status == OrderStatus.Cancelled ? OrderStatus.Cancelled :
-                        (o.Status == OrderStatus.PendingReturn ||
-                         o.Status == OrderStatus.Returned ||
-                         o.Status == OrderStatus.ReturnedDefective)
-                            ? OrderStatus.Returned
-                            : (OrderStatus?)null
-                })
-                .Where(x => x.MappedStatus != null)
+            var query = orderRepo.GetQueryable(
+        o => o.OrderDate >= fromDate &&
+             o.OrderDate < toDateExclusive,
+            asNoTracking: true
+            )
+            .Select(o => new
+            {
+                MappedStatus =
+                    o.Status == OrderStatus.Completed ? OrderStatus.Completed :
+                    o.Status == OrderStatus.Cancelled ? OrderStatus.Cancelled :
+                    (o.Status == OrderStatus.PendingReturn ||
+                     o.Status == OrderStatus.Returned ||
+                     o.Status == OrderStatus.ReturnedDefective)
+                        ? OrderStatus.Returned
+                        : (OrderStatus?)null
+            })
+            .Where(x => x.MappedStatus != null);
+
+            if (statusFilter != null)
+            {
+                query = query.Where(x => statusFilter.Contains(x.MappedStatus.Value));
+            }
+
+            var data = await query
                 .GroupBy(x => x.MappedStatus.Value)
                 .Select(g => new GetOrderDashBoardByStatus
                 {
