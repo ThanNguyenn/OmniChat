@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
+using OmniChat.Infrastructure.Dtos.Requests.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
 using OmniChat.Infrastructure.Dtos.Responses.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
@@ -104,35 +105,67 @@ public class OrderService : BaseService<OrderService>, IOrderService
         return true;
     }
 
-    public Task<PagingResponse<GetAllOrdersResponse>> GetAllOrdersAsync(string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
+    public Task<PagingResponse<GetAllOrdersResponse>> GetAllOrdersAsync(
+        IEnumerable<OrderStatus>? orderStatuses,
+        string? search,
+        int pageNumber = 1,
+        int pageSize = 20,
+        string sortBy = "id",
+        bool descending = false)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
+
         var response = orderRepo.GetPagingListAsync<GetAllOrdersResponse>(
-            predicate: o => string.IsNullOrEmpty(search) || o.Code.Contains(search) || o.CustomerProfile.CustomerName.Contains(search),
+            predicate: o =>
+                (orderStatuses == null || !orderStatuses.Any() || orderStatuses.Contains(o.Status)) &&
+                (string.IsNullOrEmpty(search) ||
+                 o.Code.Contains(search) ||
+                 o.CustomerProfile.CustomerName!.Contains(search)),
+
             orderBy: q => OrderBy(q, sortBy, descending),
+
             selector: e => _mapper.Map<GetAllOrdersResponse>(e),
-            include: q => q
-                .Include(o => o.CustomerProfile),
+
+            include: q => q.Include(o => o.CustomerProfile),
+
             page: pageNumber,
-            size: pageSize);
+            size: pageSize
+        );
 
         return response;
     }
 
-    public Task<PagingResponse<GetOrderResponse>> GetOrdersByCustomerIdAsync(Guid customerId, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
+    public Task<PagingResponse<GetOrderResponse>> GetOrdersByCustomerIdAsync(
+        Guid customerId,
+        IEnumerable<OrderStatus>? orderStatuses,
+        string? search,
+        int pageNumber = 1,
+        int pageSize = 20,
+        string sortBy = "id",
+        bool descending = false)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
+
         var response = orderRepo.GetPagingListAsync<GetOrderResponse>(
-            predicate: o => o.CustomerId == customerId &&
-                            (string.IsNullOrEmpty(search) || o.Code.Contains(search)),
+            predicate: o =>
+                o.CustomerId == customerId &&
+                (orderStatuses == null || !orderStatuses.Any() || orderStatuses.Contains(o.Status)) &&
+                (string.IsNullOrEmpty(search) || o.Code.Contains(search)),
+
             orderBy: q => OrderBy(q, sortBy, descending),
-            include: q => q.Include(o => o.CustomerProfile)
+
+            include: q => q
+                .Include(o => o.CustomerProfile)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductBatch)
                         .ThenInclude(pb => pb.Product),
+
             selector: e => _mapper.Map<GetOrderResponse>(e),
+
             page: pageNumber,
-            size: pageSize);
+            size: pageSize
+        );
+
         return response;
     }
 
@@ -400,5 +433,171 @@ public class OrderService : BaseService<OrderService>, IOrderService
             size: pageSize);
 
         return response;
+    }
+
+    public async Task<bool> SubmitOrderAsync(Guid orderId)
+    {
+        var  orderRepo = _unitOfWork.GetRepository<Order>();
+        return await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var order = await orderRepo.GetByIdAsync(orderId);
+            if (order == null)
+            {
+                throw new NotFoundException("Order not found");
+            }
+            if (order.Status != OrderStatus.Draft)
+            {
+                throw new BusinessException("Only pending orders can be submitted");
+            }
+            order.Status = OrderStatus.Pending;
+            orderRepo.Update(order);
+            return true;
+        });
+    }
+
+    public async Task<bool> AddOrderItemAsync(Guid orderId, AddOrderItemRequest request)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var order = await orderRepo
+                .GetQueryable(include: o => o.Include(x => x.OrderItems))
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+                throw new NotFoundException("Order not found");
+
+            var batch = await batchRepo
+                .GetQueryable(include: b => b.Include(x => x.Product))
+                .FirstOrDefaultAsync(b => b.Id == request.ProductBatchId);
+
+            if (batch == null)
+                throw new NotFoundException("Product batch not found");
+
+            if (batch.Quantity < request.Quantity)
+                throw new BusinessException("Insufficient stock");
+
+            var existingItem = order.OrderItems
+                .FirstOrDefault(x => x.ProductBatchId == request.ProductBatchId);
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += request.Quantity;
+            }
+            else
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    ProductBatchId = batch.Id,
+                    Quantity = request.Quantity,
+                    Price = batch.Product.Price
+                });
+            }
+
+            batch.Quantity -= request.Quantity;
+            batch.Product.Quantity -= request.Quantity;
+
+            order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
+        });
+
+        return true;
+    }
+
+    public async Task<bool> RemoveOrderItemAsync(Guid orderId, Guid orderItemId)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var order = await orderRepo
+                .GetQueryable(include: o => o.Include(x => x.OrderItems))
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+                throw new NotFoundException("Order not found");
+
+            var orderItem = order.OrderItems
+                .FirstOrDefault(i => i.Id == orderItemId);
+
+            if (orderItem == null)
+                throw new NotFoundException("Order item not in this order");
+
+            var batch = await batchRepo
+                .GetQueryable(include: b => b.Include(x => x.Product))
+                .FirstOrDefaultAsync(b => b.Id == orderItem.ProductBatchId);
+
+            if (batch == null)
+                throw new NotFoundException("Product batch not found");
+
+            // restore stock
+            batch.Quantity += orderItem.Quantity;
+            batch.Product.Quantity += orderItem.Quantity;
+
+            order.OrderItems.Remove(orderItem);
+
+            order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
+        });
+
+        return true;
+    }
+
+    public async Task<bool> UpdateOrderItemAsync(
+        Guid orderId,
+        Guid orderItemId,
+        UpdateOrderItemRequest request)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+        var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+
+        if (request.Quantity == 0)
+            return await RemoveOrderItemAsync(orderId, orderItemId);
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var order = await orderRepo
+                .GetQueryable(include: o => o.Include(x => x.OrderItems))
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+                throw new NotFoundException("Order not found");
+
+            var orderItem = order.OrderItems
+                .FirstOrDefault(i => i.Id == orderItemId);
+
+            if (orderItem == null)
+                throw new NotFoundException("Order item not in this order");
+
+            var batch = await batchRepo
+                .GetQueryable(include: b => b.Include(x => x.Product))
+                .FirstOrDefaultAsync(b => b.Id == orderItem.ProductBatchId);
+
+            if (batch == null)
+                throw new NotFoundException("Product batch not found");
+
+            int delta = request.Quantity - orderItem.Quantity;
+
+            if (delta > 0)
+            {
+                if (batch.Quantity < delta)
+                    throw new BusinessException("Insufficient stock");
+
+                batch.Quantity -= delta;
+                batch.Product.Quantity -= delta;
+            }
+            else if (delta < 0)
+            {
+                batch.Quantity += Math.Abs(delta);
+                batch.Product.Quantity += Math.Abs(delta);
+            }
+
+            orderItem.Quantity = request.Quantity;
+
+            order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
+        });
+
+        return true;
     }
 }
