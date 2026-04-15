@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Wallet;
+using OmniChat.Infrastructure.Dtos.Responses.Wallet;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
@@ -109,5 +110,36 @@ public class WalletService : BaseService<WalletService>, IWalletService
         });
         _ = _invoiceService.AllocateMoneyToInvoices(customerId);
         return true;
+    }
+
+    public async Task<GetWalletResponse> CalculateWallet(Guid customerId)
+    {
+        var walletRepo = _unitOfWork.GetRepository<Wallet>();
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
+
+        var wallet = await walletRepo.SingleOrDefaultAsync(predicate:
+            w => w.CustomerId == customerId);
+
+        var walletAmount = wallet?.Amount ?? 0;
+
+        var invoices = await invoiceRepo.GetListAsync(predicate: i =>
+            i.CustomerId == customerId &&
+            !(i.IsDeleted ?? false) &&
+            (i.InvoiceStatus == InvoiceStatus.Pending ||
+             i.InvoiceStatus == InvoiceStatus.PartialPaid)
+        );
+
+        var totalDebt = invoices.Sum(i =>
+        {
+            var remaining = i.Total - i.DeductedAmount - i.PaidAmount;
+
+            return Math.Max(0, remaining);
+        });
+
+        return new GetWalletResponse
+        {
+            WalletAmount = walletAmount,
+            TotalDebt = totalDebt
+        };
     }
 }
