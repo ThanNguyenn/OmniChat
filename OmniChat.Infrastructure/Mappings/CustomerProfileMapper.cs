@@ -15,65 +15,24 @@ namespace OmniChat.Infrastructure.Mappings
         public CustomerProfileMapper()
         {
             CreateMap<CreateCustomerProfileRequest, CustomerProfile>()
-                .ForMember(x => x.CreateDate,
-                opt => opt.MapFrom(_ => DateTime.UtcNow)
-                );
+            .ForMember(x => x.CreateDate, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
             CreateMap<CustomerProfile, GetCustomerProfileResponse>()
-         .ForMember(
-             dest => dest.TotalOrder,
-             opt => opt.MapFrom(src => src.Orders.Count)
-         )
-         .ForMember(
-             dest => dest.TotalPayment,
-             opt => opt.MapFrom(src => src.Invoices.Sum(p => p.Total))
-         )
-            .ForMember(
-            dest => dest.CustomerDate,
-            opt => opt.MapFrom(src => src.CreateDate)
-        );
+                .ForMember(dest => dest.CustomerDate, opt => opt.MapFrom(src => src.CreateDate))
+                .ForMember(dest => dest.TotalOrder, opt => opt.MapFrom(src => src.Orders != null ? src.Orders.Count : 0))
+                .ForMember(dest => dest.TotalPayment, opt => opt.MapFrom(src =>
+                    src.Invoices != null ? src.Invoices.Sum(p => (double)(p.Total - (p.DeductedAmount))) : 0))
+                .ForMember(dest => dest.getWalletResponse, opt => opt.Ignore());
 
             CreateMap<CustomerProfile, CustomerDetailResponse>()
-                .ForMember(
-                dest => dest.AvatarUrl,
-                opt => opt.MapFrom(src => src.AvatarUrl) 
-               )
-                .ForMember(
-              dest => dest.CustomerName,
-              opt => opt.MapFrom(src => src.CustomerName) 
-                )
-              .ForMember(
-                  dest => dest.CustomerPhone,
-                  opt => opt.MapFrom(src => src.PhoneNumber)
-              )
-              .ForMember(
-                  dest => dest.Email,
-                  opt => opt.MapFrom(src => src.Email)
-              )
-              .ForMember(
-                  dest => dest.Address,
-                  opt => opt.MapFrom(src => src.Address)
-              )
-              .ForMember(
-                  dest => dest.TotalOrder,
-                  opt => opt.MapFrom(src => src.Orders.Count)
-              )
-              .ForMember(
-                  dest => dest.BecomeCustomerDate,
-                  opt => opt.MapFrom(src => src.CreateDate)
-              )
-              .ForMember(
-                  dest => dest.TotalPay,
-                  opt => opt.MapFrom(src => src.Invoices.Sum(x => (double?)x.Total) ?? 0)
-              )
-              .ForMember(
-                  dest => dest.ProviderName,
-                  opt => opt.Ignore()
-              )
-              .ForMember(
-                  dest => dest.TimeStartSupport,
-                  opt => opt.Ignore()
-              );
-                }
+                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.PhoneNumber))
+                .ForMember(dest => dest.BecomeCustomerDate, opt => opt.MapFrom(src => src.CreateDate))
+                .ForMember(dest => dest.TotalOrder, opt => opt.MapFrom(src => src.Orders != null ? src.Orders.Count : 0))
+                .ForMember(dest => dest.TotalPay, opt => opt.MapFrom(src =>
+                    src.Invoices != null ? src.Invoices.Sum(p => (double)(p.Total - (p.DeductedAmount))) : 0))
+                .ForMember(dest => dest.ProviderName, opt => opt.Ignore())
+                .ForMember(dest => dest.TimeStartSupport, opt => opt.Ignore())
+                .ForMember(dest => dest.getWalletResponse, opt => opt.Ignore());
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Dtos.Responses.Wallet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,5 +30,7 @@ namespace OmniChat.Infrastructure.Dtos.Responses.CustomerProfile
         public DateTime? BecomeCustomerDate { get; set; }
 
         public double? TotalPay {  get; set; }
+
+        public GetWalletResponse getWalletResponse { get; set; }
     }
 }

@@ -21,6 +21,10 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Claim
 
         public Guid StaffId { get; set; }
 
+        public string StaffName { get; set; }
+
         public Guid ClaimTypeId { get; set; }
+
+        public string ClaimTypeName { get; set; }
     }
 }

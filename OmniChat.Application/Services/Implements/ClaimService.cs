@@ -73,6 +73,8 @@ namespace OmniChat.Application.Services.Implements
             var repo = _unitOfWork.GetRepository<Claim>();
 
             var query = repo.GetQueryable()
+                .Include(c => c.Staff)      
+                .Include(c => c.ClaimType)
                 .Where(c => c.Status == ClaimStatus.Pending);
 
             var totalItems = await query.CountAsync();
@@ -106,6 +108,8 @@ namespace OmniChat.Application.Services.Implements
             var repo = _unitOfWork.GetRepository<Claim>();
 
             var query = repo.GetQueryable()
+                .Include(c => c.Staff)
+                .Include(c => c.ClaimType)
                 .Where(c => c.Status != ClaimStatus.Pending);
 
             var totalItems = await query.CountAsync();
@@ -198,6 +202,8 @@ namespace OmniChat.Application.Services.Implements
         {
             var repo = _unitOfWork.GetRepository<Claim>();
             var query = repo.GetQueryable()
+                .Include(c => c.Staff)
+                .Include(c => c.ClaimType)
                 .Where(c => c.StaffId == staffId);
 
             var totalItems = await query.CountAsync();
@@ -317,7 +323,6 @@ namespace OmniChat.Application.Services.Implements
                 // Chưa có performance record → tạo mới
                 var newPerformance = new StaffPerformance
                 {
-                    Id = Guid.NewGuid(),
                     StaffId = oldStaffId.Value,
                     ReassignmentCount = 1,
                     CreateDate = DateTime.UtcNow,

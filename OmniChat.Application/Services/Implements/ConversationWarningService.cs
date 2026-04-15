@@ -36,11 +36,13 @@ namespace OmniChat.Application.Services.Implements
             var pagingResult = await warningRepo.GetPagingListAsync(
                 selector: w => new WarningDetailRepsone
                 {
+                    Id = w.Id,
                     CustomerName = w.Conversation.CustomerProfile.CustomerName,
                     StaffName = w.Staff.Name,
                     CreateAt = w.CreatedAt,
                     WarningType = w.WarningType,
-                    Reason = w.Reason
+                    Reason = w.Reason,
+                    IsReviewed = w.IsReviewed
                 },
                 predicate: w => isReviewed == null || w.IsReviewed == isReviewed,
                 include: q => q
@@ -70,11 +72,13 @@ namespace OmniChat.Application.Services.Implements
 
             var response = new WarningDetailRepsone
             {
+                Id = warning.Id,
                 CustomerName = warning.Conversation?.CustomerProfile?.CustomerName,
                 StaffName = warning.Staff?.Name,
                 CreateAt = warning.CreatedAt,
                 WarningType = warning.WarningType,
-                Reason = warning.Reason
+                Reason = warning.Reason,
+                IsReviewed = warning.IsReviewed
             };
 
             

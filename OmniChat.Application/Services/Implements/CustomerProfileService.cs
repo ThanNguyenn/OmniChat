@@ -24,9 +24,12 @@ namespace OmniChat.Application.Services.Implements
     public class CustomerProfileService : BaseService<CustomerProfileService>, ICustomerProfileService
     {
         private readonly IHubContext<SupportConversationHub> _hubContext;
-        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IHubContext<SupportConversationHub> hubContext) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        private readonly IWalletService _walletService;
+
+        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IHubContext<SupportConversationHub> hubContext, IWalletService walletService ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _hubContext = hubContext;
+            _walletService = walletService;
         }
 
         public async Task<CustomerProfile> CreateCustomerProfileAsync(CreateCustomerProfileRequest request)
@@ -53,27 +56,39 @@ namespace OmniChat.Application.Services.Implements
         {
 
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
-
-         
             var searchTerm = customerName?.Trim().ToUpper();
 
-            return await repo.GetPagingListAsync(
+            var pagingData = await repo.GetPagingListAsync(
                 selector: x => new GetCustomerProfileResponse
                 {
                     Id = x.Id,
                     CustomerName = x.CustomerName,
                     AvatarUrl = x.AvatarUrl,
+                    Email = x.Email,
+                    PhoneNumber = x.PhoneNumber,
                     FacebookSenderId = x.FacebookSenderId,
                     ZaloSenderId = x.ZaloSenderId,
                     InstagramSenderId = x.InstagramSenderId,
+                    CustomerDate = x.CreateDate,
+                    TotalOrder = x.Orders.Count,
+                   
+                    TotalPayment = x.Invoices.Sum(p => p.Total - (p.DeductedAmount))
                 },
                 predicate: string.IsNullOrWhiteSpace(searchTerm)
                     ? null
                     : x => x.CustomerName.ToUpper().Contains(searchTerm),
                 orderBy: q => q.OrderByDescending(x => x.CustomerName),
+                include: cp => cp.Include(o => o.Orders).Include(p => p.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions),
                 page: pageNumber,
                 size: pageSize
             );
+
+
+            foreach (var item in pagingData.Items)
+            {
+                item.getWalletResponse = await _walletService.CalculateWallet(item.Id);
+            }
+            return pagingData;
         }
 
         public async Task<CustomerProfile> GetCustomerProfileBySenderAsync(string senderId)
@@ -118,13 +133,19 @@ namespace OmniChat.Application.Services.Implements
             var existCustomProfile = await repo.SingleOrDefaultAsync(
                  predicate: x => x.Email == searchRequest || x.PhoneNumber == searchRequest,
                  include: cp => cp.Include(o => o.Orders)
-                                  .Include(p => p.Invoices)
+                                  .Include(p => p.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions)
              );
 
             if (existCustomProfile == null)
                 throw new NotFoundException("No CustomerProfile Found");
 
-            var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile); 
+            var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile);
+
+            if (result != null)
+            {
+                result.getWalletResponse = await _walletService.CalculateWallet(existCustomProfile.Id);
+            }   
+
             return result;
         }
 
@@ -138,10 +159,16 @@ namespace OmniChat.Application.Services.Implements
             var existCustomProfile = await repo.SingleOrDefaultAsync(
                predicate: x => x.Id == CustomerId,
                 include: cp => cp.Include(o => o.Orders)
-               .Include(p => p.Invoices)
+               .Include(p => p.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions)
                );
 
             var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile);
+
+            if (result != null)
+            {
+                result.getWalletResponse = await _walletService.CalculateWallet(CustomerId);
+            }
+
             return result;
         }
 
@@ -171,6 +198,7 @@ namespace OmniChat.Application.Services.Implements
 
                 var response = _mapper.Map<GetCustomerProfileResponse>(customer);
 
+
                 
                 await _hubContext.Clients.All.SendAsync(
                     "CustomerProfileUpdated",
@@ -186,38 +214,43 @@ namespace OmniChat.Application.Services.Implements
             if (conversationId == Guid.Empty)
                 throw new BadRequestException("conversationId is required");
 
-            var supportConverRepo = _unitOfWork.GetRepository<SupportConversation>();
-
-            var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
-
-            var providerRepo = _unitOfWork.GetRepository<Provider>();
-
-            var supportConversation = await  supportConverRepo.SingleOrDefaultAsync(
+            var supportConversation = await _unitOfWork.GetRepository<SupportConversation>().SingleOrDefaultAsync(
                 predicate: x => x.Id == conversationId,
                 include: sc => sc.Include(sc => sc.Providers)
-                );
+            );
 
-            if (supportConversation == null)
-                throw new NotFoundException("supportConversation is required");
+            if (supportConversation == null) throw new NotFoundException("supportConversation not found");
 
-            var customer = await customerRepo
-                .SingleOrDefaultAsync(
+            var customer = await _unitOfWork.GetRepository<CustomerProfile>().SingleOrDefaultAsync(
                 predicate: x => x.Id == supportConversation.ActiveCustomerId,
-                 include: cp => cp.Include(o => o.Orders).Include(x => x.Invoices)
-                 );
+                include: cp => cp.Include(o => o.Orders).Include(x => x.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions)
+            );
 
-            if (customer == null)
-                throw new NotFoundException("customer is required");
+            if (customer == null) throw new NotFoundException("customer not found");
 
-            var provider = await providerRepo.SingleOrDefaultAsync(
+            var provider = await _unitOfWork.GetRepository<Provider>().SingleOrDefaultAsync(
                 predicate: p => p.Id == supportConversation.ProvidersId
-                );
+            );
 
+            var result = new CustomerDetailResponse
+            {
+                Id = customer.Id,
+                AvatarUrl = customer.AvatarUrl,
+                CustomerName = customer.CustomerName,
+                CustomerPhone = customer.PhoneNumber,
+                Email = customer.Email,
+                Address = customer.Address,
+                BecomeCustomerDate = customer.CreateDate,
+                TotalOrder = customer.Orders?.Count ?? 0,
+                TotalPay = customer.Invoices?.Sum(p => (double)(p.Total - (p.DeductedAmount))) ?? 0,
 
-            var result = _mapper.Map<CustomerDetailResponse>(customer);
+               
+                ProviderName = provider?.ProviderName,
+                TimeStartSupport = supportConversation.CreatedDate,
 
-            result.ProviderName = provider?.ProviderName;
-            result.TimeStartSupport = supportConversation.CreatedDate;
+                
+                getWalletResponse = await _walletService.CalculateWallet(customer.Id)
+            };
 
             return result;
 
