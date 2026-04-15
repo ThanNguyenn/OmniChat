@@ -23,4 +23,6 @@ public class GetAllProductsCreateOrderResponse
     public string Code { get; set; }
 
     public int Quantity { get; set; }
+
+    public double Price { get; set; }
 }
