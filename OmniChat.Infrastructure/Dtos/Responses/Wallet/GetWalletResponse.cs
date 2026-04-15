@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Models;
+﻿using OmniChat.Infrastructure.Dtos.Responses.Transaction;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,11 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Wallet;
 
 public class GetWalletResponse
 {
-    public double WalletAmount { get; set; }
+    public double Amount { get; set; }
 
     public double TotalDebt { get; set; }
+
+    public double NetAmount => Amount - TotalDebt;
+
+    public IEnumerable<GetTransactionResponse> Transactions { get; set; }
 }

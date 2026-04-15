@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Wallet;
@@ -117,10 +118,10 @@ public class WalletService : BaseService<WalletService>, IWalletService
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
-        var wallet = await walletRepo.SingleOrDefaultAsync(predicate:
-            w => w.CustomerId == customerId);
-
-        var walletAmount = wallet?.Amount ?? 0;
+        var wallet = await walletRepo.SingleOrDefaultAsync(
+            predicate: w => w.CustomerId == customerId,
+            include: w => w.Include(x => x.Transactions)
+        );
 
         var invoices = await invoiceRepo.GetListAsync(predicate: i =>
             i.CustomerId == customerId &&
@@ -132,14 +133,13 @@ public class WalletService : BaseService<WalletService>, IWalletService
         var totalDebt = invoices.Sum(i =>
         {
             var remaining = i.Total - i.DeductedAmount - i.PaidAmount;
-
             return Math.Max(0, remaining);
         });
 
-        return new GetWalletResponse
-        {
-            WalletAmount = walletAmount,
-            TotalDebt = totalDebt
-        };
+        var result = _mapper.Map<GetWalletResponse>(wallet);
+
+        result.TotalDebt = totalDebt;
+
+        return result;
     }
 }
