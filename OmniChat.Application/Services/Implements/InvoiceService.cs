@@ -92,6 +92,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
         var orderRepo = _unitOfWork.GetRepository<Order>();
+        var walletRepo = _unitOfWork.GetRepository<Wallet>();
 
         var invoicesToInsert = new List<Invoice>();
 
@@ -103,6 +104,8 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 o.DeliveryStatus == DeliveryStatus.Completed &&
                 o.InvoiceId == null &&
                 !(o.IsDeleted ?? false)
+                , include: o => o.Include(x => x.CreditNotes.Where(cn =>
+            cn.CreditNoteType == CreditNoteType.Adjustment))
             );
             _logger.LogInformation("Orders found: {count}", orders.Count);
             if (!orders.Any())
@@ -132,7 +135,20 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     continue;
 
                 var customerOrders = group.ToList();
-                var orderTotal = customerOrders.Sum(o => o.TotalAmount);
+                var orderTotal = customerOrders.Sum(o =>
+                {
+                    var adjustment = o.CreditNotes?
+                        .Where(cn => cn.CreditNoteStatus == CreditNoteStatus.Completed)
+                        .Sum(cn => cn.Total) ?? 0;
+
+                    return o.TotalAmount - adjustment;
+                });
+                var wallet = await walletRepo.SingleOrDefaultAsync( predicate:
+                w => w.CustomerId == customerId);
+
+                var walletBalance = wallet?.Amount ?? 0;
+
+                var deduction = Math.Min(orderTotal, walletBalance);
 
                 invoicesToInsert.Add(new Invoice
                 {
@@ -140,6 +156,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     StartedDate = from,
                     EndedDate = to,
                     Total = orderTotal,
+                    DeductedAmount = deduction,
                     InvoiceStatus = InvoiceStatus.Pending,
                     CreateAt = DateTime.UtcNow
                 });
