@@ -4,6 +4,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers
@@ -75,10 +76,22 @@ namespace OmniChat.Api.Controllers
         [SwaggerOperation(
             Summary = "Get Support Task intent và count",
             Description = "Get Support Task intent và count theo datetime UTC. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng ")]
-        public async Task<IActionResult> GetTaskIntentDashboard([FromQuery]string period)
+        public async Task<IActionResult> GetTaskIntentDashboard([FromQuery] string period)
         {
             var result = await _supportTaskService.GetTaskIntentDashboardResponsesAsync(period);
             var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Task Intent Dashboard Successfully", result);
+            return Ok(response);
+        }
+
+        [HttpGet(ApiEndPointConstant.SupportTaskEndPoint.GetTaskStatus)]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<DashboardMonthResponse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Get Support Task follow status và count",
+            Description = "Get Support Task theo status và count theo datetime UTC. Input yyyy để lấy 12 tháng hoặc mm/yyyy để lấy theo tháng ")]
+        public async Task<IActionResult> GetTaskStatusDashboard([FromQuery] string year, [FromQuery] SupportTaskStatus status)
+        {
+            var result = await _supportTaskService.GetTaskTotalByStatusDashboardAsync(year, status);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Task status Dashboard Successfully", result);
             return Ok(response);
         }
     }

@@ -51,26 +51,29 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<PagingResponse<GetCustomerProfileResponse>> GetCustomerProfilesPagingAsync(int pageNumber = 1, int pageSize = 20, string? customerName = null)
         {
-           
-                var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                return await repo.GetPagingListAsync(
-                    selector: x => new GetCustomerProfileResponse
-                    {
-                        Id = x.Id,
-                        CustomerName = x.CustomerName,
-                        AvatarUrl = x.AvatarUrl,
-                        FacebookSenderId = x.FacebookSenderId,
-                        ZaloSenderId = x.ZaloSenderId,
-                        InstagramSenderId = x.InstagramSenderId,
-                    },
-                    predicate: string.IsNullOrWhiteSpace(customerName)
-                        ? null
-                        : x => x.CustomerName.Contains(customerName),
-                    orderBy: q => q.OrderByDescending(x => x.CustomerName),
-                    page: pageNumber,
-                    size: pageSize
-                ); 
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+         
+            var searchTerm = customerName?.Trim().ToUpper();
+
+            return await repo.GetPagingListAsync(
+                selector: x => new GetCustomerProfileResponse
+                {
+                    Id = x.Id,
+                    CustomerName = x.CustomerName,
+                    AvatarUrl = x.AvatarUrl,
+                    FacebookSenderId = x.FacebookSenderId,
+                    ZaloSenderId = x.ZaloSenderId,
+                    InstagramSenderId = x.InstagramSenderId,
+                },
+                predicate: string.IsNullOrWhiteSpace(searchTerm)
+                    ? null
+                    : x => x.CustomerName.ToUpper().Contains(searchTerm),
+                orderBy: q => q.OrderByDescending(x => x.CustomerName),
+                page: pageNumber,
+                size: pageSize
+            );
         }
 
         public async Task<CustomerProfile> GetCustomerProfileBySenderAsync(string senderId)
@@ -108,13 +111,15 @@ namespace OmniChat.Application.Services.Implements
             if (string.IsNullOrWhiteSpace(keyword))
                 throw new BadRequestException("Email or Phone is required");
 
+            var searchRequest = keyword.Trim();
+
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
             var existCustomProfile = await repo.SingleOrDefaultAsync(
-                predicate: x => x.Email.Equals(keyword) || x.PhoneNumber.Equals(keyword),
+                 predicate: x => x.Email == searchRequest || x.PhoneNumber == searchRequest,
                  include: cp => cp.Include(o => o.Orders)
-                .Include(p => p.Invoices)
-                );
+                                  .Include(p => p.Invoices)
+             );
 
             if (existCustomProfile == null)
                 throw new NotFoundException("No CustomerProfile Found");

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.WarningConversation;
 using OmniChat.Infrastructure.Exceptions;
+using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -24,62 +25,83 @@ namespace OmniChat.Application.Services.Implements
         {
         }
 
-        public async Task<IEnumerable<WarningDetailRepsone>> GetAllWarningsAsync(bool? isReviewed = null)
+        public async Task<PagingResponse<WarningDetailRepsone>> GetAllWarningsAsync(
+         int pageNumber = 1,
+         int pageSize = 10,
+         bool? isReviewed = null)
         {
-            List<WarningDetailRepsone> respones = new List<WarningDetailRepsone>();
+            var warningRepo = _unitOfWork.GetRepository<ConversationWarning>();
 
-            var warningRepo =  _unitOfWork.GetRepository<ConversationWarning>();
-
-            var warnings = await warningRepo
-                .GetListAsync(
-                    predicate: w => isReviewed == null || w.IsReviewed == isReviewed,
-                    include: q => q.
-                    Include(w => w.Staff)
-                   .Include(w => w.Conversation).ThenInclude(c => c.CustomerProfile)
-                );
-
-            foreach (var item in warnings)
-            {
-                var response = new WarningDetailRepsone
+           
+            var pagingResult = await warningRepo.GetPagingListAsync(
+                selector: w => new WarningDetailRepsone
                 {
-                    CustomerName = item.Conversation.CustomerProfile.CustomerName,
-                    StaffName = item.Staff.Name,
-                    CreateAt = item.CreatedAt,
-                    WarningType = item.WarningType,
-                    Reason = item.Reason
-                };
+                    CustomerName = w.Conversation.CustomerProfile.CustomerName,
+                    StaffName = w.Staff.Name,
+                    CreateAt = w.CreatedAt,
+                    WarningType = w.WarningType,
+                    Reason = w.Reason
+                },
+                predicate: w => isReviewed == null || w.IsReviewed == isReviewed,
+                include: q => q
+                    .Include(w => w.Staff)
+                    .Include(w => w.Conversation).ThenInclude(c => c.CustomerProfile),
+                orderBy: q => q.OrderByDescending(w => w.CreatedAt),
+                page: pageNumber,
+                size: pageSize
+            );
 
-                respones.Add(response);
-            }
-
-            return respones;
-
+          
+            return pagingResult;
         }
 
         public async Task<WarningDetailRepsone> GetWarningByIdAsync(Guid id)
         {
             var warningRepo = _unitOfWork.GetRepository<ConversationWarning>();
-            var warning = await warningRepo
-                .SingleOrDefaultAsync(
-                    predicate: w => w.Id == id,
-                    include: q => q.
-                       Include(w => w.Staff)
-                      .Include(w => w.Conversation).ThenInclude(c => c.CustomerProfile)
-                );
+
+            var warning = await warningRepo.SingleOrDefaultAsync(
+                predicate: w => w.Id == id,
+                include: q => q.Include(w => w.Staff)
+                               .Include(w => w.Conversation).ThenInclude(c => c.CustomerProfile)
+            );
 
             if (warning == null)
                 throw new NotFoundException($"Warning {id} not found");
 
             var response = new WarningDetailRepsone
             {
-                CustomerName = warning.Conversation.CustomerProfile.CustomerName,
-                StaffName = warning.Staff.Name,
+                CustomerName = warning.Conversation?.CustomerProfile?.CustomerName,
+                StaffName = warning.Staff?.Name,
                 CreateAt = warning.CreatedAt,
                 WarningType = warning.WarningType,
                 Reason = warning.Reason
             };
 
+            
+            if (!warning.IsReviewed)
+            {
+                warning.IsReviewed = true;
+                warningRepo.Update(warning);
+                await _unitOfWork.CommitAsync();
+            }
+
             return response;
+        }
+
+        public async Task DeleteWarningAsync()
+        {
+            var warningRepo = _unitOfWork.GetRepository<ConversationWarning>();
+            var limitDate = DateTime.UtcNow.AddDays(-30);
+
+            var warnings = await warningRepo.GetListAsync(
+                predicate: x => x.IsReviewed == true && x.CreatedAt <= limitDate
+            );
+
+            if (warnings != null && warnings.Any())
+            {
+                warningRepo.DeleteRange(warnings);
+                await _unitOfWork.CommitAsync();
+            }
         }
     }
 }

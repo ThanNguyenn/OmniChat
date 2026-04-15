@@ -281,5 +281,62 @@ namespace OmniChat.Application.Services.Implements
 
             return result;
         }
+
+        public async Task<IEnumerable<DashboardMonthResponse>> GetTaskTotalByStatusDashboardAsync(string input, SupportTaskStatus status)
+        {
+            var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
+
+           
+            if (!int.TryParse(input, out int year))
+            {
+                throw new BadRequestException("Invalid year format");
+            }
+
+           
+            DateTime from = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime to = from.AddYears(1);
+
+           
+            var rawData = await supportTaskRepo.GetQueryable(
+                    t => t.CreatedAt.HasValue &&
+                         t.CreatedAt.Value >= from &&
+                         t.CreatedAt.Value < to &&
+                         t.Status == status, 
+                    asNoTracking: true
+                )
+                .GroupBy(t => t.CreatedAt.Value.Month) 
+                .Select(g => new
+                {
+                    Month = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            var lookup = rawData.ToDictionary(x => x.Month, x => x.Count);
+
+            var result = new List<DashboardMonthResponse>();
+
+          
+            for (int m = 1; m <= 12; m++)
+            {
+                lookup.TryGetValue(m, out var count);
+
+                result.Add(new DashboardMonthResponse
+                {
+                    Month = m,
+                    
+                    Intents = new List<TaskIntentDashboardResponse>
+            {
+                new TaskIntentDashboardResponse
+                {
+                    IntentName = status.ToString(),
+                    TaskCount = count
+                }
+            }
+                });
+            }
+
+            return result;
+        }
     }
 }

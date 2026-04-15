@@ -250,6 +250,101 @@ namespace OmniChat.Application.Services.Implements
         }
 
         // conversattion detail
+        //public async Task<SupportConversationDetailResponse> GetConversationDetailByIdAsync(Guid conversationId)
+        //{
+        //    var repo = _unitOfWork.GetRepository<SupportConversation>();
+        //    var conversation = await repo.SingleOrDefaultAsync(predicate: sc => sc.Id == conversationId,
+        //        include: source => source
+        //            .Include(c => c.CustomerMessages)
+        //            .Include(c => c.Providers)
+        //            .Include(c => c.SupportStaffMessages)
+        //    );
+
+
+        //    if (conversation == null)
+        //        throw new NotFoundException("No support conversation found");
+
+        //    await ReadAllCustomerMessageAsync(conversation.CustomerMessages.ToList());
+
+        //    var customerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
+
+        //    var messages = conversation.CustomerMessages.Select(cm => new SupportConversationMessagesResponse
+        //    {
+        //        SenderType = "Customer",
+        //        SenderId = customerProfile.Id,
+        //        Content = cm.Content,
+        //        Timestamp = cm.Timestamp
+        //    })
+        //    .Concat(
+        //        conversation.SupportStaffMessages.Select(sm => new SupportConversationMessagesResponse
+        //        {
+        //            SenderType = "Staff",
+        //            SenderId = sm.StaffId,
+        //            Content = sm.Content,
+        //            Timestamp = sm.Timestamp
+        //        })
+        //        )
+        //    .OrderBy(m => m.Timestamp)
+        //    .ToList();
+
+        //    var recentCustomerMessages = messages
+        //.Where(m => m.SenderType == "Customer")
+        //.OrderByDescending(m => m.Timestamp)
+        //.Take(5)
+        //.ToList();
+
+        //    var customerMessages = messages.Where(m => m.SenderType == "Customer");
+
+        //    foreach (var message in recentCustomerMessages)
+        //    {
+        //        if (!string.IsNullOrEmpty(message.Content))
+        //        {
+        //            var result = await _messageKeywordFilterService.ExtractKeywords(message.Content);
+
+        //            if (result.Highlights.Any() || result.Recommends.Any())
+        //            {
+        //                message.extractKeywordResponses = result;
+        //            }
+        //        }
+        //    }
+
+
+        //    var lastMessage = conversation.CustomerMessages
+        //    .OrderByDescending(m => m.Timestamp)
+        //    .FirstOrDefault();
+
+        //    var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+        //    {
+        //        ConversationId = conversation.Id,
+        //        CustomerName = conversation.CustomerName,
+        //        avartarUrl = conversation.AvatarUrl,
+        //        providerName = conversation.Providers.ProviderName,
+        //        LastMessage = lastMessage.Content,
+        //        UnreadMessageCount = 0,
+        //    };
+
+        //    await _hubContext.Clients
+        //        .User(conversation.ActiveStaffId.ToString())
+        //        .SendAsync("SidebarUpdated", sidebarUpdate);
+
+        //    await _notificationService.UpdateNotificationIsReadAsync(conversationId);
+
+        //    return new SupportConversationDetailResponse
+        //    {
+        //        Id = conversation.Id,
+        //        CreatedDate = conversation.CreatedDate ?? DateTime.UtcNow,
+        //        Status = conversation.Status,
+        //        IsDistributed = conversation.IsDistributed,
+        //        CustomerName = conversation.CustomerName,
+        //        AvartarUrl = conversation.AvatarUrl,
+        //        ActiveStaffId = conversation.ActiveStaffId,
+        //        ActiveCustomerId = conversation.ActiveCustomerId,
+        //        ProvidersId = conversation.ProvidersId,
+
+        //        Messages = messages
+        //    };
+        //}
+
         public async Task<SupportConversationDetailResponse> GetConversationDetailByIdAsync(Guid conversationId)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
@@ -260,14 +355,15 @@ namespace OmniChat.Application.Services.Implements
                     .Include(c => c.SupportStaffMessages)
             );
 
-
             if (conversation == null)
                 throw new NotFoundException("No support conversation found");
 
+          
             await ReadAllCustomerMessageAsync(conversation.CustomerMessages.ToList());
 
             var customerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
 
+          
             var messages = conversation.CustomerMessages.Select(cm => new SupportConversationMessagesResponse
             {
                 SenderType = "Customer",
@@ -283,32 +379,39 @@ namespace OmniChat.Application.Services.Implements
                     Content = sm.Content,
                     Timestamp = sm.Timestamp
                 })
-                )
+            )
             .OrderBy(m => m.Timestamp)
             .ToList();
 
-            var customerMessages = messages.Where(m => m.SenderType == "Customer");
+         
+            var recentCustomerMessages = messages
+                .Where(m => m.SenderType == "Customer")
+                .OrderByDescending(m => m.Timestamp)
+                .Take(5)
+                .ToList();
 
-            foreach (var message in customerMessages)
+            foreach (var message in recentCustomerMessages)
             {
-                var result = await _messageKeywordFilterService.ExtractKeywords(message.Content);
-
-                if (result.Highlights.Any() || result.Recommends.Any())
-                    message.extractKeywordResponses = result;
+                if (!string.IsNullOrEmpty(message.Content))
+                {
+                    var result = await _messageKeywordFilterService.ExtractKeywords(message.Content);
+                    if (result.Highlights.Any() || result.Recommends.Any())
+                    {
+                        message.extractKeywordResponses = result;
+                    }
+                }
             }
 
-
-            var lastMessage = conversation.CustomerMessages
-            .OrderByDescending(m => m.Timestamp)
-            .FirstOrDefault();
+         
+            var lastMsg = messages.LastOrDefault();
 
             var sidebarUpdate = new StaffConversationSideBarUpdateResponse
             {
                 ConversationId = conversation.Id,
                 CustomerName = conversation.CustomerName,
                 avartarUrl = conversation.AvatarUrl,
-                providerName = conversation.Providers.ProviderName,
-                LastMessage = lastMessage.Content,
+                providerName = conversation.Providers?.ProviderName ?? "N/A", 
+                LastMessage = lastMsg?.Content ?? "...",
                 UnreadMessageCount = 0,
             };
 
@@ -329,7 +432,6 @@ namespace OmniChat.Application.Services.Implements
                 ActiveStaffId = conversation.ActiveStaffId,
                 ActiveCustomerId = conversation.ActiveCustomerId,
                 ProvidersId = conversation.ProvidersId,
-
                 Messages = messages
             };
         }

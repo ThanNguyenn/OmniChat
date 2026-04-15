@@ -134,7 +134,8 @@ public class StaffService : BaseService<StaffService>, IStaffService
             orderBy: q => OrderBy(q, sortBy, descending),
             selector: e => _mapper.Map<GetStaffsResponse>(e),
             include: k => k.Include(s => s.StaffIntentTypes)
-                    .ThenInclude(sit => sit.IntentType),
+                    .ThenInclude(sit => sit.IntentType)
+                    .Include(s => s.Account),
             page: pageNumber,
             size: pageSize
         );
@@ -372,7 +373,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
         var staff = await staffRepo.SingleOrDefaultAsync(
             predicate: s => s.Id == shipperId,
-            include: q => q.Include(s => s.Account)
+            include: q => q.Include(s => s.Account).ThenInclude(s => s.Role)
         );
 
         if (staff == null)
@@ -381,7 +382,8 @@ public class StaffService : BaseService<StaffService>, IStaffService
         }
 
 
-        if (staff.Account.Role.Name != "Shipper")
+        var roleName = staff.Account?.Role?.Name;
+        if (roleName == null || roleName != "Shipper")
         {
             throw new BadRequestException("Staff is not a shipper.");
         }
@@ -418,6 +420,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
             .Where(s => s.Account.Role.Name == "Shipper" && s.IsActive == true)
             .Select(s => new ShipperResposne
             {
+                Id = s.Id,
                 ShipperName = s.Name,
                 ShipperPhone = s.Phone,
                 ShipperStatus = s.Status,

@@ -34,5 +34,19 @@ public class ProductBrandController : BaseController<ProductBrandController>
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product brands retrieved successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
+
+    [HttpGet(ApiEndPointConstant.Brand.GetProductBrand)]
+    [ProducesResponseType(typeof(ApiResponse<ProductBrandResponse>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+       Summary = "Lấy danh sách product theo từng loại (NoSugar, Sugar, Yogurt) của brand",
+       Description = "Lấy danh sách tất cả product theo từng loại trong brand bằng brand id"
+   )]
+    public async Task<IActionResult> GetProductByBrandIdAsync([FromRoute]Guid id)
+    {
+        var result = await _productBrandService.GetTotalProductByBrandIdAsync(id);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product brand get successfully", result);
+
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
 }
 
