@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using OmniChat.Infrastructure.Dtos.Responses.Transaction;
 using OmniChat.Infrastructure.Dtos.Responses.Wallet;
 using OmniChat.Infrastructure.Models;
 using System;
@@ -17,5 +18,7 @@ public class WalletMapper : Profile
             .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount))
             .ForMember(dest => dest.TotalDebt, opt => opt.Ignore())
             .ForMember(dest => dest.Transactions, opt => opt.MapFrom(src => src.Transactions));
+
+        CreateMap<Transaction, GetTransactionResponse>();
     }
 }

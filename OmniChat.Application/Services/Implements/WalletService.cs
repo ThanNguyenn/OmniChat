@@ -136,7 +136,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
             return Math.Max(0, remaining);
         });
 
-        var result = _mapper.Map<GetWalletResponse>(wallet);
+        var result = _mapper.Map<GetWalletResponse>(wallet ?? new Wallet());
 
         result.TotalDebt = totalDebt;
 

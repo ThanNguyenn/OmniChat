@@ -78,7 +78,7 @@ namespace OmniChat.Application.Services.Implements
                     ? null
                     : x => x.CustomerName.ToUpper().Contains(searchTerm),
                 orderBy: q => q.OrderByDescending(x => x.CustomerName),
-                include: cp => cp.Include(o => o.Orders).Include(p => p.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions),
+                include: cp => cp.Include(o => o.Orders).Include(p => p.Invoices),
                 page: pageNumber,
                 size: pageSize
             );
@@ -133,7 +133,7 @@ namespace OmniChat.Application.Services.Implements
             var existCustomProfile = await repo.SingleOrDefaultAsync(
                  predicate: x => x.Email == searchRequest || x.PhoneNumber == searchRequest,
                  include: cp => cp.Include(o => o.Orders)
-                                  .Include(p => p.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions)
+                                  .Include(p => p.Invoices)
              );
 
             if (existCustomProfile == null)
@@ -159,7 +159,7 @@ namespace OmniChat.Application.Services.Implements
             var existCustomProfile = await repo.SingleOrDefaultAsync(
                predicate: x => x.Id == CustomerId,
                 include: cp => cp.Include(o => o.Orders)
-               .Include(p => p.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions)
+               .Include(p => p.Invoices)
                );
 
             var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile);
@@ -223,7 +223,7 @@ namespace OmniChat.Application.Services.Implements
 
             var customer = await _unitOfWork.GetRepository<CustomerProfile>().SingleOrDefaultAsync(
                 predicate: x => x.Id == supportConversation.ActiveCustomerId,
-                include: cp => cp.Include(o => o.Orders).Include(x => x.Invoices).Include(p => p.Wallet).ThenInclude(p => p.Transactions)
+                include: cp => cp.Include(o => o.Orders).Include(x => x.Invoices)
             );
 
             if (customer == null) throw new NotFoundException("customer not found");
