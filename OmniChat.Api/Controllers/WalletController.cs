@@ -44,7 +44,7 @@ public class WalletController : BaseController<WalletController>
         Description = "Lấy wallet theo customer id")]
     public async Task<IActionResult> GetWalletByCustomerIdAsync([FromQuery] Guid id)
     {
-        var result = await _walletService.CalculateWallet(customerId);
+        var result = await _walletService.CalculateWallet(id);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get wallet successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
