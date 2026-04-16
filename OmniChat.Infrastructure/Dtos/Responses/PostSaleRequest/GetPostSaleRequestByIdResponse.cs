@@ -18,7 +18,9 @@ public class GetPostSaleRequestByIdResponse
     public string OrderCode { get; set; }
     public double OrderTotalAmount { get; set; }
     public double? RefundAmount { get; set; }
-    public DateTime? RequestedTime { get; set; } = DateTime.UtcNow;
+    public DateTime? RequestedTime { get; set; }
+
+    public Guid OrderId { get; set; }
 
     //List san pham
 

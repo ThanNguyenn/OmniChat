@@ -17,7 +17,9 @@ public class GetPostSaleRequestsResponse
     public PostSaleRequestStatus Status { get; set; }
     public string Reason { get; set; }
     public double? RefundAmount { get; set; }
-    public DateTime? RequestedTime { get; set; } = DateTime.UtcNow;
+    public DateTime? RequestedTime { get; set; }
+
+    public Guid OrderId { get; set; }
 
     //List san pham
     public IEnumerable<GetPostSaleItemsResponse> PostSaleItems { get; set; }
