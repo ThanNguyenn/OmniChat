@@ -8,5 +8,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.IntentType;
 
 public class GetStaffIntentTypeResponse
 {
+    public Guid Id { get; set; }
     public string IntentTypeName { get; set; }
 }
