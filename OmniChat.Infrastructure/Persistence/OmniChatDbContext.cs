@@ -460,6 +460,17 @@ namespace OmniChat.Infrastructure.Persistence
             .HasIndex(k => k.Code)
             .IsUnique();
 
+            // define Keyword code auto generation example : KW000001
+            modelBuilder.HasSequence<int>("KeywordCodeSeq")
+               .StartsAt(1)
+               .IncrementsBy(1);
+
+            modelBuilder.Entity<Keyword>()
+                .Property(o => o.Code)
+                .HasDefaultValueSql(
+                    "'KW' || LPAD(nextval('\"KeywordCodeSeq\"')::text, 6, '0')")
+                .ValueGeneratedOnAdd();
+
             // ==== MessageIntentType ====
             modelBuilder.Entity<MessageIntentType>()
                 .HasKey(mkt => mkt.Id);
