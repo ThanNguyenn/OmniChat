@@ -322,7 +322,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
 
     private static IOrderedQueryable<Invoice> OrderBy(IQueryable<Invoice> query, string sortBy, bool descending)
     {
-        sortBy = sortBy?.Trim().ToLower() ?? "id";
+        sortBy = sortBy?.Trim().ToLower() ?? "createdate";
 
         return (sortBy, descending) switch
         {
@@ -334,8 +334,10 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             ("total", true) => query.OrderByDescending(s => s.Total),
              ("status", false) => query.OrderBy(s => s.InvoiceStatus),
             ("status", true) => query.OrderByDescending(s => s.InvoiceStatus),
-            (_, false) => query.OrderBy(s => s.Id),
-            (_, true) => query.OrderByDescending(s => s.Id)
+            ("id", false) => query.OrderBy(s => s.Id),
+            ("id", true) => query.OrderByDescending(s => s.Id),
+            (_, false) => query.OrderBy(s => s.CreateAt),
+            (_, true) => query.OrderByDescending(s => s.CreateAt)
         };
     }
     public async Task<GetInvoiceResponse> GetInvoiceAsync(Guid invoiceId)

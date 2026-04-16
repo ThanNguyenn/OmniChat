@@ -85,8 +85,8 @@ public class StaffController : BaseController<StaffController>
             deparmentIds,
             pageNumber ?? 1,
             pageSize ?? 20,
-            sortBy ?? "id",
-            descending ?? false
+            sortBy ?? "createdate",
+            descending ?? true
         );
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staffs successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);

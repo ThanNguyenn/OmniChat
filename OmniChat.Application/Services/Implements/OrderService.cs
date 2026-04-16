@@ -171,7 +171,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
     private static IOrderedQueryable<Order> OrderBy(IQueryable<Order> query, string sortBy, bool descending)
     {
-        sortBy = sortBy?.Trim().ToLower() ?? "id";
+        sortBy = sortBy?.Trim().ToLower() ?? "orderdate";
 
         Expression<Func<Order, object>> keySelector = sortBy switch
         {
@@ -181,7 +181,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             "status" => s => s.Status,
             "deliverystatus" => s => s.DeliveryStatus,
             "orderdate" => s => s.OrderDate,
-            _ => s => s.Id
+            _ => s => s.OrderDate
         };
 
         return descending

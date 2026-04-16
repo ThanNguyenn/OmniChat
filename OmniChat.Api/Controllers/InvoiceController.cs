@@ -98,8 +98,8 @@ public class InvoiceController : BaseController<InvoiceController>
             status,
             pageNumber ?? 1,
             pageSize ?? 10,
-            sortBy ?? "id",
-            descending ?? false
+            sortBy ?? "createddate",
+            descending ?? true
             );
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get all products successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);

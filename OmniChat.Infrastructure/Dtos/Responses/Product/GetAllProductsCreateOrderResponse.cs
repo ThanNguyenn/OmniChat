@@ -25,4 +25,6 @@ public class GetAllProductsCreateOrderResponse
     public int Quantity { get; set; }
 
     public double Price { get; set; }
+
+    public DateTime CreateDate { get; set; }
 }

@@ -151,7 +151,7 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAllOrders([FromQuery] IEnumerable<OrderStatus>? orderStatuses ,[FromQuery] string? search, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "id", [FromQuery] bool descending = false)
+    public async Task<IActionResult> GetAllOrders([FromQuery] IEnumerable<OrderStatus>? orderStatuses ,[FromQuery] string? search, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "orderdate", [FromQuery] bool descending = true)
     {
         var result = await _orderService.GetAllOrdersAsync(orderStatuses, search, pageNumber, pageSize, sortBy, descending);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders retrieved successfully", result);

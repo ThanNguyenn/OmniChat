@@ -149,7 +149,7 @@ public class ProductService : BaseService<ProductService>, IProductService
 
     private static IOrderedQueryable<Product> OrderBy(IQueryable<Product> query, string sortBy, bool descending)
     {
-        sortBy = sortBy?.Trim().ToLower() ?? "id";
+        sortBy = sortBy?.Trim().ToLower() ?? "createdate";
 
         return (sortBy, descending) switch
         {
@@ -165,8 +165,8 @@ public class ProductService : BaseService<ProductService>, IProductService
             ("price", true) => query.OrderByDescending(s => s.Price),
             ("brand", false) => query.OrderBy(s => s.Brand.Name),
             ("brand", true) => query.OrderByDescending(s => s.Brand.Name),
-            (_, false) => query.OrderBy(s => s.Id),
-            (_, true) => query.OrderByDescending(s => s.Id)
+            (_, false) => query.OrderBy(s => s.CreateDate),
+            (_, true) => query.OrderByDescending(s => s.CreateDate)
         };
     }
 

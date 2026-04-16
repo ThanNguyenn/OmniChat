@@ -113,7 +113,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         int pageNumber = 1,
         int pageSize = 20,
         string sortBy = "id",
-        bool descending = false)
+        bool descending = true)
     {
         var staffRepository = _unitOfWork.GetRepository<Staff>();
 

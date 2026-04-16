@@ -17,4 +17,6 @@ public class GetKeywordResponse
     public string IntentTypeName { get; set; }
 
     public float Weight { get; set; }
+
+    public DateTime CreateDate { get; set; }
 }

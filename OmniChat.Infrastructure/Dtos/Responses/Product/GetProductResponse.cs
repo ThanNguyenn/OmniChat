@@ -33,5 +33,7 @@ public class GetProductResponse
 
     public int LifeSpan { get; set; }
 
+    public DateTime CreateDate { get; set; }
+
     public IEnumerable<GetProductBatchesResponse> ProductBatches { get; set; }
 }

@@ -24,7 +24,7 @@ namespace OmniChat.Application.Services.Implements
         {
             var repo = _unitOfWork.GetRepository<IntentType>();
 
-            var intentTypes = await repo.GetListAsync(predicate: it => it.IsActive == true);
+            var intentTypes = await repo.GetListAsync(predicate: it => it.IsActive == true, orderBy: q => q.OrderByDescending(q => q.CreateDate));
 
             return _mapper.Map<IEnumerable<GetsIntentTypeResponse>>(intentTypes);
         }

@@ -18,6 +18,8 @@ public class GetAllKeywordsResponse
 
     public float Weight { get; set; }
 
+    public DateTime CreateDate { get; set; }
+
 }
 
 
