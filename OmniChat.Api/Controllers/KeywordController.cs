@@ -91,13 +91,13 @@ public class KeywordController : ControllerBase
     [SwaggerOperation(
         Summary = "Lấy list keyword",
         Description = "Lấy list keyword")]
-    public async Task<IActionResult> GetAllKeywords(Guid? intentTypeId,
+    public async Task<IActionResult> GetAllKeywords([FromQuery] Guid? intentTypeId, string? search,
         int pageNumber = 1,
         int pageSize = 20,
         string sortBy = "id",
         bool descending = false)
     {
-        var result = await _keywordService.GetAllKeywordsAsync(intentTypeId, pageNumber, pageSize);
+        var result = await _keywordService.GetAllKeywordsAsync(intentTypeId, search, pageNumber, pageSize);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Keywords retrieved successfully", result);
         return Ok(response);
     }

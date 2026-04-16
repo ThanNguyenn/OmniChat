@@ -58,6 +58,7 @@ public class KeywordService : BaseService<KeywordService>, IKeywordService
     }
     public async Task<PagingResponse<GetAllKeywordsResponse>> GetAllKeywordsAsync(
         Guid? intentTypeId,
+        string? search,
         int pageNumber = 1,
         int pageSize = 20,
         string sortBy = "id",
@@ -65,8 +66,20 @@ public class KeywordService : BaseService<KeywordService>, IKeywordService
     {
         var keywordRepo = _unitOfWork.GetRepository<Keyword>();
         var response = await keywordRepo.GetPagingListAsync<GetAllKeywordsResponse>(
-            predicate: k => k.IsDeleted != true && (intentTypeId == null || k.IntentTypeId == intentTypeId),
-            orderBy: q => OrderBy(q, sortBy, descending),
+            predicate: k => k.IsDeleted != true && (intentTypeId == null || k.IntentTypeId == intentTypeId) && (string.IsNullOrEmpty(search) || k.KeywordText.ToLower().Contains(search.ToLower()) || k.IntentType.TypeName.ToLower().Contains(search.ToLower())),
+            orderBy: q =>
+            {
+                if (!string.IsNullOrEmpty(search))
+                {
+                    var ordered = q.OrderBy(k =>
+                        k.KeywordText.ToLower().Contains(search.ToLower()) ? 0 :
+                        k.IntentType.TypeName.ToLower().Contains(search.ToLower()) ? 1 : 2);
+
+                    return ThenOrderBy(ordered, sortBy, descending);
+                }
+
+                return OrderBy(q, sortBy, descending);
+            },
             include: q => q.Include(k => k.IntentType),
             selector: e => _mapper.Map<GetAllKeywordsResponse>(e),
             page: pageNumber,
@@ -75,7 +88,25 @@ public class KeywordService : BaseService<KeywordService>, IKeywordService
 
         return response;
     }
+    private static IOrderedQueryable<Keyword> ThenOrderBy(
+    IOrderedQueryable<Keyword> query,
+    string sortBy,
+    bool descending)
+    {
+        sortBy = sortBy?.Trim().ToLower() ?? "intenttypeid";
 
+        Expression<Func<Keyword, object>> keySelector = sortBy switch
+        {
+            "createdate" => s => s.CreateDate,
+            "intenttypeid" => s => s.IntentTypeId,
+            "intenttypename" => s => s.IntentType.TypeName,
+            _ => s => s.IntentTypeId
+        };
+
+        return descending
+            ? query.ThenByDescending(keySelector)
+            : query.ThenBy(keySelector);
+    }
     private static IOrderedQueryable<Keyword> OrderBy(IQueryable<Keyword> query, string sortBy, bool descending)
     {
         sortBy = sortBy?.Trim().ToLower() ?? "intenttypeid";
@@ -84,6 +115,7 @@ public class KeywordService : BaseService<KeywordService>, IKeywordService
         {
             "createdate" => s => s.CreateDate,
             "intenttypeid" => s => s.IntentTypeId,
+            "intenttypename" => s => s.IntentType.TypeName,
             _ => s => s.IntentTypeId
         };
 
