@@ -145,7 +145,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
     private static IOrderedQueryable<Staff> OrderBy(IQueryable<Staff> query, string sortBy, bool descending)
     {
-        sortBy = sortBy?.Trim().ToLower() ?? "id";
+        sortBy = sortBy?.Trim().ToLower() ?? "createdate";
 
         Expression<Func<Staff, object>> keySelector = sortBy switch
         {
@@ -153,6 +153,8 @@ public class StaffService : BaseService<StaffService>, IStaffService
             "email" => s => s.Email,
             "phone" => s => s.Phone,
             "status" => s => s.Status,
+            "id" => s => s.Id,
+            "createdate" => s => s.CreateDate,
             _ => s => s.Id
         };
 
