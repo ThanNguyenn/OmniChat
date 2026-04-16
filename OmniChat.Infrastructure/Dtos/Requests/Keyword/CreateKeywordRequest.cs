@@ -12,7 +12,5 @@ public class CreateKeywordRequest
     public Guid IntentTypeId { get; set; }
     public string KeywordText { get; set; }
 
-    public string Code { get; set; }
-
     public float Weight { get; set; }
 }
