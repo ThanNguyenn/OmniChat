@@ -237,8 +237,8 @@ public class ApiEndPointConstant
     public static class Wallet
     {
         public const string Base = ApiV1 + "/wallets";
-        public const string Payment = Base + "/payment";
-
+        public const string Payment = "/payment";
+        public const string Get = "/{id}";
     }
 
     public static class PostSaleRequest

@@ -2,6 +2,7 @@
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Wallet;
+using OmniChat.Infrastructure.Dtos.Responses.Wallet;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -32,4 +33,21 @@ public class WalletController : BaseController<WalletController>
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Payment successful", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
+
+    [HttpPost(ApiEndPointConstant.Wallet.Get)]
+    [ProducesResponseType(typeof(ApiResponse<GetWalletResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy wallet theo customer id",
+        Description = "Lấy wallet theo customer id")]
+    public async Task<IActionResult> GetWalletByCustomerIdAsync([FromQuery] Guid customerId)
+    {
+        var result = await _walletService.CalculateWallet(customerId);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get wallet successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+
 }
