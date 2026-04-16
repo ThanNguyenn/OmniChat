@@ -261,20 +261,35 @@ public class OrderService : BaseService<OrderService>, IOrderService
         });
     }
 
-    private async Task HandleBatchRestockAsync(IEnumerable<OrderItem> orderItems, IGenericRepository<ProductBatch> batchRepo)
+    private async Task HandleBatchRestockAsync(
+        IEnumerable<OrderItem> orderItems,
+        IGenericRepository<ProductBatch> batchRepo)
     {
         var batchIds = orderItems.Select(i => i.ProductBatchId).Distinct().ToList();
-        var batches = (await batchRepo.GetListAsync(predicate: b => batchIds.Contains(b.Id))).ToList();
+
+        var batches = (await batchRepo.GetListAsync(
+            predicate: b => batchIds.Contains(b.Id),
+            include: q => q.Include(b => b.Product) 
+        )).ToList();
+
         if (batches.Count != batchIds.Count)
             throw new NotFoundException("One or more product batches associated with this order are missing.");
+
         var batchDict = batches.ToDictionary(b => b.Id);
+
         foreach (var item in orderItems)
         {
             if (!batchDict.TryGetValue(item.ProductBatchId, out var batch))
                 throw new NotFoundException("Product batch not found");
 
             batch.Quantity += item.Quantity;
+
+            if (batch.Product == null)
+                throw new Exception("Product not loaded");
+
+            batch.Product.Quantity += item.Quantity;
         }
+
         batchRepo.UpdateRange(batches);
     }
 
