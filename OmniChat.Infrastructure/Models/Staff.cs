@@ -24,6 +24,8 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Account Account { get; set; }
 
+        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+
         public virtual ICollection<Order> OrdersAsDriver { get; set; } = new List<Order>();
 
         public virtual ICollection<Order> OrdersCreated { get; set; } = new List<Order>();
