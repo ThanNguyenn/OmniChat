@@ -29,7 +29,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
        Summary = "Lấy danh sách post sale request có paging",
        Description = "Lấy danh sách post sale request có paging."
     )]
-    public async Task<IActionResult> GetPostSaleRequests([FromQuery] int? pageNumber, int? pageSize, string sortBy, bool? descending)
+    public async Task<IActionResult> GetPostSaleRequests([FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _postSaleRequestService.GetPostSaleRequestsAsync(pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get post sale requests successfully", result);
