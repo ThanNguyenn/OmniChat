@@ -408,7 +408,9 @@ public class StaffService : BaseService<StaffService>, IStaffService
             throw new BadRequestException("Order already has a shipper.");
         }
 
+
         order.DriverId = shipperId;
+        order.DeliveryStatus = DeliveryStatus.Pending;
 
         orderRepo.Update(order);
         await _unitOfWork.CommitAsync();
@@ -427,11 +429,8 @@ public class StaffService : BaseService<StaffService>, IStaffService
                 ShipperPhone = s.Phone,
                 ShipperStatus = s.Status,
 
-                TotalPendingOrders = s.OrdersAsDriver
-                    .Count(o => o.DeliveryStatus == DeliveryStatus.Pending),
-
                 TotalOrderShipNow = s.OrdersAsDriver
-                    .Count(o => o.Status == OrderStatus.Shipped
+                    .Count(o => o.Status == OrderStatus.Pending
                              && o.DeliveryStatus == DeliveryStatus.Pending),
 
                 TotalOrderShipped = s.OrdersAsDriver
@@ -476,11 +475,8 @@ public class StaffService : BaseService<StaffService>, IStaffService
                 ShipperPhone = s.Phone,
                 ShipperStatus = s.Status,
 
-                TotalPendingOrders = s.OrdersAsDriver
-                    .Count(o => o.DeliveryStatus == DeliveryStatus.Pending),
-
                 TotalOrderShipNow = s.OrdersAsDriver
-                    .Count(o => o.Status == OrderStatus.Shipped
+                    .Count(o => o.Status == OrderStatus.Pending
                              && o.DeliveryStatus == DeliveryStatus.Pending),
 
                 TotalOrderShipped = s.OrdersAsDriver

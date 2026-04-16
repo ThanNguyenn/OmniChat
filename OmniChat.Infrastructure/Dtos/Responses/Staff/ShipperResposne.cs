@@ -17,8 +17,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Staff
 
         public string ShipperPhone { get; set; }
 
-        public int TotalPendingOrders { get; set; }
-
         public int TotalOrderShipNow { get; set; }
 
         public int TotalOrderShipped { get; set; }
