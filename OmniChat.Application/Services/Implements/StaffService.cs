@@ -155,7 +155,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
             "status" => s => s.Status,
             "id" => s => s.Id,
             "createdate" => s => s.CreateDate,
-            _ => s => s.Id
+            _ => s => s.CreateDate
         };
 
         return descending
