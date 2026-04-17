@@ -329,4 +329,10 @@ public class ApiEndPointConstant
         public const string Base = ApiV1 + "/notifications";
         public const string GetUnRead = Base + "/unread/{staffId}";
     }
+
+    public static class Role 
+    { 
+        public const string Base = ApiV1 + "/roles";
+        public const string GetAll = Base + "/get";
+    } 
 }

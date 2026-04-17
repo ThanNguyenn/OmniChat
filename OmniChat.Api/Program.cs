@@ -212,6 +212,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<IDraftOrderService, DraftOrderService>();
     builder.Services.AddScoped<INotificationService,NotificationService>();
     builder.Services.AddScoped<ISheetExportService, SheetExportService>();
+    builder.Services.AddScoped<IRoleService, RoleService>();
 }
 
 void RegisterBackgroundServices()
