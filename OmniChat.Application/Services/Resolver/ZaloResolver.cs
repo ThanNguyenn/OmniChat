@@ -245,8 +245,7 @@ namespace OmniChat.Application.Services.Resolver
                 await _supportConversationService.UpdateConversationAsync(conversation);
 
                 if (conversation.ActiveStaffId != null)
-                {
-                    var currentTime = DateTime.UtcNow;
+                {                  
 
                     var unreadCount = await CountUnreadMessagesByConversationIdAsync(conversation.Id);
 
@@ -258,7 +257,7 @@ namespace OmniChat.Application.Services.Resolver
                         providerName = provider.ProviderName,
                         LastMessage = newMessage.Content,
                         UnreadMessageCount = unreadCount,
-                        UpdateDate = currentTime
+                        UpdateDate = newMessage.Timestamp
                     };
 
                     await _hubContext.Clients
