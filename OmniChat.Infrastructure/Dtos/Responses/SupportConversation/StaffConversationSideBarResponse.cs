@@ -20,6 +20,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
 
         public int UnreadMessageCount { get; set; }
 
-        public DateTime UpdateDate { get; set; }
+        public long UpdateDate { get; set; }
     }
 }

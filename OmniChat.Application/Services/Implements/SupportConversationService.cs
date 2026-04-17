@@ -152,8 +152,8 @@ namespace OmniChat.Application.Services.Implements
             var conversations = await repo.GetListAsync(
                 predicate: c =>
                     c.ActiveStaffId == staffId &&
-                    c.Status == ConversationStatus.Pending && (providerName == null ||
-                c.Providers.ProviderName.ToLower() == providerName.ToLower()),
+                    c.Status == ConversationStatus.Pending &&
+                    (string.IsNullOrEmpty(providerName) || c.Providers.ProviderName.ToLower() == providerName.ToLower()),
 
                 orderBy: q => q.OrderByDescending(c => c.UpdateDate),
 
@@ -164,20 +164,24 @@ namespace OmniChat.Application.Services.Implements
                     AvartarUrl = c.AvatarUrl,
                     ProviderName = c.Providers.ProviderName,
 
-                    LastMessage =
-                        c.CustomerMessages
-                            .Select(m => new { m.Content, m.Timestamp })
-                        .Concat(
-                            c.SupportStaffMessages
-                                .Select(m => new { m.Content, m.Timestamp })
-                        )
+                   
+                    LastMessage = c.CustomerMessages
+                        .Select(m => new { m.Content, m.Timestamp })
+                        .Concat(c.SupportStaffMessages.Select(m => new { m.Content, m.Timestamp }))
                         .OrderByDescending(m => m.Timestamp)
                         .Select(m => m.Content)
                         .FirstOrDefault() ?? string.Empty,
 
+                    
+                    UpdateDate = c.CustomerMessages.Select(m => m.Timestamp)
+                        .Concat(c.SupportStaffMessages.Select(m => m.Timestamp))
+                        .OrderByDescending(t => t)
+                        .FirstOrDefault(),
+
                     UnreadMessageCount = c.CustomerMessages.Count(m => m.IsRead == false)
                 }
             );
+
             return conversations;
         }
 
