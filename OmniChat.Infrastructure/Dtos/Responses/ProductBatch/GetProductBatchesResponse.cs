@@ -10,6 +10,7 @@ public class GetProductBatchesResponse
 {
     public Guid Id { get; set; }
     public string Code { get; set; }
+    public DateTime? ManuFactureDate { get; set; }
     public DateTime ExpiryDate { get; set; }
     public int Quantity { get; set; }
 }
