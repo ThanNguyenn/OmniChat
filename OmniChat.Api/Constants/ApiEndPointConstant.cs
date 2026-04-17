@@ -209,6 +209,9 @@ public class ApiEndPointConstant
         public const string AddOrderItem = "{id}/add-item";
         public const string UpdateOrderItem = "{orderId}/update-item/{orderItemId}";
         public const string RemoveOrderItem = "{orderId}/remove-item/{orderItemId}";
+        public const string GetPendingByShipper = "shipper/{shipperId}/pending";
+        public const string GetHistoryByShipper = "shipper/{shipperId}/history";
+        public const string CountDelivered = "delivered/count";
     }   
 
     public static class FacebookOAuthToken

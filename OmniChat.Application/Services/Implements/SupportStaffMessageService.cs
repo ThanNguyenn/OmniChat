@@ -254,16 +254,29 @@ namespace OmniChat.Application.Services.Implements
             try
             {
                 var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
-
+                DateTime messageDateTime = DateTimeOffset.FromUnixTimeMilliseconds(newStaffSupportMes.Timestamp).DateTime;
                 // Cập nhật Sidebar
                 if (existConversation.ActiveStaffId.HasValue)
                 {
-                    await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString()).SendAsync("SidebarUpdated", new
+
+                    //await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString()).SendAsync("SidebarUpdated", new
+                    //{
+                    //    ConversationId = existConversation.Id,
+                    //    CustomerName = existConversation.CustomerName,
+                    //    LastMessage = expandedContent
+                    //});
+                    var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                     {
                         ConversationId = existConversation.Id,
                         CustomerName = existConversation.CustomerName,
-                        LastMessage = expandedContent
-                    });
+                        avartarUrl = existConversation.AvatarUrl,
+                        providerName = provider.ProviderName,
+                        LastMessage = expandedContent,
+                        UpdateDate = messageDateTime
+                    };
+
+                    await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
+                        .SendAsync("SidebarUpdated", sidebarUpdate);
                 }
 
                 // Cập nhật khung chat
@@ -450,13 +463,15 @@ namespace OmniChat.Application.Services.Implements
                     // Update Sidebar
                     if (existConversation.ActiveStaffId.HasValue)
                     {
+                        DateTime updatedTime = DateTimeOffset.FromUnixTimeMilliseconds(newStaffSupportMes.Timestamp).DateTime;
                         var sidebarUpdate = new StaffConversationSideBarUpdateResponse
                         {
                             ConversationId = existConversation.Id,
                             CustomerName = existConversation.CustomerName,
                             avartarUrl = existConversation.AvatarUrl,
                             providerName = provider.ProviderName,
-                            LastMessage = expandedContent
+                            LastMessage = expandedContent,
+                            UpdateDate = updatedTime
                         };
                         await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString()).SendAsync("SidebarUpdated", sidebarUpdate);
                     }

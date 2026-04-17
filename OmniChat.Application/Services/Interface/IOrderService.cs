@@ -1,6 +1,7 @@
 ﻿using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Requests.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
+using OmniChat.Infrastructure.Dtos.Responses.Staff;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using System;
@@ -13,7 +14,7 @@ namespace OmniChat.Application.Services.Interface;
 
 public interface IOrderService
 {
-    Task<bool> CreateOrderAsync(CreateOrderRequest createOrderRequest); 
+    Task<bool> CreateOrderAsync(CreateOrderRequest createOrderRequest);
     Task<bool> DeleteOrderAsync(Guid orderId);
     Task<bool> UpdateOrderAsync(Guid orderId, UpdateOrderRequest updateOrderRequest);
     Task<PagingResponse<GetOrderResponse>> GetOrdersByCustomerIdAsync(Guid customerId, IEnumerable<OrderStatus>? orderStatuses, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
@@ -27,13 +28,20 @@ public interface IOrderService
 
     Task<bool> SubmitOrderAsync(Guid orderId);
 
-    Task<IEnumerable<DashboardOrderYearResponse>> GetDashboardAsync(IEnumerable<string>? status,string input);
+    Task<IEnumerable<DashboardOrderYearResponse>> GetDashboardAsync(IEnumerable<string>? status, string input);
 
     Task<PagingResponse<GetOrderForShipperResponse>> GetOrderForShipperAsync(string? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 
     Task<bool> AddOrderItemAsync(Guid orderId, AddOrderItemRequest addOrderItemRequest);
 
-    Task <bool> UpdateOrderItemAsync(Guid orderId, Guid orderItemId, UpdateOrderItemRequest updateOrderItemRequest);
+    Task<bool> UpdateOrderItemAsync(Guid orderId, Guid orderItemId, UpdateOrderItemRequest updateOrderItemRequest);
 
-    Task<bool> RemoveOrderItemAsync(Guid orderId, Guid orderItemId); 
+    Task<bool> RemoveOrderItemAsync(Guid orderId, Guid orderItemId);
+
+    public Task<PagingResponse<GetOrderForShipperResponse>> GetPendingOrderShipperIdAsync(Guid shipperId, int pageNumber = 1, int pageSize = 20);
+
+    public Task<PagingResponse<GetOrderForShipperResponse>> OrderShipperHistory(Guid shipperId, int pageNumber = 1, int pageSize = 20);
+
+    public  Task<ShipperDeliveredReportResponse> GetDeliveredReportAsync(Guid shipperId, DateTime? fromDate, DateTime? toDate, int pageNumber = 1, int pageSize = 20);
+
 }

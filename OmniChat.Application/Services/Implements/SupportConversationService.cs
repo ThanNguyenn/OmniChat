@@ -405,6 +405,10 @@ namespace OmniChat.Application.Services.Implements
          
             var lastMsg = messages.LastOrDefault();
 
+            DateTime? finalUpdateDate = lastMsg != null
+            ? DateTimeOffset.FromUnixTimeMilliseconds(lastMsg.Timestamp).DateTime
+            : conversation.CreatedDate;
+
             var sidebarUpdate = new StaffConversationSideBarUpdateResponse
             {
                 ConversationId = conversation.Id,
@@ -413,6 +417,7 @@ namespace OmniChat.Application.Services.Implements
                 providerName = conversation.Providers?.ProviderName ?? "N/A", 
                 LastMessage = lastMsg?.Content ?? "...",
                 UnreadMessageCount = 0,
+                UpdateDate = finalUpdateDate
             };
 
             await _hubContext.Clients

@@ -5,6 +5,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Requests.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
+using OmniChat.Infrastructure.Dtos.Responses.Staff;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using Swashbuckle.AspNetCore.Annotations;
@@ -151,7 +152,7 @@ public class OrderController : BaseController<OrderController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAllOrders([FromQuery] IEnumerable<OrderStatus>? orderStatuses ,[FromQuery] string? search, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "orderdate", [FromQuery] bool descending = true)
+    public async Task<IActionResult> GetAllOrders([FromQuery] IEnumerable<OrderStatus>? orderStatuses, [FromQuery] string? search, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "orderdate", [FromQuery] bool descending = true)
     {
         var result = await _orderService.GetAllOrdersAsync(orderStatuses, search, pageNumber, pageSize, sortBy, descending);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders retrieved successfully", result);
@@ -202,7 +203,7 @@ public class OrderController : BaseController<OrderController>
     )]
     public async Task<IActionResult> GetOrdersForShipper([FromQuery] string? search, [FromQuery] int? pageNumber, [FromQuery] int? pageSize, [FromQuery] string? sortBy, [FromQuery] bool? descending)
     {
-        var result = await _orderService.GetOrderForShipperAsync(search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "orderdate" , descending ?? true);
+        var result = await _orderService.GetOrderForShipperAsync(search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "orderdate", descending ?? true);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders for shipper retrieved successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -269,5 +270,56 @@ public class OrderController : BaseController<OrderController>
         var result = await _orderService.RemoveOrderItemAsync(orderId, orderItemId);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order item removed successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+
+    [HttpGet(ApiEndPointConstant.Order.GetPendingByShipper)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetOrderForShipperResponse>>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+        Summary = "Get Pending Order of Shipper",
+        Description = "Lấy danh sách đơn hàng đang chờ giao theo shipper id."
+    )]
+    public async Task<IActionResult> GetPendingOrderByShipper([FromRoute] Guid shipperId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _orderService.GetPendingOrderShipperIdAsync(shipperId, pageNumber, pageSize);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get pending order by shipper successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpGet(ApiEndPointConstant.Order.GetHistoryByShipper)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetOrderForShipperResponse>>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+        Summary = "Get Order History of Shipper",
+        Description = "Lấy danh sách lịch sử đơn hàng đã giao theo shipper id."
+    )]
+    public async Task<IActionResult> GetHistoryOrderByShipper([FromRoute] Guid shipperId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _orderService.OrderShipperHistory(shipperId, pageNumber, pageSize);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get history order by shipper successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpGet(ApiEndPointConstant.Order.CountDelivered)]
+    [ProducesResponseType(typeof(ApiResponse<ShipperDeliveredReportResponse>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+     Summary = "Get Shipper Delivered Report",
+     Description = "Lấy tổng số lượng và danh sách chi tiết đơn hàng đã giao thành công theo khoảng thời gian."
+    )]
+    public async Task<IActionResult> GetShipperDeliveredReport(
+     [FromQuery] Guid shipperId,
+     [FromQuery] DateTime? fromDate,
+     [FromQuery] DateTime? toDate,
+     [FromQuery] int pageNumber = 1,
+     [FromQuery] int pageSize = 20)
+    {
+        var result = await _orderService.GetDeliveredReportAsync(shipperId, fromDate, toDate, pageNumber, pageSize);
+
+        var response = ApiResponseBuilder.BuildResponse(
+            StatusCodes.Status200OK,
+            "Retrieved delivered report successfully",
+            result
+        );
+
+        return Ok(response);
     }
 }

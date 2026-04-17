@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ClosedXML;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -10,6 +11,7 @@ using OmniChat.Infrastructure.Dtos.Requests.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
 using OmniChat.Infrastructure.Dtos.Responses.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
+using OmniChat.Infrastructure.Dtos.Responses.Staff;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
@@ -444,11 +446,88 @@ public class OrderService : BaseService<OrderService>, IOrderService
             predicate: o => string.IsNullOrEmpty(status) || o.DeliveryStatus.ToString()!.Contains(status),
             orderBy: q => OrderBy(q, sortBy, descending),
             selector: e => _mapper.Map<GetOrderForShipperResponse>(e),
+             include: q => q.Include(o => o.CustomerProfile).Include(o => o.OrderItems)
+                                                                    .ThenInclude(oi => oi.ProductBatch)
+                                                                            .ThenInclude(pb => pb.Product),
             page: pageNumber,
             size: pageSize);
 
         return response;
     }
+
+    public async Task<PagingResponse<GetOrderForShipperResponse>> GetPendingOrderShipperIdAsync(Guid shipperId, int pageNumber = 1, int pageSize = 20)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+
+        var response = await orderRepo.GetPagingListAsync<GetOrderForShipperResponse>(
+            predicate: o => o.DriverId == shipperId && o.DeliveryStatus == DeliveryStatus.Pending,
+            orderBy: q => q.OrderByDescending(o => o.OrderDate),
+            selector: e => _mapper.Map<GetOrderForShipperResponse>(e),
+            include: q => q.Include(o => o.CustomerProfile).Include(o => o.OrderItems)
+                                                                    .ThenInclude(oi => oi.ProductBatch)
+                                                                            .ThenInclude(pb => pb.Product),
+            page: pageNumber,
+            size: pageSize);
+
+        return response;
+    }
+
+
+    public async Task<PagingResponse<GetOrderForShipperResponse>> OrderShipperHistory(Guid shipperId, int pageNumber = 1, int pageSize = 20)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+
+        var response = await orderRepo.GetPagingListAsync<GetOrderForShipperResponse>(
+            predicate: o => o.DriverId == shipperId && o.DeliveryStatus == DeliveryStatus.Completed,
+            orderBy: q => q.OrderByDescending(o => o.OrderDate),
+            selector: e => _mapper.Map<GetOrderForShipperResponse>(e),
+             include: q => q.Include(o => o.CustomerProfile).Include(o => o.OrderItems)
+                                                                     .ThenInclude(oi => oi.ProductBatch)
+                                                                            .ThenInclude(pb => pb.Product),
+            page: pageNumber,
+            size: pageSize);
+
+        return response;
+    }
+
+    public async Task<ShipperDeliveredReportResponse> GetDeliveredReportAsync(Guid shipperId,DateTime? fromDate,DateTime? toDate,int pageNumber = 1,int pageSize = 20)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+
+       
+        var start = fromDate?.Date ?? DateTime.MinValue;
+        var end = toDate?.Date ?? DateTime.MaxValue;
+
+        
+        Expression<Func<Order, bool>> filter = o => o.DriverId == shipperId &&
+                                                    o.DeliveryStatus == DeliveryStatus.Completed &&
+                                                    o.DeliveriedDate != null &&
+                                                    o.DeliveriedDate.Value.Date >= start &&
+                                                    o.DeliveriedDate.Value.Date <= end;
+
+        
+        var totalCount = await orderRepo.CountAsync(filter);
+
+       
+        var pagedOrders = await orderRepo.GetPagingListAsync<GetOrderResponse>(
+            predicate: filter,
+            orderBy: q => q.OrderByDescending(o => o.DeliveriedDate),
+            selector: e => _mapper.Map<GetOrderResponse>(e),
+            include: q => q.Include(o => o.CustomerProfile)
+                           .Include(o => o.OrderItems)
+                                .ThenInclude(oi => oi.ProductBatch)
+                                    .ThenInclude(pb => pb.Product),
+            page: pageNumber,
+            size: pageSize);
+
+       
+        return new ShipperDeliveredReportResponse
+        {
+            TotalDeliveredOrders = totalCount,
+            Orders = pagedOrders
+        };
+    }
+
 
     public async Task<bool> SubmitOrderAsync(Guid orderId)
     {
