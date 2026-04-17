@@ -308,8 +308,8 @@ public class ProductService : BaseService<ProductService>, IProductService
                 predicate: predicate,
                 orderBy: q => q.OrderByDescending(p => p.ManuFactureDate),
                 selector: e => _mapper.Map<GetProductBatchesResponse>(e),
-                page: 1,
-                size: 1
+                page: pageNumber,
+                size: pageSize
             );
         }
 
