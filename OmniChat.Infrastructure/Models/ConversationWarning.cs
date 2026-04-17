@@ -24,9 +24,7 @@ namespace OmniChat.Infrastructure.Models
 
     public enum WarningType
     {
-        TaskCompletedTooFast = 0,       
-        ConversationClosedTooFast = 1,  
-        BothFast = 2,
-        StaffNotResponding = 3
+        StaffNotResponding = 0,
+        SlowPerformance = 1
     }
 }

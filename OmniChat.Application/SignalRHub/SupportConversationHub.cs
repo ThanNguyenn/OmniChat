@@ -56,6 +56,10 @@ namespace OmniChat.Application.SignalRHub
 
             var userId = Context.UserIdentifier;
 
+            DateTime? finalUpdateDate = lastMessage != null
+            ? DateTimeOffset.FromUnixTimeMilliseconds(lastMessage.Timestamp).DateTime
+            : existConversation.CreatedDate;
+
             if (!string.IsNullOrEmpty(userId))
             {
                 var sidebarUpdate = new StaffConversationSideBarUpdateResponse
@@ -66,6 +70,7 @@ namespace OmniChat.Application.SignalRHub
                     providerName = existConversation.Providers.ProviderName,
                     LastMessage = lastMessage.Content,
                     UnreadMessageCount = 0,
+                    UpdateDate = finalUpdateDate
                 };
 
                 await Clients.User(userId).SendAsync("SidebarUpdated", sidebarUpdate);

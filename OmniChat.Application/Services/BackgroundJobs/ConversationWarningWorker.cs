@@ -16,6 +16,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
 {
     public class ConversationWarningWorker : BackgroundService
     {
+
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ConversationWarningWorker> _logger;
         private readonly IConfiguration _configuration;
@@ -32,6 +33,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("[WARNING-WORKER] Background Service is starting.");
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -40,161 +43,133 @@ namespace OmniChat.Application.Services.BackgroundJobs
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "[WARNING-WORKER] Error during check");
+                    _logger.LogError(ex, "[WARNING-WORKER] Error during check cycle");
                 }
 
-                // chạy mỗi 1 tiếng
+                // Chạy kiểm tra định kỳ mỗi 1 tiếng
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
 
         private async Task CheckAndCreateWarningsAsync()
         {
-            var minTaskSecs = int.Parse(_configuration["WarningThresholds:MinTaskDurationSeconds"] ?? "120");
-            var minConvSecs = int.Parse(_configuration["WarningThresholds:MinConversationDurationSeconds"] ?? "300");
-            var notRespondingMins = int.Parse(_configuration["WarningThresholds:StaffNotRespondingMinutes"] ?? "30");
+            // 1. CHỈ CHẠY TRONG GIỜ HÀNH CHÍNH
+            if (!IsWorkingHours())
+            {
+                _logger.LogInformation("[WARNING-WORKER] Ngoài giờ làm việc (VN Time). Tạm dừng quét.");
+                return;
+            }
 
             using var scope = _scopeFactory.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork<OmniChatDbContext>>();
+
+            var notRespondingMins = int.Parse(_configuration["WarningThresholds:StaffNotRespondingMinutes"] ?? "30");
+            var maxAvgTaskTime = int.Parse(_configuration["WarningThresholds:MaxAvgTaskHandleTimeSeconds"] ?? "600");
+
             var warningsToAdd = new List<ConversationWarning>();
+            var nowUtc = DateTime.UtcNow;
 
-            // =============================================
-            // CASE 1 & 2: Conversation/Task hoàn tất quá nhanh
-            // =============================================
-            var completedConversations = await unitOfWork.GetRepository<SupportConversation>()
-                .GetListAsync(
-                    predicate: c => c.Status == ConversationStatus.Complete
-                                 && c.CloseAt != null
-                                 && c.CreatedDate != null,
-                    include: q => q
-                        .Include(c => c.SupportTasks)
-                        .Include(c => c.ConversationWarnings)
-                );
-
-            foreach (var conv in completedConversations)
-            {
-                if (conv.ActiveStaffId == null) continue;
-
-                // Bỏ qua nếu đã có warning loại này rồi
-                bool alreadyWarned = conv.ConversationWarnings.Any(w =>
-                    w.WarningType == WarningType.TaskCompletedTooFast ||
-                    w.WarningType == WarningType.ConversationClosedTooFast ||
-                    w.WarningType == WarningType.BothFast);
-
-                if (alreadyWarned) continue;
-
-                var convDuration = (conv.CloseAt!.Value - conv.CreatedDate!.Value).TotalSeconds;
-                bool convTooFast = convDuration < minConvSecs;
-
-                var fastTasks = conv.SupportTasks
-                    .Where(t => t.Status == SupportTaskStatus.Done
-                             && t.CompleteDate != null
-                             && t.CreatedAt != null
-                             && (t.CompleteDate!.Value - t.CreatedAt!.Value).TotalSeconds < minTaskSecs)
-                    .ToList();
-
-                bool taskTooFast = fastTasks.Any();
-
-                if (!convTooFast && !taskTooFast) continue;
-
-                WarningType warningType;
-                string reason;
-
-                if (convTooFast && taskTooFast)
-                {
-                    warningType = WarningType.BothFast;
-                    reason = $"Conversation hoàn tất sau {convDuration:F0}s (ngưỡng {minConvSecs}s). " +
-                             $"Có {fastTasks.Count} task hoàn thành dưới {minTaskSecs}s.";
-                }
-                else if (convTooFast)
-                {
-                    warningType = WarningType.ConversationClosedTooFast;
-                    reason = $"Conversation hoàn tất sau {convDuration:F0}s (ngưỡng {minConvSecs}s).";
-                }
-                else
-                {
-                    warningType = WarningType.TaskCompletedTooFast;
-                    reason = $"Có {fastTasks.Count} task hoàn thành dưới {minTaskSecs}s.";
-                }
-
-                warningsToAdd.Add(new ConversationWarning
-                {
-                    Id = Guid.NewGuid(),
-                    ConversationId = conv.Id,
-                    StaffId = conv.ActiveStaffId.Value,
-                    WarningType = warningType,
-                    Reason = reason,
-                    IsReviewed = false,
-                    CreatedAt = DateTime.UtcNow
-                });
-
-                _logger.LogInformation(
-                    "[WARNING-WORKER] Fast completion warning | Conv={ConvId} | Staff={StaffId} | Type={Type}",
-                    conv.Id, conv.ActiveStaffId, warningType);
-            }
-
-            // =============================================
-            // CASE 3: Staff không trả lời customer
-            // =============================================
+            // 2. LẤY DỮ LIỆU CẦN THIẾT
+            // Chỉ lấy các cuộc hội thoại ĐANG HOẠT ĐỘNG
             var activeConversations = await unitOfWork.GetRepository<SupportConversation>()
                 .GetListAsync(
                     predicate: c =>
                         (c.Status == ConversationStatus.Pending || c.Status == ConversationStatus.Waiting)
-                        && c.ActiveStaffId != null
-                        && c.LastCustomerMessageAt != null,
+                        && c.ActiveStaffId != null,
                     include: q => q.Include(c => c.ConversationWarnings)
                 );
 
-            var threshold = DateTime.UtcNow.AddMinutes(-notRespondingMins);
+            if (!activeConversations.Any()) return;
+
+            // Lấy danh sách StaffId đang trực để lấy Performance một lần duy nhất (Tối ưu performance DB)
+            var activeStaffIds = activeConversations.Select(c => c.ActiveStaffId!.Value).Distinct().ToList();
+            var staffPerformances = await unitOfWork.GetRepository<StaffPerformance>()
+                .GetListAsync(predicate: p => activeStaffIds.Contains(p.StaffId));
 
             foreach (var conv in activeConversations)
             {
-                bool customerMessagedLongAgo = conv.LastCustomerMessageAt < threshold;
-                bool staffNotRepliedAfter = conv.LastStaffMessageAt == null
-                                            || conv.LastStaffMessageAt < conv.LastCustomerMessageAt;
-
-                if (!customerMessagedLongAgo || !staffNotRepliedAfter) continue;
-
-                // Chống spam: chỉ tạo 1 warning StaffNotResponding mỗi tiếng
-                bool recentWarningExists = conv.ConversationWarnings.Any(w =>
-                    w.WarningType == WarningType.StaffNotResponding &&
-                    w.CreatedAt >= DateTime.UtcNow.AddHours(-1));
-
-                if (recentWarningExists) continue;
-
-                var waitingMinutes = (DateTime.UtcNow - conv.LastCustomerMessageAt!.Value).TotalMinutes;
-
-                warningsToAdd.Add(new ConversationWarning
+                // --- TRƯỜNG HỢP 1: STAFF KHÔNG TRẢ LỜI QUÁ THỜI GIAN QUY ĐỊNH ---
+                if (conv.LastCustomerMessageAt != null)
                 {
-                    Id = Guid.NewGuid(),
-                    ConversationId = conv.Id,
-                    StaffId = conv.ActiveStaffId!.Value,
-                    WarningType = WarningType.StaffNotResponding,
-                    Reason = $"Staff chưa trả lời customer sau {waitingMinutes:F0} phút " +
-                                     $"(ngưỡng {notRespondingMins} phút). " +
-                                     $"Tin nhắn cuối của customer lúc {conv.LastCustomerMessageAt:HH:mm dd/MM/yyyy}.",
-                    IsReviewed = false,
-                    CreatedAt = DateTime.UtcNow
-                });
+                    var threshold = nowUtc.AddMinutes(-notRespondingMins);
 
-                _logger.LogWarning(
-                    "[WARNING-WORKER] Staff not responding | Conv={ConvId} | Staff={StaffId} | WaitingMins={Mins:F0}",
-                    conv.Id, conv.ActiveStaffId, waitingMinutes);
+                    // Staff im lặng: Chưa từng trả lời HOẶC tin nhắn cuối của staff cũ hơn tin nhắn của khách
+                    bool staffIsSilent = conv.LastStaffMessageAt == null || conv.LastStaffMessageAt < conv.LastCustomerMessageAt;
+
+                    if (conv.LastCustomerMessageAt < threshold && staffIsSilent)
+                    {
+                        // Chống spam: Mỗi 1 tiếng mới tạo thêm 1 warning StaffNotResponding cho cùng 1 hội thoại
+                        bool recentlyWarned = conv.ConversationWarnings.Any(w =>
+                            w.WarningType == WarningType.StaffNotResponding &&
+                            w.CreatedAt >= nowUtc.AddHours(-1));
+
+                        if (!recentlyWarned)
+                        {
+                            var waitingMins = (nowUtc - conv.LastCustomerMessageAt.Value).TotalMinutes;
+                            warningsToAdd.Add(new ConversationWarning
+                            {
+                                Id = Guid.NewGuid(),
+                                ConversationId = conv.Id,
+                                StaffId = conv.ActiveStaffId!.Value,
+                                WarningType = WarningType.StaffNotResponding,
+                                Reason = $"Staff chưa phản hồi sau {waitingMins:F0} phút (Ngưỡng {notRespondingMins}m).",
+                                IsReviewed = false,
+                                CreatedAt = nowUtc
+                            });
+                        }
+                    }
+                }
+
+                // --- TRƯỜNG HỢP 2: WARNING DỰA TRÊN PERFORMANCE (Xử lý quá chậm) ---
+                var perf = staffPerformances.FirstOrDefault(p => p.StaffId == conv.ActiveStaffId);
+
+                if (perf != null && perf.AvgTaskHandleTime > maxAvgTaskTime)
+                {
+                    // Chống spam: Chỉ tạo warning hiệu suất 1 lần mỗi ngày cho 1 cuộc hội thoại
+                    bool performanceWarnedToday = conv.ConversationWarnings.Any(w =>
+                        w.WarningType == WarningType.SlowPerformance &&
+                        w.CreatedAt >= nowUtc.Date);
+
+                    if (!performanceWarnedToday)
+                    {
+                        warningsToAdd.Add(new ConversationWarning
+                        {
+                            Id = Guid.NewGuid(),
+                            ConversationId = conv.Id,
+                            StaffId = conv.ActiveStaffId!.Value,
+                            WarningType = WarningType.SlowPerformance,
+                            Reason = $"Staff xử lý chậm: AvgTaskHandleTime là {perf.AvgTaskHandleTime:F0}s (Ngưỡng {maxAvgTaskTime}s).",
+                            IsReviewed = false,
+                            CreatedAt = nowUtc
+                        });
+                    }
+                }
             }
 
-            // =============================================
-            // Lưu tất cả warnings
-            // =============================================
+            // 3. LƯU VÀO DATABASE
             if (warningsToAdd.Any())
             {
                 await unitOfWork.GetRepository<ConversationWarning>().InsertRangeAsync(warningsToAdd);
                 await unitOfWork.CommitAsync();
-                _logger.LogInformation("[WARNING-WORKER] Inserted {Count} warnings", warningsToAdd.Count);
+                _logger.LogInformation("[WARNING-WORKER] Successfully inserted {Count} new warnings.", warningsToAdd.Count);
             }
-            else
-            {
-                _logger.LogInformation("[WARNING-WORKER] No new warnings found");
-            }
+        }
+
+        private bool IsWorkingHours()
+        {
+            // Chuyển sang múi giờ VN (UTC+7) để logic luôn đúng dù server đặt ở đâu
+            var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vnNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+            var time = vnNow.TimeOfDay;
+
+            // Nghỉ tối & sáng sớm: 17:00 chiều -> 07:00 sáng hôm sau
+            if (time >= new TimeSpan(17, 0, 0) || time < new TimeSpan(7, 0, 0)) return false;
+
+            // Nghỉ trưa: 11:45 -> 12:00
+            if (time >= new TimeSpan(11, 45, 0) && time < new TimeSpan(12, 0, 0)) return false;
+
+            return true;
         }
     }
 }
+

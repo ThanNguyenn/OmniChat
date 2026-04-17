@@ -29,5 +29,12 @@ public class OrderMapper : Profile
                  opt => opt.MapFrom(src => src.CustomerProfile.Address)).ForMember(dest => dest.OrderItems,
                  opt => opt.MapFrom(src => src.OrderItems));
         CreateMap<Order, GetPostSaleOrderResponse>();
+
+        CreateMap<Order, GetOrderForShipperResponse>()
+            .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.CustomerProfile.CustomerName))
+            .ForMember(dest => dest.CustomerPhoneNumber, opt => opt.MapFrom(src => src.CustomerProfile.PhoneNumber))
+            .ForMember(dest => dest.CustomerAddress, opt => opt.MapFrom(src => src.CustomerProfile.Address))
+            .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.OrderItems));
+      ;
     }
 }
