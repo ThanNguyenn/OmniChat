@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Dtos.Requests.Staff;
+﻿using Microsoft.AspNetCore.Http;
+using OmniChat.Infrastructure.Dtos.Requests.Staff;
 using OmniChat.Infrastructure.Dtos.Requests.SupportTask;
 using OmniChat.Infrastructure.Dtos.Responses.Staff;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
@@ -17,6 +18,8 @@ public interface IStaffService
     Task<bool> CreateStaffAsync(CreateStaffRequest createStaffRequest);
 
     Task<bool> UpdateStaffAsync(Guid StaffId, UpdateStaffRequest updateStaffRequest);
+
+    Task<bool> UploadStaffImage(Guid staffId, UploadStaffImageRequest request);
 
     Task<bool> DeleteStaffAsync(Guid StaffId);
 

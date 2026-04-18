@@ -25,8 +25,10 @@ namespace OmniChat.Application.Services.Implements;
 
 public class StaffService : BaseService<StaffService>, IStaffService
 {
-    public StaffService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<StaffService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+    private readonly IR2StorageService _storageService;
+    public StaffService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<StaffService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IR2StorageService storageService) : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
+        _storageService = storageService;
     }
 
     public async Task<bool> CreateStaffAsync(CreateStaffRequest createStaffRequest)
@@ -523,5 +525,23 @@ public class StaffService : BaseService<StaffService>, IStaffService
             DeliveringOrders = deliveringOrders,
             DeliveredToday = deliveredToday
         };
+    }
+
+    public async Task<bool> UploadStaffImage(Guid staffId, UploadStaffImageRequest request)
+    {
+        if (request?.Image == null || request.Image.Length == 0)
+            throw new BusinessException("Invalid image file.");
+
+        var stream = request.Image.OpenReadStream();
+        var fileName = request.Image.FileName;
+
+        var result = await _storageService.UploadUpdatedImageAsync(
+            stream,
+            fileName,
+            "staffs",
+            staffId
+        );
+
+        return result;
     }
 }

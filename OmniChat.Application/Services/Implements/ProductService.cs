@@ -53,7 +53,7 @@ public class ProductService : BaseService<ProductService>, IProductService
 
         if (createProductRequest.Image != null && createProductRequest.Image.Length > 0)
         {
-            await _storageService.UploadImageAsync(
+            await _storageService.UploadUpdatedImageAsync(
                 createProductRequest.Image.OpenReadStream(),
                 createProductRequest.Image.FileName,
                 "products",

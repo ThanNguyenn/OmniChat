@@ -157,4 +157,22 @@ public class StaffController : BaseController<StaffController>
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff tasks successfully", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
+
+
+    [HttpPost(ApiEndPointConstant.Staff.UploadImage)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [SwaggerOperation(
+    Summary = "Upload staff image",
+    Description = "Upload staff image.")]
+
+    public async Task<IActionResult> UploadStaffImageAsync([FromRoute] Guid id, [FromForm] UploadStaffImageRequest request)
+    {
+        var result = await _staffService.UploadStaffImage(id, request);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Upload staff image successfully", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+
+    }
 }

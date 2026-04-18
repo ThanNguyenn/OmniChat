@@ -56,7 +56,9 @@ public class AuthService : BaseService<AuthService>, IAuthService
             RefreshToken = refreshToken,
             Role = account.Role.Name,
             AccountId =  account.Id,
-            StaffId = account.Staff.Id
+            StaffId = account.Staff.Id,
+            StaffName = account.Staff.Name,
+            AvatarUrl = account.AvatarUrl
         };
         return loginResponse;
     }   

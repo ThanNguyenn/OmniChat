@@ -143,6 +143,7 @@ public class ApiEndPointConstant
         public const string UnassignIntent = "{id}/unassign-intent";
         public const string StaffDashboard = "{id}/dashboard";
         public const string getStaffTasks = "{id}/tasks";
+        public const string UploadImage = "{id}/upload-image";
     }
 
     public static class Shipper

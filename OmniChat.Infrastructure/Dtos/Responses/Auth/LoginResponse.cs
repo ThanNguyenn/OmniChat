@@ -11,8 +11,8 @@ public class LoginResponse
     public string AccessToken { get; set; }
     public string RefreshToken { get; set; }
     public string Role { get; set; }
-
     public Guid AccountId { get; set; }
-
     public Guid StaffId { get; set; }
+    public string StaffName { get; set; }
+    public string AvatarUrl { get; set; }
 }
