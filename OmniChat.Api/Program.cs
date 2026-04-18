@@ -282,6 +282,7 @@ void ConfigureAuthentication()
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
                 ValidIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>(),
                 ValidAudience = builder.Configuration.GetSection("Jwt:Audience").Get<string>(),
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
@@ -331,12 +332,16 @@ void ConfigureAuthentication()
                     context.HandleResponse();
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     context.Response.ContentType = "application/json";
+                    var errorType = context.HttpContext.Items["AuthError"]?.ToString()
+                    ?? "INVALID_TOKEN";
+
+                    var reason = $"Authentication failed. Error: {errorType}";
 
                     var response = new ApiResponse<object>
                     {
                         StatusCode = StatusCodes.Status401Unauthorized,
                         Message = "Unauthorized access",
-                        Reason = "Authentication failed. Please provide a valid token.",
+                        Reason = reason,
                         IsSuccess = false,
                         Data = new
                         {
@@ -347,8 +352,20 @@ void ConfigureAuthentication()
                     };
 
                     await context.Response.WriteAsJsonAsync(response);
-                }
+                },
+                OnAuthenticationFailed = context =>
+                {
+                    if (context.Exception is SecurityTokenExpiredException)
+                    {
+                        context.HttpContext.Items["AuthError"] = "EXPIRED_TOKEN";
+                    }
+                    else
+                    {
+                        context.HttpContext.Items["AuthError"] = "INVALID_TOKEN";
+                    }
 
+                    return Task.CompletedTask;
+                },
 
             };
 

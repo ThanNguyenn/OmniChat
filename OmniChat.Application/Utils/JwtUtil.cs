@@ -45,7 +45,7 @@ public class JwtUtil
             securityClaims.Add(new Claim(guidClaimer.Item1, guidClaimer.Item2.ToString()));
 
         var expires = DateTime.UtcNow.AddMinutes(_expired);
-        var token = new JwtSecurityToken(issuer, _audience, securityClaims, DateTime.Now, expires, credentials);
+        var token = new JwtSecurityToken(issuer, _audience, securityClaims, DateTime.UtcNow, expires, credentials);
 
         return tokenHandler.WriteToken(token);
     }
