@@ -16,6 +16,8 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? ExpireDate { get; set; } = DateTime.UtcNow;
 
+        public string UniqueIdentity { get; set; }
+
         public Guid AccountId { get; set; }
 
         public virtual Account Account { get; set; }
