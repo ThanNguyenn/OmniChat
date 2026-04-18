@@ -26,7 +26,7 @@ public class JwtUtil
         _expired = double.Parse(configuration["Jwt:TokenValidityInMinutes"]);
     }
 
-    public string GenerateJwtToken(Account user, Tuple<string, Guid> guidClaimer)
+    public string GenerateJwtToken(Account user, Tuple<string, Guid> guidClaimer, string sessionId)
     {
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
         SymmetricSecurityKey secrectKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtkey));
@@ -38,12 +38,13 @@ public class JwtUtil
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Staff.Id.ToString()),  
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim("session_id",sessionId)
             };
 
         if (guidClaimer != null)
             securityClaims.Add(new Claim(guidClaimer.Item1, guidClaimer.Item2.ToString()));
 
-        var expires = DateTime.Now.AddMinutes(_expired);
+        var expires = DateTime.UtcNow.AddMinutes(_expired);
         var token = new JwtSecurityToken(issuer, _audience, securityClaims, DateTime.Now, expires, credentials);
 
         return tokenHandler.WriteToken(token);

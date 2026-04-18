@@ -22,7 +22,7 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
     {
     }
 
-    public async Task<string> CreateRefreshTokenAsync(Guid accountId)
+    public async Task<string> CreateRefreshTokenAsync(Guid accountId, string sessionId)
     {
         string rawToken = GenerateRefreshToken();
         string hashedToken = HashRefreshToken(rawToken);
@@ -36,6 +36,7 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
             {
                 AccountId = accountId,
                 Token = hashedToken,
+                UniqueIdentity = sessionId,
                 ExpireDate = DateTime.UtcNow.AddDays(7),
                 CreateDate = DateTime.UtcNow
             };

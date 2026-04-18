@@ -45,9 +45,10 @@ public class AuthService : BaseService<AuthService>, IAuthService
         }
 
         var guidSecurityClaim = new Tuple<string, Guid>("UserId", account.Id);
-        var accessToken = _jwtUtil.GenerateJwtToken(account, guidSecurityClaim);
+        var sessionId = Guid.NewGuid().ToString();
+        var accessToken = _jwtUtil.GenerateJwtToken(account, guidSecurityClaim, sessionId);
 
-        var refreshToken = await _refreshTokenService.CreateRefreshTokenAsync(account.Id);
+        var refreshToken = await _refreshTokenService.CreateRefreshTokenAsync(account.Id, sessionId);
 
         var loginResponse = new LoginResponse
         {
@@ -62,11 +63,11 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
     public async Task<bool> LogoutAsync()
     {
-        var accountId = _httpContextAccessor.HttpContext!.User.GetUserId();
+        var sessionId = _httpContextAccessor.HttpContext!.User.GetSessionId();
         var repo = _unitOfWork.GetRepository<RefreshToken>();
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var tokens = await repo.GetListAsync(predicate: t => t.AccountId == accountId);
+            var tokens = await repo.GetListAsync(predicate: t => t.UniqueIdentity == sessionId);
             if (tokens.Any())
             {
                 repo.DeleteRange(tokens);
@@ -107,7 +108,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
             throw new UnauthorizedException("Invalid refresh token");
         }
         var guidSecurityClaim = new Tuple<string, Guid>("UserId", token.AccountId);
-        var newAccessToken = _jwtUtil.GenerateJwtToken(token.Account, guidSecurityClaim);
+        var newAccessToken = _jwtUtil.GenerateJwtToken(token.Account, guidSecurityClaim, token.UniqueIdentity);
 
         var response = new RefreshAccessTokenResponse
         {

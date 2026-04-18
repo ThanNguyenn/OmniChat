@@ -9,7 +9,7 @@ namespace OmniChat.Application.Services.Interface;
 
 public interface IRefreshTokenService
 {
-    Task<string> CreateRefreshTokenAsync(Guid accountId);
+    Task<string> CreateRefreshTokenAsync(Guid accountId, string sessionId);
 
     Task<RefreshToken> ValidateRefreshTokenAsync(string refreshToken);
 

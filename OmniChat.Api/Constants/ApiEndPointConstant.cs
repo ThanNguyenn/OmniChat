@@ -109,6 +109,8 @@ public class ApiEndPointConstant
 
         public const string Login = "login";
 
+        public const string Logout = "logout";
+
         public const string RefreshToken = "refresh-token";
 
         public const string ChangePassword = "change-password";

@@ -44,4 +44,18 @@ public static class ClaimsPrincipalUtil
 
         return subId;
     }
+
+    public static string GetSessionId(this ClaimsPrincipal user)
+    {
+        if (user == null)
+            throw new UnauthorizedAccessException("User context is missing.");
+
+        var sessionClaim = user.Claims.FirstOrDefault(c =>
+            string.Equals(c.Type, "session_id", StringComparison.OrdinalIgnoreCase));
+
+        if (sessionClaim == null || string.IsNullOrWhiteSpace(sessionClaim.Value))
+            throw new UnauthorizedAccessException("Invalid session_id claim.");
+
+        return sessionClaim.Value;
+    }
 }

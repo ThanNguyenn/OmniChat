@@ -36,6 +36,21 @@ public class AuthController : BaseController<AuthController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [HttpPost(ApiEndPointConstant.Auth.Logout)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+    Summary = "Logout tài khoản của app",
+    Description = "Logout tài khoản của app")]
+    public async Task<IActionResult> Logout()
+    {
+        var result = await _authService.LogoutAsync();
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Logout successful", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
     [HttpPost(ApiEndPointConstant.Auth.ChangePassword)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
