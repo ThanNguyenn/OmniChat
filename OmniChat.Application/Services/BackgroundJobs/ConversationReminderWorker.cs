@@ -175,30 +175,27 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     //    needUpdate = true;
                     //}
 
-                    if (diff.TotalHours >= 24
-                    && convo.ReminderSent == true
-                    && CustomerNotReplied(convo))
+                    if (diff.TotalHours >= 24 && convo.ReminderSent == true)
                     {
-                        _logger.LogInformation("Conversation close");
+                        _logger.LogInformation("Closing conversation ID: {Id}", convo.Id);
                         convo.Status = ConversationStatus.Complete;
                         convo.CloseAt = now;
                         needUpdate = true;
 
                         using var taskScope = _serviceProvider.CreateScope();
-                        var performanceService = taskScope.ServiceProvider
-                            .GetRequiredService<IStaffPerformanceService>();
-
+                        var performanceService = taskScope.ServiceProvider.GetRequiredService<IStaffPerformanceService>();
                         await performanceService.CompleteConversationAndTasksAsync(convo);
                     }
+                  
                     else if (diff.TotalHours >= 23 && convo.ReminderSent != true)
                     {
-                        _logger.LogInformation("Conversation send reminder");
+                        _logger.LogInformation("Attempting to send reminder for ID: {Id}", convo.Id);
 
                         using var sendScope = _serviceProvider.CreateScope();
-                        var messageService = sendScope.ServiceProvider
-                            .GetRequiredService<ISupportStaffMessageService>();
+                        var messageService = sendScope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
 
                         await SendReminder(convo, messageService);
+
                         convo.ReminderSent = true;
                         needUpdate = true;
                     }
