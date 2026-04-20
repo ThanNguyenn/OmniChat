@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using System;
 using System.Collections.Generic;
@@ -23,8 +24,14 @@ public class InvoiceJobRunner
 
     public async Task RunAsync(DateTime? from = null, DateTime? to = null)
     {
-        var end = to ?? DateTime.UtcNow;
-        var start = from ?? end.AddDays(-7);
+        var now = DateTime.UtcNow;
+        int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
+        var startOfWeek = now.Date.AddDays(-diff);
+
+        var endOfWeek = startOfWeek.AddDays(6);
+
+        var start = from ?? startOfWeek;
+        var end = to ?? endOfWeek;
 
         List<Guid> customerIds;
 

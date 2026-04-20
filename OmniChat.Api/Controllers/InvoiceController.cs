@@ -61,7 +61,7 @@ public class InvoiceController : BaseController<InvoiceController>
     }
 
 
-    [HttpPost(ApiEndPointConstant.Invoice.Base + "run")]
+    [HttpPost(ApiEndPointConstant.Invoice.Base + "/run")]
     public async Task<IActionResult> Run([FromQuery] DateTime? from, [FromQuery] DateTime? to)
     {
         await _runner.RunAsync(from, to);
