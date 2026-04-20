@@ -38,12 +38,12 @@ namespace OmniChat.Application.Services.Implements
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex OrderFlexibleRegex =
-      new(@"(\d+)\s*(chai|cái|ly|bịch|ml|lít|kđ|đường)",
-      RegexOptions.Compiled | RegexOptions.IgnoreCase);
+             new(@"(\d+)\s*(chai|cái|ly|bịch|ml|lít|kđ|đường|thùng|hộp)",
+             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex CreateOrderKeywordsRegex =
-    new(@"\b(mua hàng|đặt hàng|tạo đơn|tạo đơn hàng|lên đơn|chốt đơn)\b",
-    RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        new(@"(mua|đặt|mua hàng|đặt hàng|tạo đơn|lên đơn|chốt đơn)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         //public async Task<ExtractKeywordResponse> ExtractKeywords(string content, List<string>? productNames = null)
         //{
@@ -209,11 +209,11 @@ namespace OmniChat.Application.Services.Implements
             var orderRepo = _unitOfWork.GetRepository<Order>();
             var customerProfileRepo = _unitOfWork.GetRepository<CustomerProfile>();
 
-           
 
-           
+
+
             var autoOrderMatches = OrderFlexibleRegex.Matches(content);
-            if (autoOrderMatches.Count >= 2)
+            if (autoOrderMatches.Count >= 1)
             {
                 result.Recommends.Add(new IsRecommentOnMesssageResponse
                 {
@@ -222,7 +222,7 @@ namespace OmniChat.Application.Services.Implements
                 });
             }
 
-         
+
             if (CreateOrderKeywordsRegex.IsMatch(content))
             {
                 result.Recommends.Add(new IsRecommentOnMesssageResponse
