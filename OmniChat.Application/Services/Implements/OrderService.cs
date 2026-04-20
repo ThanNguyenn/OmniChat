@@ -306,6 +306,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 throw new NotFoundException("Order not found");
             }
             order.DeliveryStatus = DeliveryStatus.Completed;
+            order.Status = OrderStatus.Shipped;
             order.DeliveriedDate = DateTime.UtcNow;
             orderRepo.Update(order);
             return true;
