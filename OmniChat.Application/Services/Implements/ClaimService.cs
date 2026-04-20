@@ -41,7 +41,9 @@ namespace OmniChat.Application.Services.Implements
                  if (claimType == null)
                      throw new Exception("Loại khiếu nại (Claim Type) không tồn tại.");
 
-                 if (string.Equals(claimType.TypeName, "CHANGETASK", StringComparison.OrdinalIgnoreCase))
+                 var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
+
+                 if (claimType.Id == changeTaskTypeId)
                  {
                      if (!claimRequest.SupportConversationId.HasValue || claimRequest.SupportConversationId == Guid.Empty)
                      {
