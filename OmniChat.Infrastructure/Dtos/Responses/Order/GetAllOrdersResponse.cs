@@ -23,7 +23,7 @@ public class GetAllOrdersResponse
 
     public double TotalAmount { get; set; }
 
-    public DeliveryStatus DeliveryStatus { get; set; }
+    public DeliveryStatus? DeliveryStatus { get; set; }
 
     public string Code { get; set; }
 }
