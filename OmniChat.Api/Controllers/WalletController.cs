@@ -29,7 +29,7 @@ public class WalletController : BaseController<WalletController>
         Description = "Dùng cho Manager hoặc Driver xác nhận khách hàng trả tiền mặt")]
     public async Task<IActionResult> PaymentAsync([FromBody] WalletPaymentRequest walletPaymentRequest)
     {
-        var result = await _walletService.DepositToWallet(walletPaymentRequest);
+        var result = await _walletService.AddCreditToWallet(walletPaymentRequest.CustomerId, walletPaymentRequest.Amount);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Payment successful", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }

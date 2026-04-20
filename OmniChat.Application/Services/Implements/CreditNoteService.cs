@@ -56,7 +56,7 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
                .GetQueryable(
                    predicate: o => o.Id == orderId,
                    include: q => q.Include(c => c.CustomerProfile)
-                                  .ThenInclude(w => w.Wallet!)
+                                  .ThenInclude(w => w.Wallet!).Include(c => c.Invoice)
                )
                .FirstOrDefaultAsync();
         await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -80,6 +80,7 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
                 TransactionType = TransactionType.Credit
             });
             wallet.Amount += amount;
+            existingOrder.Invoice.InvoiceStatus = InvoiceStatus.Refunded;
         });
 
         await _invoiceService.AllocateMoneyToInvoices(existingOrder.CustomerId);

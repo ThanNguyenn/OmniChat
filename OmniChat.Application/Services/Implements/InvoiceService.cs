@@ -69,7 +69,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     WalletId = wallet.Id,
                     Amount = allocationAmount,
                 });
-
+                invoice.PaidAmount += allocationAmount;
                 wallet.Amount -= allocationAmount;
 
                 if (allocationAmount == remaining)
