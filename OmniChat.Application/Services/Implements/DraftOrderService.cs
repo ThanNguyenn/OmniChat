@@ -28,12 +28,13 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
         _orderService = orderService;
     }
 
+
     public async Task<bool> CreateDraftOrderAsync(Guid customerId, string message)
     {
         var parsedItems = Parse(message);
 
         if (parsedItems == null || parsedItems.Count == 0)
-            return false;
+            throw new BusinessException("Fail to parse messgae");
 
         var orderItems = new List<AddOrderItemRequest>();
 
@@ -52,23 +53,66 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
                     });
                 }
             }
-            catch (BusinessException)
+            catch (BusinessException e)
             {
+                _logger.LogError("Failed to resolve batches for item: {Item}. Error: {Error}", item, e.Message);
                 continue;
             }
         }
-        if (orderItems.Count == 0)
-            return false;
+        if (orderItems.Count == 0 || orderItems == null)
+            throw new BusinessException("Fail to auto draft");
+        _logger.LogInformation("Creating draft order for customer {CustomerId} with {orderItems} items", customerId, orderItems);
+        var request = new CreateOrderRequest
+        {
+            CustomerId = customerId,
+            Name = $"Auto Draft for customer {customerId}",
+            OrderItems = orderItems
+        };  
+
+        return await _orderService.CreateOrderAsync(request);
+    }
+
+    public async Task<CreateOrderRequest> TestCreateDraftOrderAsync(Guid customerId, string message)
+    {
+        var parsedItems = Parse(message);
+
+        if (parsedItems == null || parsedItems.Count == 0)
+            throw new BusinessException("Fail to parse messgae");
+
+        var orderItems = new List<AddOrderItemRequest>();
+
+        foreach (var item in parsedItems)
+        {
+            try
+            {
+                var allocations = await ResolveBatchesAsync(item);
+
+                foreach (var (batchId, qty) in allocations)
+                {
+                    orderItems.Add(new AddOrderItemRequest
+                    {
+                        ProductBatchId = batchId,
+                        Quantity = qty
+                    });
+                }
+            }
+            catch (BusinessException e)
+            {
+                _logger.LogError("Failed to resolve batches for item: {Item}. Error: {Error}", item, e.Message);
+                continue;
+            }
+        }
+        if (orderItems.Count == 0 || orderItems == null)
+            throw new BusinessException("Fail to auto draft");
+        _logger.LogInformation("Creating draft order for customer {CustomerId} with {orderItems} items", customerId, orderItems);
         var request = new CreateOrderRequest
         {
             CustomerId = customerId,
             Name = $"Auto Draft for customer {customerId}",
             OrderItems = orderItems
         };
-
-        return await _orderService.CreateOrderAsync(request);
+        return request;
     }
-
     private static Regex quantityRegex = new Regex(@"(\d+)\s*(chai|c|ch)\b", RegexOptions.Compiled);
     private static Regex volumeRegex = new Regex(@"(180|190|490|880|1760)\s*(ml)?|nhi|nua lit|1 lit|2 lit", RegexOptions.Compiled);
     private static Regex kindRegex = new Regex(@"(khong duong|ko duong|kd|co duong|duong|sua chua)", RegexOptions.Compiled);
@@ -76,17 +120,50 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
     public List<DraftOrderItem> Parse(string raw)
     {
         var text = Normalize(raw);
-
         text = ExpandAllFormats(text);
-
-        var segments = SplitSegments(text);
 
         var results = new List<DraftOrderItem>();
 
-        foreach (var seg in segments)
+        // 1. Find all valid volumes to use as anchors
+        var volumeMatches = Regex.Matches(text, @"\b(180|190|490|880|1760)\b");
+
+        foreach (Match volMatch in volumeMatches)
         {
-            var items = ParseSegment(seg);
-            results.AddRange(items);
+            string volStr = volMatch.Value;
+
+            // 2. Define a narrow window: 20 chars before and 25 chars after this specific volume
+            int windowStart = Math.Max(0, volMatch.Index - 20);
+            int windowEnd = Math.Min(text.Length, volMatch.Index + volMatch.Length + 25);
+            string contextWindow = text.Substring(windowStart, windowEnd - windowStart);
+
+            // 3. Extract Quantity from this specific window
+            string qtyStr = "1";
+            // Check for "[number] chai" or "so luong [number]" or just a number near the volume
+            var qtyMatch = Regex.Match(contextWindow, @"(?<num>\d+)\s*(?:chai|c|ch)\b|so luong(?: la)?\s*(?<num>\d+)|(?<num2>\d+)\s+" + volStr);
+
+            if (qtyMatch.Success)
+            {
+                qtyStr = qtyMatch.Groups["num"].Success ? qtyMatch.Groups["num"].Value : qtyMatch.Groups["num2"].Value;
+            }
+            else
+            {
+                // Fallback: the closest number in the window that isn't the volume itself
+                var fallback = Regex.Matches(contextWindow, @"\b\d+\b")
+                    .Cast<Match>()
+                    .FirstOrDefault(n => n.Value != volStr);
+                if (fallback != null) qtyStr = fallback.Value;
+            }
+
+            // 4. Create the item using the local context for Brand and Kind
+            var item = new DraftOrderItem
+            {
+                Quantity = int.Parse(qtyStr),
+                Volume = NormalizeVolume(volStr),
+                Brand = DetectBrand(contextWindow) ?? "long thanh",
+                Kind = DetectKind(contextWindow)
+            };
+
+            results.Add(item);
         }
 
         return results;
@@ -95,36 +172,24 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
     {
         var results = new List<DraftOrderItem>();
 
+        // Regex to find Quantity and Volume in any order
+        // Matches: "2 chai 880", "880ml 2", "880 25c"
         var matches = Regex.Matches(segment,
-            @"(?:
-            (?<qty>\d+)\s*(chai|c|ch)?\s*(?<vol>180|190|490|880|1760)\s*ml? |
-            (?<vol2>180|190|490|880|1760)\s*ml?\s*(?<qty2>\d+) |
-            (?<vol3>180|190|490|880|1760)\s+(?<qty3>\d+)\s*(c|chai|ch)
-        )",
-            RegexOptions.IgnorePatternWhitespace);
+            @"(?<qty>\d+)\s*(?:chai|c|ch)?\s*(?<vol>180|190|490|880|1760)\b|(?<vol2>180|190|490|880|1760)\s*(?:ml)?\s*(?<qty2>\d+)",
+            RegexOptions.IgnoreCase);
 
         foreach (Match m in matches)
         {
-            string vol =
-                m.Groups["vol"].Success ? m.Groups["vol"].Value :
-                m.Groups["vol2"].Success ? m.Groups["vol2"].Value :
-                m.Groups["vol3"].Value;
-
-            int qty =
-                m.Groups["qty"].Success ? int.Parse(m.Groups["qty"].Value) :
-                m.Groups["qty2"].Success ? int.Parse(m.Groups["qty2"].Value) :
-                int.Parse(m.Groups["qty3"].Value);
-
-            var window = segment.Substring(m.Index, Math.Min(30, segment.Length - m.Index));
+            string volStr = m.Groups["vol"].Success ? m.Groups["vol"].Value : m.Groups["vol2"].Value;
+            string qtyStr = m.Groups["qty"].Success ? m.Groups["qty"].Value : m.Groups["qty2"].Value;
 
             var item = new DraftOrderItem
             {
-                Quantity = qty,
-                Volume = NormalizeVolume(vol),
-                Brand = "long thanh",
-                Kind = DetectKind(window)
+                Quantity = int.Parse(qtyStr),
+                Volume = NormalizeVolume(volStr),
+                Brand = DetectBrand(segment) ?? "long thanh",
+                Kind = DetectKind(segment)
             };
-
             results.Add(item);
         }
 
@@ -267,27 +332,24 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
     }
     private string Normalize(string input)
     {
-        string text = input.ToLower();
+        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
 
+        string text = input.ToLower();
         text = RemoveDiacritics(text);
 
-        // fix spacing
-        text = Regex.Replace(text, @"(\d)(\p{L})", "$1 $2");
-        text = Regex.Replace(text, @"(\p{L})(\d)", "$1 $2");
+        // Standardize all variants of "no sugar" and "sugar" immediately
+        text = Regex.Replace(text, @"\b(k duong|ko duong|kd|k đ|kđ|it dg|it duong|it dduong|khong duong)\b", "kd");
+        text = Regex.Replace(text, @"\b(co duong|dg|duong)\b", "duong");
 
-        // normalize common variants
-        text = text.Replace("kđ", "kd");
-        text = text.Replace("it duong", "kd");
-        text = text.Replace("k duong", "kd");
-        text = text.Replace("it dg", "kd");
+        // Standardize product types
+        text = Regex.Replace(text, @"\b(sua chua|sc)\b", "sua chua");
+        text = Regex.Replace(text, @"\b(sua tuoi|st)\b", "st");
 
-        // unify separators
-        text = text.Replace("\n", " ");
-        text = text.Replace("\r", " ");
+        // Ensure space between numbers and identifiers for easier regex matching
+        text = Regex.Replace(text, @"(\d+)(ml|c|chai|ch|kd|duong|st|sc)", "$1 $2");
+        text = Regex.Replace(text, @"(ml|c|chai|ch|kd|duong|st|sc)(\d+)", "$1 $2");
 
-        text = Regex.Replace(text, @"\s+", " ");
-
-        return text.Trim();
+        return Regex.Replace(text, @"\s+", " ").Trim();
     }
 
     private string RemoveDiacritics(string text)
@@ -422,4 +484,6 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
 
         return entity.Id;
     }
+
+
 }

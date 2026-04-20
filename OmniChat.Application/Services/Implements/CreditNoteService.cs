@@ -17,8 +17,10 @@ namespace OmniChat.Application.Services.Implements;
 
 public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteService
 {
-    public CreditNoteService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CreditNoteService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+    private readonly IInvoiceService _invoiceService;
+    public CreditNoteService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CreditNoteService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IInvoiceService invoiceService) : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
+        _invoiceService = invoiceService;
     }
 
     public async Task<bool> CreateCreditNoteAdjustmentAsync(Guid orderId, double amount)
@@ -50,16 +52,16 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
         var creditNoteRepo = _unitOfWork.GetRepository<CreditNote>();
         var orderRepo = _unitOfWork.GetRepository<Order>();
 
-
-        return await _unitOfWork.ProcessInTransactionAsync(async () =>
+        var existingOrder = await orderRepo
+               .GetQueryable(
+                   predicate: o => o.Id == orderId,
+                   include: q => q.Include(c => c.CustomerProfile)
+                                  .ThenInclude(w => w.Wallet!)
+               )
+               .FirstOrDefaultAsync();
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var existingOrder = await orderRepo
-                .GetQueryable(
-                    predicate: o => o.Id == orderId,
-                    include: q => q.Include(c => c.CustomerProfile)
-                                   .ThenInclude(w => w.Wallet!)
-                )
-                .FirstOrDefaultAsync();
+           
             var creditNote = new CreditNote
             {
                 Id = Guid.NewGuid(),
@@ -78,7 +80,10 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
                 TransactionType = TransactionType.Credit
             });
             wallet.Amount += amount;
-            return true;
         });
+
+        await _invoiceService.AllocateMoneyToInvoices(existingOrder.CustomerId);
+
+        return true;
     }
 }

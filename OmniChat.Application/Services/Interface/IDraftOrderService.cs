@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Dtos.Requests.Order;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,4 +10,6 @@ namespace OmniChat.Application.Services.Interface;
 public interface IDraftOrderService
 {
     Task<bool> CreateDraftOrderAsync(Guid customerId, string message);
+
+    Task<CreateOrderRequest> TestCreateDraftOrderAsync(Guid customerId, string message);
 }

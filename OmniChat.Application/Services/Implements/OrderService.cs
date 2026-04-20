@@ -16,6 +16,7 @@ using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
+using OmniChat.Infrastructure.Repositories.Implements;
 using OmniChat.Infrastructure.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -326,6 +327,8 @@ public class OrderService : BaseService<OrderService>, IOrderService
             order.Status = OrderStatus.Returned;
             
             orderRepo.Update(order);
+            await _unitOfWork.CommitAsync();
+            _unitOfWork.Context.ChangeTracker.Clear();
             await creditNoteService.CreateCreditNoteRefundAsync(orderId, amount);
             return true;
         });
