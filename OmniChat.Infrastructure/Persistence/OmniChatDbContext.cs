@@ -388,6 +388,18 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(c => c.Id)
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
+
+            // ==== Conversation - Claim ( one to Many ) ====
+            
+            modelBuilder.Entity<Claim>()
+                .HasOne(c => c.SupportConversation)
+                .WithMany(sc => sc.Claims)
+                .HasForeignKey(c => c.SupportConversationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Claim>()
+                .HasIndex(c => c.SupportConversationId); // index scan claim by supportconversation faster
+
             // ==== Staff - Claim ( one to Many ) ====
 
             modelBuilder.Entity<Staff>()

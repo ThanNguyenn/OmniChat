@@ -58,6 +58,7 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ICollection<ConversationWarning> ConversationWarnings { get; set; } = new List<ConversationWarning>();
 
+        public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();
     }
 
     public enum ConversationStatus
