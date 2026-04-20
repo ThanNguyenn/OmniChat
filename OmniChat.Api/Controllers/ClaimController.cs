@@ -188,5 +188,23 @@ namespace OmniChat.Api.Controllers
                 Data = true
             });
         }
+
+        [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetPendingChangeTask)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<ClaimDetailResponse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+            Summary = "Lấy danh sách ChangeTask Claim đang chờ xử lý",
+            Description = "Lấy tất cả ChangeTask Claim đang chờ xử lý"
+        )]
+        public async Task<IActionResult> GetPendingChangeTaskAsync([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+        {
+            var claims = await _claimService.GetPendingChangeTask(pageIndex, pageSize);
+            return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Pending Change Task Successfully",
+                IsSuccess = true,
+                Data = claims
+            });
+        }
     }
 }
