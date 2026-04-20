@@ -78,7 +78,7 @@
                         product.ImageUrl = _defaultImages["products"];
                         productRepo.Update(product);
                         break;
-                    case "staff":
+                    case "staffs":
                         var staffRepo = _unitOfWork.GetRepository<Staff>();
                         var staff = await staffRepo.GetQueryable(s => s.Id == relatedId, q => q.Include(s => s.Account)).FirstOrDefaultAsync();
 
@@ -156,7 +156,7 @@
                             productRepo.Update(product);
                             break;
 
-                        case "staff" when relatedId.HasValue:
+                        case "staffs" when relatedId.HasValue:
                             var staffRepo = _unitOfWork.GetRepository<Staff>();
                             var staff = await staffRepo.GetQueryable(s => s.Id == relatedId.Value, q => q.Include(s => s.Account)).FirstOrDefaultAsync();
                             if (staff is null || staff.Account is null)
@@ -230,7 +230,7 @@
                         oldFileUrl = product?.ImageUrl;
                         break;
 
-                    case "staff":
+                    case "staffs":
                         var staff = await _unitOfWork
                             .GetRepository<Staff>()
                             .GetQueryable(s => s.Id == relatedId.Value,
