@@ -34,7 +34,7 @@ public class WalletController : BaseController<WalletController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
-    [HttpPost(ApiEndPointConstant.Wallet.Get)]
+    [HttpGet(ApiEndPointConstant.Wallet.Get)]
     [ProducesResponseType(typeof(ApiResponse<GetWalletResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
@@ -42,7 +42,7 @@ public class WalletController : BaseController<WalletController>
     [SwaggerOperation(
         Summary = "Lấy wallet theo customer id",
         Description = "Lấy wallet theo customer id")]
-    public async Task<IActionResult> GetWalletByCustomerIdAsync([FromQuery] Guid id)
+    public async Task<IActionResult> GetWalletByCustomerIdAsync([FromRoute] Guid id)
     {
         var result = await _walletService.CalculateWallet(id);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get wallet successfully", result);

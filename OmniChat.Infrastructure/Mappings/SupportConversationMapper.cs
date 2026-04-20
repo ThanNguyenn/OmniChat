@@ -19,6 +19,10 @@ namespace OmniChat.Infrastructure.Mappings
                 opt => opt.MapFrom(_ => DateTime.UtcNow)
                 );
             CreateMap<SupportConversation, SupportConversationDetailResponse>();
+
+            CreateMap<SupportConversation, StaffConversationResponse>()
+    .ForMember(dest => dest.ConversationId, opt => opt.MapFrom(src => src.Id))
+    .ForMember(dest => dest.customerName, opt => opt.MapFrom(src => src.CustomerName));
         }
     }
 }

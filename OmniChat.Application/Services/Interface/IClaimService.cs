@@ -28,5 +28,7 @@ namespace OmniChat.Application.Services.Interface
         public  Task<ClaimDetailResponse> RejectClaimAsync(Guid claimId);
 
         public  Task ReAssignStaffAsync(Guid newStaffAssignId, Guid conversationReAssignId);
+
+        public  Task<PagingResponse<ClaimDetailResponse>> GetPendingChangeTask(int pageIndex = 1, int pageSize = 10);
     }
 }

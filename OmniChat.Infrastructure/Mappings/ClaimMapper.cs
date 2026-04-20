@@ -20,8 +20,9 @@ namespace OmniChat.Infrastructure.Mappings
                 .ForMember(dest => dest.Status,
                            opt => opt.MapFrom(src => ClaimStatus.Pending))
                 .ForMember(dest => dest.SubmitDate,
-                           opt => opt.MapFrom(src => DateTime.UtcNow));
-
+                           opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                
             // Update
             CreateMap<UpdateClaimRequest, Claim>()
            .ForMember(dest => dest.Id, opt => opt.Ignore())

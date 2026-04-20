@@ -16,5 +16,7 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Claim
         public Guid StaffId { get; set; }
 
         public Guid ClaimTypeId { get; set; }
+
+        public Guid? SupportConversationId { get; set; }
     }
 }

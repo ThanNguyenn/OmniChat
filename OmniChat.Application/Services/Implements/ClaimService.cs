@@ -33,19 +33,64 @@ namespace OmniChat.Application.Services.Implements
         {
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
              {
-                 // call repo 
                  var _repo = _unitOfWork.GetRepository<Claim>();
+                 var _claimTypeRepo = _unitOfWork.GetRepository<ClaimType>();
 
-                 // map entity
+               
+                 var claimType = await _claimTypeRepo.GetByIdAsync(claimRequest.ClaimTypeId);
+                 if (claimType == null)
+                     throw new Exception("Loại khiếu nại (Claim Type) không tồn tại.");
 
+                 var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
+
+                 if (claimType.Id == changeTaskTypeId)
+                 {
+                     if (!claimRequest.SupportConversationId.HasValue || claimRequest.SupportConversationId == Guid.Empty)
+                     {
+                        
+                         throw new Exception("Yêu cầu thay đổi công việc (CHANGETASK) bắt buộc phải đính kèm cuộc hội thoại hỗ trợ.");
+                     }
+                 }
                  var entity = _mapper.Map<Claim>(claimRequest);
-
-                 // Insert Database
-
-                 await _repo.InsertAsync(entity);
-
+                 await _repo.InsertAsync(entity);         
                  return true;
              });
+        }
+
+
+        public async Task<PagingResponse<ClaimDetailResponse>> GetPendingChangeTask(int pageIndex = 1, int pageSize = 10)
+        {
+            var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
+            var repo = _unitOfWork.GetRepository<Claim>();
+
+          
+            var query = repo.GetQueryable()
+                .AsNoTracking()
+                .Include(c => c.Staff)
+                .Include(c => c.ClaimType)
+                .Where(c => c.Status == ClaimStatus.Pending && c.ClaimTypeId == changeTaskTypeId);
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(c => c.SubmitDate)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var mapped = _mapper.Map<IEnumerable<ClaimDetailResponse>>(items);
+
+            return new PagingResponse<ClaimDetailResponse>
+            {
+                Items = mapped,
+                Meta = new PaginationMeta
+                {
+                    CurrentPage = pageIndex,
+                    PageSize = pageSize,
+                    TotalItems = totalItems,
+                    TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+                }
+            };
         }
 
         public async Task<ClaimDashboardResponse> GetClaimDashboardAsync()

@@ -25,6 +25,10 @@ namespace OmniChat.Infrastructure.Models
         public Guid ClaimTypeId { get; set; }
 
         public virtual ClaimType ClaimType { get; set; }
+
+        public Guid? SupportConversationId { get; set; }
+
+        public virtual SupportConversation SupportConversation { get; set; }
     }
 
     public enum ClaimStatus

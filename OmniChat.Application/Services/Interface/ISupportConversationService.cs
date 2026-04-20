@@ -17,6 +17,8 @@ namespace OmniChat.Application.Services.Interface
 
         public Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(SupportConversation conversation);
 
+        public  Task<PagingResponse<StaffConversationResponse>> GetStaffConversationAsync( Guid staffId,int pageNumber = 1,int pageSize = 20);
+
         public  Task UpdateConversationAsync(SupportConversation conversion);
 
         public  Task<List<SupportConversation>> GetConversationsForReminderAsync();
