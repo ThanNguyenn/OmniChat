@@ -94,10 +94,10 @@ public class KeywordController : ControllerBase
     public async Task<IActionResult> GetAllKeywords([FromQuery] Guid? intentTypeId, string? search,
         int pageNumber = 1,
         int pageSize = 20,
-        string sortBy = "id",
-        bool descending = false)
+        string sortBy = "createdate",
+        bool descending = true)
     {
-        var result = await _keywordService.GetAllKeywordsAsync(intentTypeId, search, pageNumber, pageSize);
+        var result = await _keywordService.GetAllKeywordsAsync(intentTypeId, search, pageNumber, pageSize, sortBy, descending);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Keywords retrieved successfully", result);
         return Ok(response);
     }

@@ -13,7 +13,7 @@ namespace OmniChat.Application.Services.Interface;
 public interface IKeywordService
 {
     Task<GetKeywordResponse> GetKeywordAsync(Guid keywordId);
-    Task<PagingResponse<GetAllKeywordsResponse>> GetAllKeywordsAsync(Guid? intentTypeId, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
+    Task<PagingResponse<GetAllKeywordsResponse>> GetAllKeywordsAsync(Guid? intentTypeId, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "createdate", bool descending = true);
     Task<bool> CreateKeywordAsync(CreateKeywordRequest createKeywordRequest);
 
     Task<bool> UpdateKeywordAsync(Guid keywordId, UpdateKeywordRequest updateKeywordRequest);
