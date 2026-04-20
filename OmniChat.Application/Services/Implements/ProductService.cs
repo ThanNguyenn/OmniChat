@@ -113,11 +113,19 @@ public class ProductService : BaseService<ProductService>, IProductService
         return result;
     }
 
-    public async Task<PagingResponse<GetAllProductsResponse>> GetProductsAsync(string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
+    public async Task<PagingResponse<GetAllProductsResponse>> GetProductsAsync(PackagingType? PackagingType, ProductKind? ProductKind, double? VolumeMl, Guid? BrandId, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
     {
         var productRepo = _unitOfWork.GetRepository<Product>();
         var response = await productRepo.GetPagingListAsync<GetAllProductsResponse>(
-                predicate: p => p.IsActive != false && (string.IsNullOrEmpty(search) || p.Name.Contains(search) || p.Code.Contains(search)),
+                predicate:p =>
+                    p.IsActive != false
+                    && (PackagingType == null || p.ProductPackagingType == PackagingType)
+                    && (ProductKind == null || p.ProductKind == ProductKind)
+                    && (VolumeMl == null || p.VolumeMl == VolumeMl)
+                    && (BrandId == null || p.BrandId == BrandId)
+                    && (string.IsNullOrEmpty(search)
+                        || p.Name.Contains(search)
+                        || p.Code.Contains(search)),
                 orderBy: q => OrderBy(q, sortBy, descending),
                 selector: e => _mapper.Map<GetAllProductsResponse>(e),
                 include: q => q.Include(p => p.Brand),

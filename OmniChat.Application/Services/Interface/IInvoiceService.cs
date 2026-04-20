@@ -19,7 +19,7 @@ public interface IInvoiceService
     Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalIncomeAsync(string input);
     Task<IEnumerable<DashBoardInvoiceByYearResponse>> GetTotalUnpaidAsync(string input);
 
-    Task<PagingResponse<GetInvoicesResponse>> GetInvoicesAsync(Guid? customerId, InvoiceStatus? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
+    Task<PagingResponse<GetInvoicesResponse>> GetInvoicesAsync(Guid? customerId, string? customerName, InvoiceStatus? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 
     Task<GetInvoiceResponse> GetInvoiceAsync(Guid invoiceId);
 }

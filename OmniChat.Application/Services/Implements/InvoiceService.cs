@@ -305,16 +305,20 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             .SumAsync(i => (double?)(i.Total - i.PaidAmount - i.DeductedAmount)) ?? 0;
     }
 
-    public async Task<PagingResponse<GetInvoicesResponse>> GetInvoicesAsync(Guid? customerId, InvoiceStatus? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
+    public async Task<PagingResponse<GetInvoicesResponse>> GetInvoicesAsync(Guid? customerId, string? customerName, InvoiceStatus? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
         var response = await invoiceRepo.GetPagingListAsync<GetInvoicesResponse>(
                     predicate: p =>
-                        (customerId == null || p.CustomerId == customerId) &&
-                        (status == null || p.InvoiceStatus == status),
+    (customerId == null || p.CustomerId == customerId)
+    && (status == null || p.InvoiceStatus == status)
+    && (string.IsNullOrEmpty(customerName)
+        || (p.CustomerProfile != null &&
+            p.CustomerProfile.CustomerName.ToLower().Contains(customerName.ToLower()))),
                     orderBy: q => OrderBy(q, sortBy, descending),
                     selector: e => _mapper.Map<GetInvoicesResponse>(e),
                     page: pageNumber,
+
                     size: pageSize, include: i => i.Include(x => x.CustomerProfile)
                 );
         return response;

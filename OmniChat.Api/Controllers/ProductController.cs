@@ -5,6 +5,7 @@ using OmniChat.Infrastructure.Dtos.Requests.Product;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
 using OmniChat.Infrastructure.Dtos.Responses.ProductBatch;
 using OmniChat.Infrastructure.Metadatas;
+using OmniChat.Infrastructure.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace OmniChat.Api.Controllers;
@@ -97,9 +98,13 @@ public class ProductController : BaseController<ProductController>
         Summary = "Lấy danh sách product",
         Description = "Lấy danh sách product có phân trang, tìm kiếm theo từ khóa, và sắp xếp theo field chỉ định."
     )]  
-    public async Task<IActionResult> GetAllProducts([FromQuery] string? search, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    public async Task<IActionResult> GetAllProducts([FromQuery] PackagingType? packagingType, ProductKind? productKind, double? volumeMl, Guid? brandId, string? search, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _productService.GetProductsAsync(
+            packagingType,
+            productKind,
+            volumeMl,
+            brandId,
             search,
             pageNumber ?? 1, 
             pageSize ?? 10,

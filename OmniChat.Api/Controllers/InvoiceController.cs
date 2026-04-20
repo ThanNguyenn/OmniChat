@@ -91,10 +91,11 @@ public class InvoiceController : BaseController<InvoiceController>
         Summary = "Lấy danh sách Invoice",
         Description = "Lấy danh sách Invoice có phân trang, và sắp xếp theo field chỉ định."
     )]
-    public async Task<IActionResult> GetAllProducts([FromQuery] Guid? invoiceId, InvoiceStatus? status, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    public async Task<IActionResult> GetAllProducts([FromQuery] Guid? customerId, string? customerName, InvoiceStatus? status, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _invoiceService.GetInvoicesAsync(
-            invoiceId,
+            customerId,
+            customerName,
             status,
             pageNumber ?? 1,
             pageSize ?? 10,
