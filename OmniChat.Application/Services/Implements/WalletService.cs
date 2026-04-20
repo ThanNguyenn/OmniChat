@@ -109,7 +109,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
             wallet.Amount += amount;
             walletRepo.Update(wallet);  
         });
-        _ = _invoiceService.AllocateMoneyToInvoices(customerId);
+        await _invoiceService.AllocateMoneyToInvoices(customerId);
         return true;
     }
 
