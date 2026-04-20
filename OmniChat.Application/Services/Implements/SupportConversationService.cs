@@ -58,6 +58,24 @@ namespace OmniChat.Application.Services.Implements
             return exitSupportConversation;
         }
 
+        public async Task<PagingResponse<StaffConversationResponse>> GetStaffConversationAsync(
+             Guid staffId,
+             int pageNumber = 1,
+             int pageSize = 20)
+        {
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var response = await repo.GetPagingListAsync<StaffConversationResponse>(
+                predicate: sc => sc.ActiveStaffId == staffId && sc.Status == ConversationStatus.Pending,
+                selector: sc => _mapper.Map<StaffConversationResponse>(sc),
+                orderBy: q => q.OrderByDescending(sc => sc.CreatedDate),
+                page: pageNumber,
+                size: pageSize
+            );
+
+            return response;
+        }
+
         public async Task<SupportConversation> UpdateSupportConversationUpdateDateAsync(SupportConversation conversation)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();

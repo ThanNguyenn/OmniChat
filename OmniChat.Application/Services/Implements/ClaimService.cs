@@ -33,17 +33,24 @@ namespace OmniChat.Application.Services.Implements
         {
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
              {
-                 // call repo 
                  var _repo = _unitOfWork.GetRepository<Claim>();
+                 var _claimTypeRepo = _unitOfWork.GetRepository<ClaimType>();
 
-                 // map entity
+               
+                 var claimType = await _claimTypeRepo.GetByIdAsync(claimRequest.ClaimTypeId);
+                 if (claimType == null)
+                     throw new Exception("Loại khiếu nại (Claim Type) không tồn tại.");
 
+                 if (string.Equals(claimType.TypeName, "CHANGETASK", StringComparison.OrdinalIgnoreCase))
+                 {
+                     if (!claimRequest.SupportConversationId.HasValue || claimRequest.SupportConversationId == Guid.Empty)
+                     {
+                        
+                         throw new Exception("Yêu cầu thay đổi công việc (CHANGETASK) bắt buộc phải đính kèm cuộc hội thoại hỗ trợ.");
+                     }
+                 }
                  var entity = _mapper.Map<Claim>(claimRequest);
-
-                 // Insert Database
-
-                 await _repo.InsertAsync(entity);
-
+                 await _repo.InsertAsync(entity);         
                  return true;
              });
         }

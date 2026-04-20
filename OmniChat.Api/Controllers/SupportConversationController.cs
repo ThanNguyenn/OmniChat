@@ -123,5 +123,28 @@ namespace OmniChat.Api.Controllers
                 Data = result
             });
         }
+
+
+        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.GetStaffConversationsForSelect)]
+        [ProducesResponseType(typeof(ApiResponse<PagingResponse<StaffConversationResponse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+        Summary = "Lấy danh sách cuộc trò chuyện của nhân viên để chọn",
+        Description = "Lấy danh sách cuộc trò chuyện của nhân viên theo staffId"
+          )]
+        public async Task<IActionResult> GetConversationsForClaimSelect(
+        Guid staffId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50)
+        {
+            
+            var result = await _supportConversationService.GetStaffConversationAsync(staffId, pageNumber, pageSize);
+            return Ok(new ApiResponse<PagingResponse<StaffConversationResponse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Get Staff Conversations For Select Successfully",
+                IsSuccess = true,
+                Data = result
+            });
+        }
     }
 }
