@@ -89,14 +89,12 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
 
             var postSaleRequest = new PostSaleRequest
             {
-                Id = Guid.NewGuid(),
                 CustomerId = request.CustomerId,
                 OrderId = request.OrderId,
                 PresentByStaffId = staff.Id,
                 Type = request.Type,
                 Reason = request.Reason,
                 Status = PostSaleRequestStatus.Pending,
-                CreateTime = DateTime.UtcNow,
                 RequestedTime = DateTime.UtcNow
             };
 
@@ -125,7 +123,6 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
 
                 postSaleItems.Add(new PostSaleItem
                 {
-                    Id = Guid.NewGuid(),
                     PostSaleRequestId = postSaleRequest.Id,
                     OrderItemId = item.OrderItemId,
                     Quantity = item.Quantity
