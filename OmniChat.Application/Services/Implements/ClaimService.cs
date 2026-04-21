@@ -68,6 +68,7 @@ namespace OmniChat.Application.Services.Implements
                 .AsNoTracking()
                 .Include(c => c.Staff)
                 .Include(c => c.ClaimType)
+                .Include(c => c.SupportConversation)
                 .Where(c => c.Status == ClaimStatus.Pending && c.ClaimTypeId == changeTaskTypeId);
 
             var totalItems = await query.CountAsync();

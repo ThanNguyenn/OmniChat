@@ -35,7 +35,8 @@ namespace OmniChat.Infrastructure.Mappings
             .ForMember(dest => dest.StaffName,
                opt => opt.MapFrom(src => src.Staff.Name)) 
             .ForMember(dest => dest.ClaimTypeName,
-               opt => opt.MapFrom(src => src.ClaimType.TypeName));
+               opt => opt.MapFrom(src => src.ClaimType.TypeName))
+            .ForMember(dest => dest.ConversationId, opt => opt.MapFrom(src => src.SupportConversationId));
 
             CreateMap<Claim, StaffClaimResponse>()
               .ForMember(dest => dest.ClaimType, opt => opt.MapFrom(src => src.ClaimType.TypeName));
