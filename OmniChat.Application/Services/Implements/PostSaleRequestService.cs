@@ -77,20 +77,75 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
+        var orderItemRepo = _unitOfWork.GetRepository<OrderItem>();
+
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var postSaleRequest = _mapper.Map<PostSaleRequest>(request);
-            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
-            postSaleRequest.PresentByStaffId = staff.Id;
+            var staff = await staffRepo.SingleOrDefaultAsync( predicate:
+                s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
 
-            postSaleRequest.Status = PostSaleRequestStatus.Pending;
+            if (staff == null)
+                throw new Exception("Staff not found");
+
+            var postSaleRequest = new PostSaleRequest
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = request.CustomerId,
+                OrderId = request.OrderId,
+                PresentByStaffId = staff.Id,
+                Type = request.Type,
+                Reason = request.Reason,
+                Status = PostSaleRequestStatus.Pending,
+                CreateTime = DateTime.UtcNow,
+                RequestedTime = DateTime.UtcNow
+            };
+
+            if (request.PostSaleItems == null || !request.PostSaleItems.Any())
+                throw new Exception("PostSaleItems required");
+
+            var orderItemIds = request.PostSaleItems.Select(x => x.OrderItemId).ToList();
+
+            var orderItems = await orderItemRepo.GetListAsync( predicate:
+                oi => orderItemIds.Contains(oi.Id));
+
+            var orderItemDict = orderItems.ToDictionary(x => x.Id);
+
+            double totalAmount = 0;
+            var postSaleItems = new List<PostSaleItem>();
+
+            foreach (var item in request.PostSaleItems)
+            {
+                if (!orderItemDict.TryGetValue(item.OrderItemId, out var orderItem))
+                    throw new Exception($"OrderItem {item.OrderItemId} not found");
+
+                if (item.Quantity <= 0 || item.Quantity > orderItem.Quantity)
+                    throw new Exception("Invalid quantity");
+
+                totalAmount += item.Quantity * orderItem.Price;
+
+                postSaleItems.Add(new PostSaleItem
+                {
+                    Id = Guid.NewGuid(),
+                    PostSaleRequestId = postSaleRequest.Id,
+                    OrderItemId = item.OrderItemId,
+                    Quantity = item.Quantity
+                });
+            }
+
+            // Only calculate refund for valid types
+            if (request.Type == PostSaleRequestType.Return ||
+                request.Type == PostSaleRequestType.Refund)
+            {
+                postSaleRequest.RefundAmount = totalAmount;
+            }
+
+            postSaleRequest.PostSaleItems = postSaleItems;
 
             await postSaleRequestRepo.InsertAsync(postSaleRequest);
 
             return true;
         });
     }
-
     public async Task<bool> DeletePostSaleRequestAsync(Guid id)
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
