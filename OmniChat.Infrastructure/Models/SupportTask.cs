@@ -43,5 +43,6 @@ namespace OmniChat.Infrastructure.Models
         Done = 3,
         Cancelled = 4,
         closed = 5,
+        Reassign = 6,
     }
 }

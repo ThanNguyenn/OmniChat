@@ -190,7 +190,8 @@ public class ApiEndPointConstant
         public const string Approve = Base + "/{id}/approve";
         public const string Reject = Base + "/{id}/reject";
         public const string GetByStaffId = Base + "/staff/{staffId}";
-        public const string ReAssign = Base + "/{conversationId}/reassign/{newStaffId}";
+        public const string ApproveReAssign = Base + "/{claimId}/reassign/{conversationId}/{newStaffId}/approve";
+        public const string RejectReAssign = Base + "/{id}/reject/{managerId}";
         public const string GetPendingChangeTask = Base + "/pending-change-tasks";
     }
 

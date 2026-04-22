@@ -5,6 +5,7 @@ using OmniChat.Infrastructure.Dtos.Requests.Claim;
 using OmniChat.Infrastructure.Dtos.Responses.Claim;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Security.Claims;
 
 namespace OmniChat.Api.Controllers
 {
@@ -158,7 +159,7 @@ namespace OmniChat.Api.Controllers
         Summary = "Lấy Claim theo StaffId",
         Description = "Lấy tất cả Claim của một nhân viên dựa trên StaffId"
         )]
-        public async Task<IActionResult> GetByStaffIdAsync([FromRoute] Guid staffId, [FromQuery] int pageIndex = 1,[FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetByStaffIdAsync([FromRoute] Guid staffId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
             var claims = await _claimService.GetClaimsByStaffIdAsync(staffId, pageIndex, pageSize);
             return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
@@ -170,24 +171,51 @@ namespace OmniChat.Api.Controllers
             });
         }
 
-        [HttpPut(ApiEndPointConstant.ClaimEndPoint.ReAssign)]
+        [HttpPut(ApiEndPointConstant.ClaimEndPoint.ApproveReAssign)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
             summary: "Gán Conversation cho new Staff ",
             description: "Gán lại một Conversation cho nhân viên khác dựa trên ConversationId và NewStaffId"
             )]
-        public async Task<IActionResult> ReAssignStaffAsync([FromRoute] Guid conversationId, [FromRoute] Guid newStaffId)
+        public async Task<IActionResult> ReAssignStaffAsync(
+        [FromRoute] Guid claimId,
+        [FromRoute] Guid conversationId,
+        [FromRoute] Guid newStaffId)
         {
-            await _claimService.ReAssignStaffAsync(newStaffId, conversationId);
+            await _claimService.ReAssignStaffAsync(claimId, newStaffId, conversationId);
+
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Reassign Staff Successfully",
+                Message = "Phê duyệt và chuyển giao nhân viên thành công",
                 IsSuccess = true,
                 Data = true
             });
         }
+
+        [HttpPut(ApiEndPointConstant.ClaimEndPoint.RejectReAssign)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+        Summary = "Từ chối yêu cầu chuyển giao công việc",
+        Description = "Manager từ chối yêu cầu, đưa hội thoại về trạng thái làm việc cho nhân viên cũ"
+        )]
+        public async Task<IActionResult> RejectReassignClaimAsync(
+        [FromRoute] Guid id,
+        [FromRoute] Guid managerId) 
+        {
+
+            await _claimService.RejectReassignClaimAsync(id, managerId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Đã từ chối yêu cầu chuyển giao",
+                IsSuccess = true,
+                Data = true
+            });
+        }
+
 
         [HttpGet(ApiEndPointConstant.ClaimEndPoint.GetPendingChangeTask)]
         [ProducesResponseType(typeof(ApiResponse<PagingResponse<ClaimDetailResponse>>), StatusCodes.Status200OK)]
