@@ -16,7 +16,5 @@ namespace OmniChat.Infrastructure.Dtos.Responses.SupportConversation
         public string Content { get; set; }
 
         public long Timestamp { get; set; }
-
-       public ExtractKeywordResponse? extractKeywordResponses { get; set; }
     }
 }

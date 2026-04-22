@@ -28,15 +28,13 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly ICustomerProfileService _customerProfileService;
 
-        private readonly IMessageKeywordFilterService _messageKeywordFilterService;
-
         private readonly INotificationService _notificationService;
 
         private readonly IHubContext<SupportConversationHub> _hubContext;
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SupportConversationHub> hubContext, IMessageKeywordFilterService messageKeywordFilterService, ISupportTaskService supportTaskService,INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SupportConversationHub> hubContext, ISupportTaskService supportTaskService,INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
-            _messageKeywordFilterService = messageKeywordFilterService;
             _supportTaskService = supportTaskService;
             _hubContext = hubContext;
             _supportTaskService = supportTaskService;
@@ -245,17 +243,6 @@ namespace OmniChat.Application.Services.Implements
                 .OrderBy(m => m.Timestamp)
                 .ToList();
 
-
-            var customerMessages = messages.Where(m => m.SenderType == "Customer");
-
-            foreach (var message in customerMessages)
-            {
-                var result = await _messageKeywordFilterService.ExtractKeywords(message.Content);
-
-                if (result.Highlights.Any() || result.Recommends.Any())
-                    message.extractKeywordResponses = result;
-            }
-
             return new SupportConversationDetailResponse
             {
                 Id = conversation.Id,
@@ -404,30 +391,8 @@ namespace OmniChat.Application.Services.Implements
             )
             .OrderBy(m => m.Timestamp)
             .ToList();
-
-         
-            var recentCustomerMessages = messages
-                .Where(m => m.SenderType == "Customer")
-                .OrderByDescending(m => m.Timestamp)
-                .Take(5)
-                .ToList();
-
-            foreach (var message in recentCustomerMessages)
-            {
-                if (!string.IsNullOrEmpty(message.Content))
-                {
-                    var result = await _messageKeywordFilterService.ExtractKeywords(message.Content);
-                    if (result.Highlights.Any() || result.Recommends.Any())
-                    {
-                        message.extractKeywordResponses = result;
-                    }
-                }
-            }
-
-         
+        
             var lastMsg = messages.LastOrDefault();
-
-         
 
             var sidebarUpdate = new StaffConversationSideBarUpdateResponse
             {

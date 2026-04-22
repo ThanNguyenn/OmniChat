@@ -41,8 +41,6 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly ISupportConversationService _supportConversationService;
 
-        private readonly IMessageKeywordFilterService _messageKeywordFilterService;
-
         private readonly IChatAggregationService _chatAggregationService;
 
         private readonly INotificationService _notificationService;
@@ -61,7 +59,6 @@ namespace OmniChat.Application.Services.Resolver
             IFacebookUserService facebookUserService,
             ISupportConversationService supportConversationService,
             IConfiguration configuration,
-            IMessageKeywordFilterService messageKeywordFilterService,
             IChatAggregationService chatAggregationService,
             INotificationService notificationService,
              IHubContext<SupportConversationHub> hubContext
@@ -77,7 +74,6 @@ namespace OmniChat.Application.Services.Resolver
             _chatAggregationService = chatAggregationService;
             _notificationService = notificationService;
             _hubContext = hubContext;
-            _messageKeywordFilterService = messageKeywordFilterService;
         }
         public async Task ZaloWebhookLogic(ZaloWebhookEvent zaloEvent)
         {
@@ -264,18 +260,12 @@ namespace OmniChat.Application.Services.Resolver
                         .User(conversation.ActiveStaffId.ToString())
                         .SendAsync("SidebarUpdated", sidebarUpdate);
 
-                    var extractResult = await _messageKeywordFilterService.ExtractKeywords(newMessage.Content);
-
                     var supportConversationMessages = new SupportConversationMessagesResponse
                     {
                         SenderType = "Customer",
                         SenderId = customerProfile.Id,
                         Content = newMessage.Content,
-                        Timestamp = newMessage.Timestamp,
-                        extractKeywordResponses =
-                            (extractResult.Highlights.Count > 0 || extractResult.Recommends.Count > 0)
-                                ? extractResult
-                                : null
+                        Timestamp = newMessage.Timestamp
                     };
 
                     await _hubContext.Clients
