@@ -42,8 +42,6 @@ namespace OmniChat.Infrastructure.Models
     
         public virtual ICollection<SupportStaffMessage> SupportStaffMessages { get; set; } = new List<SupportStaffMessage>();
 
-        public virtual ICollection<InternalStaffMessage> InternalStaffMessages { get; set; } = new List<InternalStaffMessage>();
-
         public virtual ICollection<SupportTask> SupportTasks { get; set; } = new List<SupportTask>();
 
         public virtual ICollection<TaskAction> ActionsPerformed { get; set; } = new List<TaskAction>();

@@ -27,7 +27,6 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<MessageIntentType> MessageIntentTypes { get; set; }
 
-        public DbSet<InternalConversationFile> InternalConversationFiles { get; set; }
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
@@ -38,8 +37,6 @@ namespace OmniChat.Infrastructure.Persistence
         public DbSet<SupportTask> SupportTasks { get; set; }
 
         public DbSet<TaskCancelReason> TaskCancelReasons { get; set; }
-
-        public DbSet<InternalStaffMessage> InternalStaffMessages { get; set; }
 
         public DbSet<ClaimType> ClaimTypes { get; set; }
 
@@ -69,8 +66,6 @@ namespace OmniChat.Infrastructure.Persistence
 
         public DbSet<SupportConversationFile> SupportConversationFiles { get; set; }
 
-        public DbSet<InternalConversation> InternalConversations { get; set; }
-
         public DbSet<TaskAction> TaskActions { get; set; }
 
         public DbSet<Order> Orders { get; set; }
@@ -82,6 +77,8 @@ namespace OmniChat.Infrastructure.Persistence
         public DbSet<Brand> Brands { get; set; }
 
         public DbSet<ProductBatch> ProductBatches { get; set; }
+
+        public DbSet<BatchAudit> BatchAudits { get; set; }
 
         public DbSet<Invoice> Invoices { get; set; }
 
@@ -119,16 +116,6 @@ namespace OmniChat.Infrastructure.Persistence
             // convert enum to string
             modelBuilder.Entity<SupportStaffMessage>()
                 .Property(sm => sm.Status)
-                .HasConversion<string>();
-
-            // convert enum to string
-            modelBuilder.Entity<InternalConversation>()
-                .Property(ic => ic.Status)
-                .HasConversion<string>();
-
-            // convert enum to string
-            modelBuilder.Entity<InternalStaffMessage>()
-                .Property(ism => ism.Status)
                 .HasConversion<string>();
 
             // convert enum to string
@@ -222,10 +209,6 @@ namespace OmniChat.Infrastructure.Persistence
             .Property(x => x.IsActive)
             .HasDefaultValueSql("true");
 
-            modelBuilder.Entity<InternalConversation>()
-                .Property(x => x.IsActive)
-                .HasDefaultValueSql("true");
-
             modelBuilder.Entity<ProductBatch>()
                 .Property(x => x.IsActive)
                 .HasDefaultValueSql("true");
@@ -286,6 +269,11 @@ namespace OmniChat.Infrastructure.Persistence
             // deafult value ReminderSent = false
             modelBuilder.Entity<SupportConversation>()
              .Property(x => x.ReminderSent)
+             .HasDefaultValueSql("false");
+
+            // default value IsExpired = false
+            modelBuilder.Entity<ProductBatch>()
+             .Property(x => x.IsExpired)
              .HasDefaultValueSql("false");
 
             //default createDate utc now 
@@ -885,16 +873,6 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<SupportConversationFile>()
                 .HasIndex(scf => new { scf.SupportConversationId, scf.ConversationFileId }).IsUnique();// scan by supportconversation and conversationfile faster
 
-            // ==== ConversationFile - InternalConversationFile ( one to Many ) ====
-
-            modelBuilder.Entity<InternalConversationFile>()
-                .HasKey(icf => icf.Id);
-
-            modelBuilder.Entity<InternalConversationFile>()
-                 .Property(icf => icf.Id)
-                .ValueGeneratedOnAdd()
-                .HasDefaultValueSql("gen_random_uuid()");
-
             // ==== staff - StaffIntentType (many - one)
             modelBuilder.Entity<StaffIntentType>()
                 .HasKey(sit => sit.Id);
@@ -1015,55 +993,6 @@ namespace OmniChat.Infrastructure.Persistence
             .ValueGeneratedOnAdd()
             .HasDefaultValueSql("gen_random_uuid()");
 
-            // ==== InternalConversation - InternalConversationFile ( one to Many ) ====
-
-            modelBuilder.Entity<InternalConversation>()
-                .HasKey(ic => ic.Id);
-
-            // auto gen Guid Id InternalConversation
-
-            modelBuilder.Entity<InternalConversation>()
-                .Property(ic => ic.Id)
-                .ValueGeneratedOnAdd()
-                .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<InternalConversation>()
-                .HasMany(ic => ic.InternalConversationFiles)
-                .WithOne(icf => icf.InternalConversation)
-                .HasForeignKey(icf => icf.InternalConversationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<InternalConversationFile>()
-                .HasIndex(icf => icf.InternalConversationId); // scan by InternalConversationId faster
-
-            // ==== Staff - InternalStaffMessages ( one to Many ) ====
-            modelBuilder.Entity<Staff>()
-                .HasMany(s => s.InternalStaffMessages)
-                .WithOne(ism => ism.Staff)
-                .HasForeignKey(ism => ism.StaffId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<InternalStaffMessage>()
-                .HasIndex(ism => ism.StaffId); // scan by StaffId faster 
-
-            // ==== InternalConversation - InternalStaffMessage ( one to Many ) ====
-            modelBuilder.Entity<InternalStaffMessage>()
-                .HasKey(ism => ism.Id);
-
-            modelBuilder.Entity<InternalStaffMessage>()
-                .Property(ism => ism.Id)
-                .ValueGeneratedOnAdd()
-                .HasDefaultValueSql("gen_random_uuid()");
-
-            modelBuilder.Entity<InternalConversation>()
-                .HasMany(ic => ic.InternalMessages)
-                .WithOne(ism => ism.InternalConversation)
-                .HasForeignKey(ism => ism.InternalConversationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<InternalStaffMessage>()
-                .HasIndex(ism => ism.InternalConversationId); // scan by InternalConversationId faster
-
             modelBuilder.Entity<ChatTemplate>()
                 .HasIndex(ct => ct.Code).IsUnique(); // 1 code only for 1 chat template
 
@@ -1075,16 +1004,6 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<ChatTemplate>()
                 .Property(ct => ct.Content)
                 .IsRequired(); // Content is required
-
-            // ==== staff - InternalStaffMessage ( one to Many ) ====
-            modelBuilder.Entity<Staff>()
-                .HasMany(s => s.InternalStaffMessages)
-                .WithOne(ism => ism.Staff)
-                .HasForeignKey(ism => ism.StaffId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<InternalStaffMessage>()
-                .HasIndex(ism => ism.StaffId); // scan by StaffId faster
 
             // == TaskAction - SupportTask ( many to one ) ==
 
@@ -1247,6 +1166,9 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasForeignKey(oi => oi.ProductBatchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<ProductBatch>()
+                .ToTable(t => t.HasCheckConstraint("CK_ProductBatch_Quantity_Min", "\"Quantity\" >= 0"));
+
             modelBuilder.Entity<OrderItem>()
                 .HasIndex(oi => oi.ProductBatchId); // index scan orderitem by productbatch faster
 
@@ -1275,25 +1197,45 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasForeignKey(pb => pb.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Product>()
+                .ToTable(t => t.HasCheckConstraint("CK_Product_Quantity_Min", "\"Quantity\" >= 0"));
+
+            modelBuilder.Entity<Product>()
+                .ToTable(t => t.HasCheckConstraint("CK_Product_Price_Min", "\"Price\" >= 0"));
+
             modelBuilder.Entity<ProductBatch>()
                 .HasIndex(pb => pb.ProductId); // index scan productbatch by product faster
 
-            // define Product code auto generation example : SP000001
-            modelBuilder.HasSequence<int>("ProductCodeSeq")
-              .StartsAt(1)
-              .IncrementsBy(1);
+            // define ProductBatch code auto generation example : LOT000000
 
-            modelBuilder.Entity<Product>()
+            modelBuilder.Entity<ProductBatch>()
+                .HasIndex(e => e.Code).IsUnique();
+
+
+            modelBuilder.HasSequence<int>("BatchCodeSeq")
+                 .StartsAt(1)
+                 .IncrementsBy(1);
+
+            modelBuilder.Entity<ProductBatch>()
                 .Property(p => p.Code)
-                .HasDefaultValueSql(
-                    "'SP' || LPAD(nextval('\"ProductCodeSeq\"')::text, 6, '0')")
+                .HasDefaultValueSql("'LOT' || LPAD(nextval('\"BatchCodeSeq\"')::text, 6, '0')")
                 .ValueGeneratedOnAdd();
 
-            // define ProductBatch code auto generation example : LOT + ExpiryDate
-            modelBuilder.Entity<ProductBatch>()
-               .Property(e => e.Code)
-               .ValueGeneratedOnAdd();
+            // ==== Productbatch - BathAudit ( one to Many ) ====
+            modelBuilder.Entity<BatchAudit>()
+                .HasKey(ba => ba.Id);
 
+            //Auto gen Guid Id BatchAudit
+            modelBuilder.Entity<BatchAudit>()
+                .Property(ba => ba.Id)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            modelBuilder.Entity<ProductBatch>()
+                .HasMany(pb => pb.BatchAudits)
+                .WithOne(ba => ba.ProductBatch)
+                .HasForeignKey(ba => ba.ProductBatchId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // ==== Brand - Product ( one to Many ) ====
             modelBuilder.Entity<Brand>()

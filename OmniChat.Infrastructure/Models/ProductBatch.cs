@@ -18,12 +18,18 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? ExpiryDate { get; set; } = DateTime.UtcNow;
 
-        public int Quantity { get; set; }
+        public int Quantity { get; set; } 
 
         public bool? IsActive { get; set; }
 
         public string Code { get; set; } 
 
+        public bool? IsExpired { get; set; }
+
+        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        public virtual ICollection<BatchAudit> BatchAudits { get; set; } = new List<BatchAudit>();
     }
 }

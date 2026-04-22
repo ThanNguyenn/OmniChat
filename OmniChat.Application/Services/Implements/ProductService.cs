@@ -8,6 +8,7 @@ using OmniChat.Infrastructure.Dtos.Requests.ProductBatch;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
 using OmniChat.Infrastructure.Dtos.Responses.ProductBatch;
 using OmniChat.Infrastructure.Exceptions;
+using OmniChat.Infrastructure.Helper;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
@@ -45,6 +46,12 @@ public class ProductService : BaseService<ProductService>, IProductService
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             newProduct = _mapper.Map<Product>(createProductRequest);
+          
+            newProduct.Code = ProductHelper.GenerateSku(
+            newProduct.Name,
+            newProduct.ProductKind,
+            newProduct.VolumeMl
+            );
 
             newProduct.ImageUrl = "https://pub-28eb3560d5b74d478da589a1c3dd7e34.r2.dev/products/default_product.webp";
 
