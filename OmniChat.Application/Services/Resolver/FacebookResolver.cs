@@ -40,21 +40,33 @@ namespace OmniChat.Application.Services.Resolver
 
         private readonly ISupportConversationService _supportConversationService;
 
-        private readonly IMessageKeywordFilterService _messageKeywordFilterService;
-
         private readonly IChatAggregationService _chatAggregationService;
 
         private readonly INotificationService _notificationService;
 
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<FacebookResolver> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IProviderService providerService, ICustomerProfileService customerProfileService, ICustomerMessageService customerMessageService, IZaloUserService zaloUserService, IFacebookUserService facebookUserService, IConfiguration configuration, IInstagramUserService instagramUserService, IHubContext<SupportConversationHub> hubContext, ISupportConversationService supportConversationService, IMessageKeywordFilterService messageKeywordFilterService, IChatAggregationService chatAggregationService, ICustomerMergeService customerMergeService, INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public FacebookResolver(IUnitOfWork<OmniChatDbContext> unitOfWork
+            , ILogger<FacebookResolver> logger,
+            IMapper mapper, 
+            IHttpContextAccessor httpContextAccessor,
+            IProviderService providerService, 
+            ICustomerProfileService customerProfileService,
+            ICustomerMessageService customerMessageService, 
+            IZaloUserService zaloUserService,
+            IFacebookUserService facebookUserService,
+            IConfiguration configuration, 
+            IInstagramUserService instagramUserService, 
+            IHubContext<SupportConversationHub> hubContext, 
+            ISupportConversationService supportConversationService,
+            IChatAggregationService chatAggregationService,
+            ICustomerMergeService customerMergeService,
+            INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _providerService = providerService;
             _customerProfileService = customerProfileService;
             _customerMessageService = customerMessageService;
             _supportConversationService = supportConversationService;
-            _messageKeywordFilterService = messageKeywordFilterService;
             _facebookUserService = facebookUserService;
             _hubContext = hubContext;
             _supportConversationService = supportConversationService;
@@ -242,18 +254,12 @@ namespace OmniChat.Application.Services.Resolver
                                 .User(conversation.ActiveStaffId.ToString())
                                 .SendAsync("SidebarUpdated", sidebarUpdate);
 
-                            var extractResult = await _messageKeywordFilterService.ExtractKeywords(newMessage.Content);
-
                             var supportConversationMessages = new SupportConversationMessagesResponse
                             {
                                 SenderType = "Customer",
                                 SenderId = customerProfile.Id,
                                 Content = newMessage.Content,
-                                Timestamp = newMessage.Timestamp,
-                                extractKeywordResponses =
-                                    (extractResult.Highlights.Count > 0 || extractResult.Recommends.Count > 0)
-                                        ? extractResult
-                                        : null
+                                Timestamp = newMessage.Timestamp
                             };
 
                             await _hubContext.Clients

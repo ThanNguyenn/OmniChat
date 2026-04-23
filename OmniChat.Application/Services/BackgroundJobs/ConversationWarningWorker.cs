@@ -74,7 +74,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
             var activeConversations = await unitOfWork.GetRepository<SupportConversation>()
                 .GetListAsync(
                     predicate: c =>
-                        (c.Status == ConversationStatus.Pending || c.Status == ConversationStatus.Waiting)
+                        (c.Status == ConversationStatus.Pending ||
+                        c.Status == ConversationStatus.Warning)
                         && c.ActiveStaffId != null,
                     include: q => q.Include(c => c.ConversationWarnings)
                 );

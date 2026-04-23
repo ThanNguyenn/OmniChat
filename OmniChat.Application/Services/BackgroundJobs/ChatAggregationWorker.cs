@@ -77,7 +77,6 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             using var scope = _scopeFactory.CreateScope();
                             var conversationService = scope.ServiceProvider.GetRequiredService<ISupportConversationService>();
                             var taskService = scope.ServiceProvider.GetRequiredService<ITaskAssignmentService>();
-                            var mergeService = scope.ServiceProvider.GetRequiredService<ICustomerMergeService>();
 
                           
                             var conversation = await conversationService.GetSupportConversationHavePendingByCustomerIdAsync(customerId, providerId);
@@ -95,9 +94,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                             if (updatedConv?.ActiveStaffId != null)
                             {
-                                _logger.LogInformation("[AGGREGATION] Staff assigned: {Staff}. Sending Link...", updatedConv.ActiveStaffId);
-                              
-                                await mergeService.SendFormLinkIfNeededAsync(updatedConv);
+                                _logger.LogInformation("[AGGREGATION] Staff assigned: {Staff}", updatedConv.ActiveStaffId);
+ 
                             }
                             else
                             {

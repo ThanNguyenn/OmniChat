@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.Claim;
 using OmniChat.Infrastructure.Dtos.Requests.TaskAction;
 using OmniChat.Infrastructure.Dtos.Responses.Claim;
+using OmniChat.Infrastructure.Dtos.Responses.Notification;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
@@ -23,16 +26,26 @@ namespace OmniChat.Application.Services.Implements
     public class ClaimService : BaseService<ClaimService>, IClaimService
     {
         private readonly ITaskActionService _taskActionService;
+        private readonly IHubContext<SupportConversationHub> _hubContext;
 
-        public ClaimService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<ClaimService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ITaskActionService taskActionService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public ClaimService(IUnitOfWork<OmniChatDbContext> unitOfWork,
+            ILogger<ClaimService> logger, 
+            IMapper mapper, 
+            IHttpContextAccessor httpContextAccessor,
+            ITaskActionService taskActionService,
+            IHubContext<SupportConversationHub> hubContext
+            ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _taskActionService = taskActionService;
+            _hubContext = hubContext;
         }
 
         public async Task<bool> CreateClaimAsync(CreateClaimRequest claimRequest)
         {
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
              {
+                 var _taskRepo = _unitOfWork.GetRepository<SupportTask>();
+                 var _conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
                  var _repo = _unitOfWork.GetRepository<Claim>();
                  var _claimTypeRepo = _unitOfWork.GetRepository<ClaimType>();
 
@@ -50,6 +63,25 @@ namespace OmniChat.Application.Services.Implements
                         
                          throw new Exception("Yêu cầu thay đổi công việc (CHANGETASK) bắt buộc phải đính kèm cuộc hội thoại hỗ trợ.");
                      }
+                     var conversation = await _conversationRepo.SingleOrDefaultAsync(
+                         predicate: x => x.Id == claimRequest.SupportConversationId.Value,
+                            include: c => c.Include(conv => conv.SupportTasks)
+                     );
+                      
+                     conversation.Status = ConversationStatus.PendingReassign;
+
+                     foreach (var task in conversation.SupportTasks)
+                     {
+                         if (task.Status != SupportTaskStatus.Done && 
+                         task.Status != SupportTaskStatus.Cancelled &&
+                         task.Status != SupportTaskStatus.closed)
+                         {
+                             task.Status = SupportTaskStatus.PendingReassign ;
+                         }
+                     }
+                     _taskRepo.UpdateRange(conversation.SupportTasks);
+                      _conversationRepo.Update(conversation);
+
                  }
                  var entity = _mapper.Map<Claim>(claimRequest);
                  await _repo.InsertAsync(entity);         
@@ -279,7 +311,7 @@ namespace OmniChat.Application.Services.Implements
             };
         }
 
-        public async Task ReAssignStaffAsync(Guid newStaffAssignId, Guid conversationReAssignId)
+        public async Task ReAssignStaffAsync(Guid claimId,Guid newStaffAssignId, Guid conversationReAssignId)
         {
             var converRepo = _unitOfWork.GetRepository<SupportConversation>();
 
@@ -287,48 +319,42 @@ namespace OmniChat.Application.Services.Implements
 
             var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
 
+            var claimRepo = _unitOfWork.GetRepository<Claim>();
+
+            var claim = await claimRepo.SingleOrDefaultAsync(predicate: c => c.Id == claimId);
+            if (claim == null) throw new NotFoundException($"Claim {claimId} not found");
+
+            claim.Status = ClaimStatus.Approved;
+            claimRepo.Update(claim);
+
             var conversation = await converRepo.SingleOrDefaultAsync(predicate: cs => cs.Id == conversationReAssignId,
                 include: c => c.Include(x => x.SupportTasks));
-
-            if (conversation == null)
-                throw new NotFoundException($"Conversation {conversationReAssignId} not found");
+            if (conversation == null) throw new NotFoundException($"Conversation {conversationReAssignId} not found");
 
             var oldStaffId = conversation.ActiveStaffId;
-
             if (oldStaffId == null)
                 throw new BusinessException("Conversation has no assigned staff to reassign");
 
             var newStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == newStaffAssignId,
-                include: s => s.Include(x => x.StaffIntentTypes)
-               );
+         include: s => s.Include(x => x.StaffIntentTypes));
+            if (newStaff == null) throw new NotFoundException($"Staff {newStaffAssignId} not found");
 
-            if (newStaff == null)
-                throw new NotFoundException($"Staff {newStaffAssignId} not found");
 
-            
-            var conversationIntentTypeIds = conversation.SupportTasks
-                .Where(t => t.Status != SupportTaskStatus.Done
-                         && t.Status != SupportTaskStatus.Cancelled
-                         && t.Status != SupportTaskStatus.closed)
-                .Select(t => t.IntentTypeId)
-                .Distinct()
-                .ToHashSet();
+           
+            var newStaffCurrentWorkload = await converRepo.CountAsync(
+            predicate: c => c.ActiveStaffId == newStaffAssignId &&
+                    (c.Status == ConversationStatus.Pending &&
+                                   c.Id != conversation.Id));
 
-            var newStaffIntentTypeIds = newStaff.StaffIntentTypes
-                .Select(si => si.IntentTypeId)
-                .ToHashSet();
-
-            bool hasMatchingIntent = conversationIntentTypeIds
-                 .Any(id => newStaffIntentTypeIds.Contains(id));
-
-            if (!hasMatchingIntent)
-                throw new BusinessException(
-                 "New staff does not have any matching IntentType with this conversation's tasks");
+            var statusAfterApprove = newStaffCurrentWorkload >= 5
+                   ? ConversationStatus.Warning
+                   : ConversationStatus.Pending;
 
             conversation.ActiveStaffId = newStaffAssignId;
+            conversation.Status = statusAfterApprove;
             conversation.UpdateDate = DateTime.UtcNow;
-
-            _unitOfWork.GetRepository<SupportConversation>().Update(conversation);
+            conversation.LastStaffMessageAt = DateTime.UtcNow;
+            converRepo.Update(conversation);
 
             var activeTasks = conversation.SupportTasks
                .Where(t => t.Status != SupportTaskStatus.Done
@@ -339,8 +365,9 @@ namespace OmniChat.Application.Services.Implements
             foreach (var task in activeTasks)
             {
                 task.CurrentAssignedStaffId = newStaffAssignId;
+                task.Status = SupportTaskStatus.Reassign;
                 _unitOfWork.GetRepository<SupportTask>().Update(task);
-               await _taskActionService.CreateTaskActionAsync(new TaskActionRequest
+                await _taskActionService.CreateTaskActionAsync(new TaskActionRequest
                 {
                     SupportTaskId = task.Id,
                     Action = TaskActionType.Reassigned,
@@ -379,9 +406,98 @@ namespace OmniChat.Application.Services.Implements
 
             await _unitOfWork.CommitAsync();
 
+            var notificationResponse = new ClaimNotificationResponse
+            {
+                ConversationName = conversation.CustomerName,
+                Description = claim.Description ?? "Yêu cầu thay đổi công việc được phê duyệt.",
+                Status = claim.Status,
+                NewStatus = conversation.Status.ToString(),
+                Message = "Bạn có một cuộc hội thoại mới được bàn giao."
+            };
+
+           
+            await _hubContext.Clients
+                .User(newStaffAssignId.ToString())
+                .SendAsync("ReassignApproved", notificationResponse); 
+
             _logger.LogInformation(
                 "[REASSIGN] Conversation {ConvId} reassigned from Staff {OldStaff} to Staff {NewStaff}. Tasks updated: {Count}",
                 conversationReAssignId, oldStaffId, newStaffAssignId, activeTasks.Count);
+        }
+
+
+        public async Task RejectReassignClaimAsync(Guid claimId, Guid ManagerId)
+        {
+            await _unitOfWork.ProcessInTransactionAsync(async () =>
+            {
+                var claimRepo = _unitOfWork.GetRepository<Claim>();
+                var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
+                var taskRepo = _unitOfWork.GetRepository<SupportTask>();
+
+         
+                var claim = await claimRepo.GetByIdAsync(claimId);
+                if (claim == null) throw new NotFoundException("Không tìm thấy yêu cầu Reassign.");
+
+                claim.Status = ClaimStatus.Rejected;
+                claimRepo.Update(claim);
+
+                var conversation = await conversationRepo.SingleOrDefaultAsync(
+                    predicate: c => c.Id == claim.SupportConversationId,
+                    include: c => c.Include(x => x.SupportTasks));
+
+                if (conversation == null) throw new NotFoundException("Hội thoại không tồn tại.");
+
+                var staffId = conversation.ActiveStaffId;
+
+              
+                var currentPendingCount = await conversationRepo.CountAsync(
+                    predicate: c => c.ActiveStaffId == staffId &&
+                                   c.Status == ConversationStatus.Pending &&
+                                   c.Id != conversation.Id);
+
+             
+                var statusAfterReject = currentPendingCount >= 5
+                    ? ConversationStatus.Warning
+                    : ConversationStatus.Pending;
+
+                conversation.Status = statusAfterReject;
+                conversation.UpdateDate = DateTime.UtcNow;
+                conversation.LastStaffMessageAt = DateTime.UtcNow;
+
+                var pendingReassignTasks = conversation.SupportTasks
+                    .Where(t => t.Status == SupportTaskStatus.PendingReassign)
+                    .ToList();
+
+                foreach (var task in pendingReassignTasks)
+                {
+                    task.Status = SupportTaskStatus.InProgress;
+                    taskRepo.Update(task);
+
+                    await _taskActionService.CreateTaskActionAsync(new TaskActionRequest
+                    {
+                        SupportTaskId = task.Id,
+                        Action = TaskActionType.Reassigned,
+                        ActionById = claim.StaffId,
+                        ActionToId = ManagerId,
+                        Reason = $"Reassignment request rejected. Status set to {statusAfterReject}."
+                    });
+                }
+
+                conversationRepo.Update(conversation);
+                await _unitOfWork.CommitAsync();
+
+                var notificationResponse = new ClaimNotificationResponse
+                {
+                    ConversationName = conversation.CustomerName,
+                    Description = claim.Description ?? "Yêu cầu thay đổi công việc không được phê duyệt.",
+                    Status = claim.Status,
+                    NewStatus = statusAfterReject.ToString(),
+                    Message = "Yêu cầu chuyển công việc đã bị từ chối. Vui lòng tiếp tục hỗ trợ khách hàng."
+                };
+                await _hubContext.Clients
+                .User(staffId.ToString())
+                .SendAsync("ReassignRejected", notificationResponse);
+            });
         }
     }
 }
