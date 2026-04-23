@@ -22,6 +22,8 @@ public class ApiEndPointConstant
         public const string FacebookWebhook = Base + "/facebook";
 
         public const string InstagramWebhook = Base + "/instagram";
+
+        public const string PayOsWebhook = Base + "/payos";
     }
 
     public static class CustomerMessageEndPoint

@@ -13,13 +13,15 @@ public class InvoiceJobRunner
 {
     private readonly IInvoiceService _invoiceService;
     private readonly ILogger<InvoiceJobRunner> _logger;
-
+    private readonly IPayOsService _payOsService;
     public InvoiceJobRunner(
         IInvoiceService invoiceService,
-        ILogger<InvoiceJobRunner> logger)
+        ILogger<InvoiceJobRunner> logger,
+        IPayOsService payOsService)
     {
         _invoiceService = invoiceService;
         _logger = logger;
+        _payOsService = payOsService;
     }
 
     public async Task RunAsync(DateTime? from = null, DateTime? to = null)
@@ -48,6 +50,7 @@ public class InvoiceJobRunner
         foreach (var customerId in customerIds)
         {
             await _invoiceService.AllocateMoneyToInvoices(customerId);
+            await _payOsService.CreatePaymentLinkAsync(customerId);
         }
     }
 }
