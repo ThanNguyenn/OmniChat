@@ -67,5 +67,6 @@ namespace OmniChat.Infrastructure.Models
         Complete = 1,
         Waiting = 2,
         Warning = 3,
+        PendingReassign = 4,
     }
 }
