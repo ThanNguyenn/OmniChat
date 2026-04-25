@@ -51,7 +51,7 @@ public class OrderController : BaseController<OrderController>
     Description = "Tạo mới draft order")]
     public async Task<IActionResult> CreateDraftOrder([FromBody] DraftOrderRequest createOrderRequest)
     {
-        var result = await _draftOrderService.CreateDraftOrderAsync(createOrderRequest.CustomerId, createOrderRequest.Message);
+        var result = await _draftOrderService.CreateDraftOrderFromConversationAsync(createOrderRequest.ConversationId);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Order created successfully", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
@@ -329,4 +329,20 @@ public class OrderController : BaseController<OrderController>
 
         return Ok(response);
     }
+
+    [HttpPost("preview")]
+    public async Task<ActionResult<List<DraftOrderItem>>> PreviewDraftOrder(
+         [FromBody] List<string> messages)
+    {
+        if (messages == null || !messages.Any())
+        {
+            return BadRequest("Message list cannot be empty.");
+        }
+        Guid customerId = Guid.NewGuid(); // Replace with actual customer ID retrieval logic
+
+        var result = await _draftOrderService.PreviewDraftOrderAsync(customerId, messages);
+        return Ok(result);
+    }
+
+
 }

@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,6 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OmniChat.Application.Services.Implements;
 
@@ -28,6 +31,218 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
         _orderService = orderService;
     }
 
+    public async Task<bool> CreateDraftOrderFromConversationAsync(Guid conversationId)
+    {
+        var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
+        var conversation = await conversationRepo.GetQueryable(predicate: c => c.Id == conversationId, include: q => q.Include(c => c.CustomerMessages)).FirstOrDefaultAsync();
+
+        var customerId = conversation.ActiveCustomerId;
+        var messages = conversation.CustomerMessages.OrderBy(m => m.Timestamp).Select(m => m.Content).ToList();
+
+        var isSuccess = await CreateDraftOrderFromConversationAsync(customerId, messages);
+        return isSuccess;
+
+    }
+    public async Task<List<DraftOrderItem>> PreviewDraftOrderAsync(Guid customerId, List<string> messages)
+    {
+        var context = new DraftOrderContext { CustomerId = customerId };
+
+        foreach (var msg in messages)
+        {
+            // Use the same normalization and parsing logic as the main flow
+            var parsed = Parse(msg);
+            ApplyToContext(context, parsed, msg);
+        }
+
+        // Return the list of items accumulated in the context
+        // This allows you to verify Volumes, Kinds, and Quantities before order creation
+        return await Task.FromResult(context.Items);
+    }
+    public async Task<bool> CreateDraftOrderFromConversationAsync(
+    Guid customerId,
+    List<string> messages)
+    {
+        var context = new DraftOrderContext { CustomerId = customerId };
+
+        foreach (var msg in messages)
+        {
+            var parsed = Parse(msg);
+            ApplyToContext(context, parsed, msg);
+        }
+
+        return await CreateOrderFromContext(context);
+    }
+
+   
+private void ApplyToContext(DraftOrderContext context, List<DraftOrderItem> newItems, string message)
+    {
+        newItems ??= new List<DraftOrderItem>();
+        var normalizedMsg = Normalize(message);
+
+        // 1. Cancellation
+        if (IsCancellation(normalizedMsg))
+        {
+            RemoveItems(context, newItems);
+            context.LastFocusedItem = null;
+            return;
+        }
+
+        // 2. Handle Standalone Updates (When no new products are mentioned)
+        if (newItems.Count == 0 && context.LastFocusedItem != null)
+        {
+            var standaloneQty = ExtractStandaloneQuantity(normalizedMsg);
+
+            if (standaloneQty.HasValue)
+            {
+                // Subtraction: "bỏ ra 5"
+                if (IsSubtraction(normalizedMsg))
+                {
+                    context.LastFocusedItem.Quantity = Math.Max(0, context.LastFocusedItem.Quantity - standaloneQty.Value);
+                    // Remove item if quantity hits 0
+                    if (context.LastFocusedItem.Quantity == 0) context.Items.Remove(context.LastFocusedItem);
+                    return;
+                }
+
+                // Addition: "thêm 5"
+                if (IsAddIntent(normalizedMsg))
+                {
+                    context.LastFocusedItem.Quantity += standaloneQty.Value;
+                    return;
+                }
+
+                // Overwrite: "lấy 15"
+                context.LastFocusedItem.Quantity = standaloneQty.Value;
+                return;
+            }
+
+            // Handle property changes: "đổi sang kd"
+            if (normalizedMsg.Contains("kd") || normalizedMsg.Contains("duong") || normalizedMsg.Contains("sua chua"))
+            {
+                context.LastFocusedItem.Kind = DetectKind(normalizedMsg);
+                return;
+            }
+        }
+
+        // 3. Regular Parsing Logic (New items detected)
+        if (newItems.Count > 0)
+        {
+            if (IsAddIntent(normalizedMsg))
+            {
+                AddOrMerge(context, newItems);
+            }
+            else
+            {
+                OverwriteItems(context, newItems);
+            }
+
+            // Update focus to the most recently added/modified item
+            context.LastFocusedItem = context.Items.LastOrDefault();
+        }
+    }
+
+    private int? ExtractStandaloneQuantity(string message)
+    {
+        var normalized = Normalize(message);
+
+        // Specifically matches "them 3", "lay 3", "3 chai", or just "3" if it's the whole message
+        var match = Regex.Match(normalized, @"\b(?:them|lay|lay cho minh|so luong)?\s*(?<num>\d+)\b(?:\s*(?:chai|c|ch))?");
+
+        if (match.Success && int.TryParse(match.Groups["num"].Value, out int qty))
+        {
+            // Ignore numbers that look like volumes (e.g., 180, 490) to prevent mis-parsing
+            if (qty == 180 || qty == 490 || qty == 880 || qty == 1760) return null;
+
+            return qty;
+        }
+        return null;
+    }
+
+    private void AddOrMerge(DraftOrderContext context, List<DraftOrderItem> items)
+    {
+        foreach (var item in items)
+        {
+            var existing = context.Items.FirstOrDefault(x =>
+                x.Volume == item.Volume &&
+                x.Brand == item.Brand &&
+                x.Kind == item.Kind);
+
+            if (existing != null)
+                existing.Quantity += item.Quantity;
+            else
+                context.Items.Add(item);
+        }
+    }
+
+    private void OverwriteItems(DraftOrderContext context, List<DraftOrderItem> items)
+    {
+        foreach (var item in items)
+        {
+            context.Items.RemoveAll(x =>
+                x.Volume == item.Volume &&
+                x.Brand == item.Brand &&
+                x.Kind == item.Kind);
+
+            context.Items.Add(item);
+        }
+    }
+
+    private void RemoveItems(DraftOrderContext context, List<DraftOrderItem> items)
+    {
+        if (items == null || items.Count == 0)
+        {
+            // full cancel
+            context.Items.Clear();
+            return;
+        }
+
+        foreach (var item in items)
+        {
+            context.Items.RemoveAll(x =>
+                x.Volume == item.Volume &&
+                x.Brand == item.Brand &&
+                x.Kind == item.Kind);
+        }
+    }
+
+
+    private bool IsCancellation(string msg)
+    {
+        return Regex.IsMatch(msg, @"\b(khong lay|huy|xoa|bo het)\b");
+    }
+    private bool IsSubtraction(string msg) => Regex.IsMatch(msg, @"\b(bo ra|bot|tru|bot di)\b");
+    private bool IsAddIntent(string msg)
+    {
+        return Regex.IsMatch(msg, @"\b(them|add|\+)\b");
+    }
+
+    private async Task<bool> CreateOrderFromContext(DraftOrderContext context)
+    {
+        var orderItems = new List<AddOrderItemRequest>();
+
+        foreach (var item in context.Items)
+        {
+            var allocations = await ResolveBatchesAsync(item);
+
+            foreach (var (batchId, qty) in allocations)
+            {
+                orderItems.Add(new AddOrderItemRequest
+                {
+                    ProductBatchId = batchId,
+                    Quantity = qty
+                });
+            }
+        }
+
+        if (!orderItems.Any())
+            throw new BusinessException("Empty order");
+
+        return await _orderService.CreateOrderAsync(new CreateOrderRequest
+        {
+            CustomerId = context.CustomerId,
+            Name = $"Auto Draft for {context.CustomerId}",
+            OrderItems = orderItems
+        });
+    }
 
     public async Task<bool> CreateDraftOrderAsync(Guid customerId, string message)
     {
@@ -113,10 +328,7 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
         };
         return request;
     }
-    private static Regex quantityRegex = new Regex(@"(\d+)\s*(chai|c|ch)\b", RegexOptions.Compiled);
-    private static Regex volumeRegex = new Regex(@"(180|190|490|880|1760)\s*(ml)?|nhi|nua lit|1 lit|2 lit", RegexOptions.Compiled);
-    private static Regex kindRegex = new Regex(@"(khong duong|ko duong|kd|co duong|duong|sua chua)", RegexOptions.Compiled);
-    private static Regex brandRegex = new Regex(@"(long thanh|lothamilk|lt milk|lotha milk)", RegexOptions.Compiled);
+    private static Regex brandRegex = new Regex(@"(long thanh|lothamilk|lt milk|lotha milk|lotha)", RegexOptions.Compiled);
     public List<DraftOrderItem> Parse(string raw)
     {
         var text = Normalize(raw);
@@ -124,21 +336,43 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
 
         var results = new List<DraftOrderItem>();
 
-        // 1. Find all valid volumes to use as anchors
         var volumeMatches = Regex.Matches(text, @"\b(180|190|490|880|1760)\b");
 
-        foreach (Match volMatch in volumeMatches)
+        for (int i = 0; i < volumeMatches.Count; i++)
         {
+            Match volMatch = volumeMatches[i];
             string volStr = volMatch.Value;
 
-            // 2. Define a narrow window: 20 chars before and 25 chars after this specific volume
             int windowStart = Math.Max(0, volMatch.Index - 20);
             int windowEnd = Math.Min(text.Length, volMatch.Index + volMatch.Length + 25);
+
+            if (i > 0)
+            {
+                int prevEnd = volumeMatches[i - 1].Index + volumeMatches[i - 1].Length;
+                windowStart = Math.Max(windowStart, prevEnd);
+            }
+
+            if (i < volumeMatches.Count - 1)
+            {
+                int nextVolIndex = volumeMatches[i + 1].Index;
+                string textBetween = text.Substring(volMatch.Index + volMatch.Length, nextVolIndex - (volMatch.Index + volMatch.Length));
+
+                var nextQuantityMatch = Regex.Match(textBetween, @"\b\d+\s*(?:chai|c|ch)?\b");
+                if (nextQuantityMatch.Success)
+                {
+                    int cutoffIndex = volMatch.Index + volMatch.Length + nextQuantityMatch.Index;
+                    windowEnd = Math.Min(windowEnd, cutoffIndex);
+                }
+                else
+                {
+                    windowEnd = Math.Min(windowEnd, nextVolIndex);
+                }
+            }
+
             string contextWindow = text.Substring(windowStart, windowEnd - windowStart);
 
-            // 3. Extract Quantity from this specific window
             string qtyStr = "1";
-            // Check for "[number] chai" or "so luong [number]" or just a number near the volume
+
             var qtyMatch = Regex.Match(contextWindow, @"(?<num>\d+)\s*(?:chai|c|ch)\b|so luong(?: la)?\s*(?<num>\d+)|(?<num2>\d+)\s+" + volStr);
 
             if (qtyMatch.Success)
@@ -147,14 +381,12 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
             }
             else
             {
-                // Fallback: the closest number in the window that isn't the volume itself
                 var fallback = Regex.Matches(contextWindow, @"\b\d+\b")
                     .Cast<Match>()
                     .FirstOrDefault(n => n.Value != volStr);
                 if (fallback != null) qtyStr = fallback.Value;
             }
 
-            // 4. Create the item using the local context for Brand and Kind
             var item = new DraftOrderItem
             {
                 Quantity = int.Parse(qtyStr),
@@ -168,48 +400,27 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
 
         return results;
     }
-    private List<DraftOrderItem> ParseSegment(string segment)
-    {
-        var results = new List<DraftOrderItem>();
-
-        // Regex to find Quantity and Volume in any order
-        // Matches: "2 chai 880", "880ml 2", "880 25c"
-        var matches = Regex.Matches(segment,
-            @"(?<qty>\d+)\s*(?:chai|c|ch)?\s*(?<vol>180|190|490|880|1760)\b|(?<vol2>180|190|490|880|1760)\s*(?:ml)?\s*(?<qty2>\d+)",
-            RegexOptions.IgnoreCase);
-
-        foreach (Match m in matches)
-        {
-            string volStr = m.Groups["vol"].Success ? m.Groups["vol"].Value : m.Groups["vol2"].Value;
-            string qtyStr = m.Groups["qty"].Success ? m.Groups["qty"].Value : m.Groups["qty2"].Value;
-
-            var item = new DraftOrderItem
-            {
-                Quantity = int.Parse(qtyStr),
-                Volume = NormalizeVolume(volStr),
-                Brand = DetectBrand(segment) ?? "long thanh",
-                Kind = DetectKind(segment)
-            };
-            results.Add(item);
-        }
-
-        return results;
-    }
 
     private string DetectKind(string text)
     {
-        if (Regex.IsMatch(text, @"(sua chua|^y\b)"))
+        // Check for Yogurt first
+        if (Regex.IsMatch(text, @"(sua chua|^y\b|sc)"))
             return "yogurt";
 
-        if (Regex.IsMatch(text, @"(kd|khong duong|k duong)"))
+        // Check for No Sugar specifically
+        // Use \b to ensure we match the exact normalized token "kd"
+        if (Regex.IsMatch(text, @"\bkd\b") || text.Contains("khong duong") || text.Contains("k duong"))
             return "no_sugar";
 
-        if (Regex.IsMatch(text, @"duong"))
+        if (text.Contains("duong") && !text.Contains("kd"))
             return "sugar";
 
+
+        // If it contains sugar keywords OR it's just a standard order, it's sugar
+        // Only return sugar if explicitly mentioned or as a final fallback
         return "sugar";
     }
-   
+
 
     private string DetectBrand(string text)
     {
@@ -221,16 +432,7 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
         return NormalizeBrand(match.Value);
     }
 
-    private List<string> SplitSegments(string input)
-    {
-        var text = Regex.Replace(input, @"\s+", " ");
-
-        return Regex.Split(text,
-            @"(?=(\d+\s*(chai|c|ch)?\s*(180|190|490|880|1760)))")
-            .Select(x => x.Trim())
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .ToList();
-    }
+ 
     private string ExpandAllFormats(string input)
     {
         input = ExpandDotFormat(input);
@@ -330,22 +532,25 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
                 return string.Join(" ", results);
             });
     }
-    private string Normalize(string input)
+   
+private string Normalize(string input)
     {
         if (string.IsNullOrWhiteSpace(input)) return string.Empty;
 
         string text = input.ToLower();
         text = RemoveDiacritics(text);
 
-        // Standardize all variants of "no sugar" and "sugar" immediately
-        text = Regex.Replace(text, @"\b(k duong|ko duong|kd|k đ|kđ|it dg|it duong|it dduong|khong duong)\b", "kd");
+        // 1. Handle "No Sugar" variants first
+        text = Regex.Replace(text, @"\b(khong duong|k duong|ko duong|kd|k đ|kđ|it dg|it duong|it dduong)\b", "kd");
+
+        // 2. Handle "Sugar" variants second
+        // Use \b to prevent matching "kd" (if it weren't already replaced)
         text = Regex.Replace(text, @"\b(co duong|dg|duong)\b", "duong");
 
-        // Standardize product types
+        // 3. Product types
         text = Regex.Replace(text, @"\b(sua chua|sc)\b", "sua chua");
         text = Regex.Replace(text, @"\b(sua tuoi|st)\b", "st");
 
-        // Ensure space between numbers and identifiers for easier regex matching
         text = Regex.Replace(text, @"(\d+)(ml|c|chai|ch|kd|duong|st|sc)", "$1 $2");
         text = Regex.Replace(text, @"(ml|c|chai|ch|kd|duong|st|sc)(\d+)", "$1 $2");
 
@@ -371,16 +576,7 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
         return null;
     }
 
-    private string NormalizeKind(string k)
-    {
-        k = k.Trim();
-
-        if (k.Contains("sua chua")) return "yogurt";
-        if (k.Contains("kd") || k.Contains("khong duong") || k.Contains("ko duong")) return "no_sugar";
-        if (k.Contains("duong") || k.Contains("co duong")) return "sugar";
-
-        return "sugar";
-    }
+  
 
     private string NormalizeBrand(string b)
     {
@@ -392,14 +588,7 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
         return "long thanh";
     }
 
-    private string NormalizeUnit(string u)
-    {
-        if (string.IsNullOrEmpty(u)) return "chai";
-
-        if (u == "c" || u == "ch") return "chai";
-
-        return u;
-    }
+  
 
     private async Task<List<(Guid batchId, int quantity)>> ResolveBatchesAsync(DraftOrderItem item)
     {

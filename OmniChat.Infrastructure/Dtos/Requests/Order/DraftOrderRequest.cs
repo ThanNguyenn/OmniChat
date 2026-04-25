@@ -8,6 +8,5 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Order;
 
 public class DraftOrderRequest
 {
-    public Guid CustomerId { get; set; }
-    public string Message { get; set; }
+    public Guid ConversationId { get; set; }
 }
