@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Net.payOS.Types;
 using OmniChat.Api.Constants;
+using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Webhooks.Facebook.WebhookMessage;
 using OmniChat.Application.Webhooks.Instagram.InstagramMessage;
@@ -14,10 +16,12 @@ namespace OmniChat.Api.Controllers
     public class WebhookController : BaseController<WebhookController>
     {
         private readonly IWebhookService _webhookService;
+        private readonly IPayOsService _payOsService;
 
-        public WebhookController(ILogger<WebhookController> logger,IWebhookService webhookService) : base(logger)
+        public WebhookController(ILogger<WebhookController> logger,IWebhookService webhookService, IPayOsService payOsService) : base(logger)
         {
             _webhookService = webhookService;
+            _payOsService = payOsService;
         }
 
 
@@ -97,36 +101,54 @@ namespace OmniChat.Api.Controllers
             return Content(challenge, "text/plain");
         }
 
-        // POST /api/v1/webhooks/instagram
-        //[HttpPost(ApiEndPointConstant.Webhooks.InstagramWebhook)]
-        //[ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        //public async Task<IActionResult> InstagramWebhookAsync(
-        //    [FromBody] InstagramWebhookPayload payload)
-        //{
-        //    await _webhookService.InstagramWebhookAsync(payload);
 
-        //    return Ok(new ApiResponse<object>
-        //    {
-        //        StatusCode = StatusCodes.Status200OK,
-        //        Message = "Instagram webhook processed successfully",
-        //        IsSuccess = true,
-        //        Data = null
-        //    });
-        //}
-        // GET: verify webhook
-        //[HttpGet(ApiEndPointConstant.Webhooks.InstagramWebhook)]
-        //[ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        //public async Task<IActionResult> VerifyInstagramAsync(
-        //[FromQuery(Name = "hub.mode")] string mode,
-        //[FromQuery(Name = "hub.verify_token")] string token,
-        //[FromQuery(Name = "hub.challenge")] string challenge)
-        //{
-        //    var isValid = await _webhookService.VerifyInstagramWebhook(mode, token);
+        [HttpPost(ApiEndPointConstant.Webhooks.PayOsWebhook)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> HandlePayOsWebhook([FromBody] WebhookType body)
+        {
+            var result = await _payOsService.HandleWebhookAsync(body);
 
-        //    if (!isValid)
-        //        return Forbid();
+            return Ok(new ApiResponse<object>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "PayOs webhook processed successfully",
+                IsSuccess = true,
+                Data = null
+            });
+        }
 
-        //    return Content(challenge, "text/plain");
-        //}
-    }
+
+
+            // POST /api/v1/webhooks/instagram
+            //[HttpPost(ApiEndPointConstant.Webhooks.InstagramWebhook)]
+            //[ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+            //public async Task<IActionResult> InstagramWebhookAsync(
+            //    [FromBody] InstagramWebhookPayload payload)
+            //{
+            //    await _webhookService.InstagramWebhookAsync(payload);
+
+            //    return Ok(new ApiResponse<object>
+            //    {
+            //        StatusCode = StatusCodes.Status200OK,
+            //        Message = "Instagram webhook processed successfully",
+            //        IsSuccess = true,
+            //        Data = null
+            //    });
+            //}
+            // GET: verify webhook
+            //[HttpGet(ApiEndPointConstant.Webhooks.InstagramWebhook)]
+            //[ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+            //public async Task<IActionResult> VerifyInstagramAsync(
+            //[FromQuery(Name = "hub.mode")] string mode,
+            //[FromQuery(Name = "hub.verify_token")] string token,
+            //[FromQuery(Name = "hub.challenge")] string challenge)
+            //{
+            //    var isValid = await _webhookService.VerifyInstagramWebhook(mode, token);
+
+            //    if (!isValid)
+            //        return Forbid();
+
+            //    return Content(challenge, "text/plain");
+            //}
+        }
 }
