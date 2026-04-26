@@ -68,8 +68,8 @@ namespace OmniChat.Application.Services.Implements
               orderCode: payOsOrderCode,
                 amount: (int)remainingAmount,
                  description: $"INV|{invoice.Id}",
-                     cancelUrl: "https://yourapp.com/payment-cancel",
-                         returnUrl: "https://yourapp.com/payment-return",
+                     cancelUrl: "https://omni-chat-web.vercel.app/payment?status=fail",
+                         returnUrl: "https://omni-chat-web.vercel.app/payment?status=success",
                             items: items
              );
 

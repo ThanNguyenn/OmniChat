@@ -55,13 +55,7 @@ public class OrderController : BaseController<OrderController>
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Order created successfully", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
-    [HttpPost("test")]
-    public async Task<IActionResult> CreateTestDraftOrder([FromBody] DraftOrderRequest createOrderRequest)
-    {
-        var result = await _draftOrderService.TestCreateDraftOrderAsync(createOrderRequest.CustomerId, createOrderRequest.Message);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Order created successfully", result);
-        return StatusCode(StatusCodes.Status201Created, response);
-    }
+   
     //[HttpPost(ApiEndPointConstant.Order.Update)]
     //[ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     //[ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
