@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Mosaik.Core;
 using OmniChat.Api.Middlewares;
+using OmniChat.Application.MailMap;
 using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Channels;
 using OmniChat.Application.Services.Implements;
@@ -36,6 +37,7 @@ ConfigureDatabase();
 ConfigureAuthentication();
 ConfigureSwagger();
 ConfigureSignalRServices();
+EmailConfiguration();
 RegisterResolver();
 BackgoudTaskQueue();
 var app = builder.Build();
@@ -213,6 +215,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<INotificationService,NotificationService>();
     builder.Services.AddScoped<ISheetExportService, SheetExportService>();
     builder.Services.AddScoped<IRoleService, RoleService>();
+    builder.Services.AddTransient<IMailService, MailService>();
 }
 
 void RegisterBackgroundServices()
@@ -229,7 +232,10 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<CleanupWarningWorker>();
 }
 
-
+void  EmailConfiguration()
+{
+    builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+}
 
 // add signalR
 void ConfigureSignalRServices()

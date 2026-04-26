@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Net.payOS;
 using Net.payOS.Types;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Mail;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -14,24 +15,27 @@ using OmniChat.Infrastructure.Repositories.Interfaces;
 
 namespace OmniChat.Application.Services.Implements
 {
-    public class PayOsService : BaseService<PayOsService> ,IPayOsService
+    public class PayOsService : BaseService<PayOsService>, IPayOsService
     {
+        private readonly IMailService _mailService;
         private readonly PayOS _payOS;
         public PayOsService(IUnitOfWork<OmniChatDbContext> unitOfWork,
               ILogger<PayOsService> logger,
               IMapper mapper,
               IHttpContextAccessor httpContextAccessor,
+                IMailService mailService,
               IConfiguration configuration
               ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             var settings = configuration.GetSection("PayOs");
 
-         
+
             _payOS = new PayOS(
                 settings["ClientID"],
                 settings["APIKey"],
                 settings["ChecksumKey"]
             );
+            _mailService = mailService;
         }
 
         public async Task<string> CreatePaymentLinkAsync(Guid customerId)
@@ -63,7 +67,7 @@ namespace OmniChat.Application.Services.Implements
             var paymentData = new PaymentData(
               orderCode: payOsOrderCode,
                 amount: (int)remainingAmount,
-                 description: $"INV|{invoice.Id}", 
+                 description: $"INV|{invoice.Id}",
                      cancelUrl: "https://yourapp.com/payment-cancel",
                          returnUrl: "https://yourapp.com/payment-return",
                             items: items
@@ -74,6 +78,18 @@ namespace OmniChat.Application.Services.Implements
 
             // gửi link này về email cho khách hàng qua email address
 
+            var customer = await _unitOfWork.GetRepository<CustomerProfile>().SingleOrDefaultAsync(predicate: x => x.Id == customerId);
+
+
+            var mailContent = new MailContent
+            {
+                To = customer.Email,
+                Subject = "Payment Link",
+                Body = $"Please click the following link to complete your payment: {paymentLink.checkoutUrl}"
+            };
+
+            await _mailService.SendEmailAsync(mailContent);
+
             return paymentLink.checkoutUrl;
         }
 
@@ -82,57 +98,57 @@ namespace OmniChat.Application.Services.Implements
         {
             try
             {
-                // Bước 1: Xác thực chữ ký để đảm bảo dữ liệu chuẩn từ PayOS
-                // verifiedData sẽ chứa thông tin giao dịch đã được giải mã
-                var verifiedData = _payOS.verifyPaymentWebhookData(body);
 
-                // Bước 2: Kiểm tra description để lấy InvoiceId
+                var verifiedData = _payOS.verifyPaymentWebhookData(body);
                 string description = verifiedData.description;
                 if (string.IsNullOrEmpty(description) || !description.StartsWith("INV|"))
-                    return false;
+                    return true;
 
-                string invoiceIdStr = description.Split('|')[1];
-                if (!Guid.TryParse(invoiceIdStr, out Guid invoiceId))
-                    return false;
+                if (!Guid.TryParse(description.Split('|')[1], out Guid invoiceId))
+                    return true;
 
-                // Bước 3: Truy vấn Invoice và cập nhật
+
                 var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
                 var invoice = await invoiceRepo.SingleOrDefaultAsync(
                     predicate: x => x.Id == invoiceId,
-                    include: x => x.Include(i => i.Orders)
+                    include: x => x.Include(i => i.Orders).Include(i => i.CustomerProfile)
                 );
 
-                if (invoice == null || invoice.InvoiceStatus == InvoiceStatus.Completed)
-                    return true; // Trả về true để PayOS không bắn lại nữa nếu đã xử lý xong
+                if (invoice == null) return true;
+                if (invoice.InvoiceStatus == InvoiceStatus.Completed) return true;
 
-                // Bước 4: Kiểm tra mã thành công (code "00")
+                // Kiểm tra mã thành công (code "00")
                 if (body.code == "00")
                 {
-                    //invoice.PaidAmount += verifiedData.amount;
                     invoice.InvoiceMethod = InvoiceMethod.BankTransfer;
+                    invoice.InvoiceStatus = InvoiceStatus.Completed;
+                    invoice.CompletedDate = DateTime.UtcNow;
 
-                    //double totalNeedToPay = invoice.Total - invoice.DeductedAmount;
-
-                    //if (invoice.PaidAmount >= totalNeedToPay)
-                    //{
-                        invoice.InvoiceStatus = InvoiceStatus.Completed;
-                        invoice.CompletedDate = DateTime.UtcNow;
-
-                        foreach (var order in invoice.Orders)
+                    foreach (var order in invoice.Orders)
+                    {
+                        order.Status = OrderStatus.Completed;
+                        await _mailService.SendEmailAsync(new MailContent
                         {
-                            order.Status = OrderStatus.Completed;
-                        }
-                    //}
-                    //else
-                    //{
-                    //    invoice.InvoiceStatus = InvoiceStatus.PartialPaid;
-                    //}
-
-                    _unitOfWork.GetRepository<Invoice>().Update(invoice);
-                     await _unitOfWork.CommitAsync();
+                            To = order.CustomerProfile.Email,
+                            Subject = "Order Completed",
+                            Body = $"Your order {order.Name} has been completed. Thank you for shopping with us!"
+                        });
+                    }
+                    invoiceRepo.Update(invoice);
+                    await _unitOfWork.CommitAsync();
+                    return true;
+                }
+                else
+                {
+                    await _mailService.SendEmailAsync(new MailContent
+                    {
+                        To = invoice.CustomerProfile.Email,
+                        Subject = "Payment Failed",
+                        Body = $"Your payment for invoice {invoice.Id} has failed. Please try again or contact support."
+                    });
+                    return true;
                 }
 
-                return false;
             }
             catch (Exception ex)
             {
