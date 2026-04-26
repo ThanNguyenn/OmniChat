@@ -46,7 +46,7 @@ public class ProductService : BaseService<ProductService>, IProductService
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             newProduct = _mapper.Map<Product>(createProductRequest);
-          
+
             newProduct.Code = ProductHelper.GenerateSku(
             newProduct.Name,
             newProduct.ProductKind,
@@ -124,7 +124,7 @@ public class ProductService : BaseService<ProductService>, IProductService
     {
         var productRepo = _unitOfWork.GetRepository<Product>();
         var response = await productRepo.GetPagingListAsync<GetAllProductsResponse>(
-                predicate:p =>
+                predicate: p =>
                     p.IsActive != false
                     && (PackagingType == null || p.ProductPackagingType == PackagingType)
                     && (ProductKind == null || p.ProductKind == ProductKind)
@@ -215,20 +215,6 @@ public class ProductService : BaseService<ProductService>, IProductService
                 if (!productDict.TryGetValue(request.ProductId, out var product))
                     throw new NotFoundException($"Product {request.ProductId} not found");
 
-                var existingBatches = await batchRepo
-                    .GetListAsync(predicate: b => b.ProductId == product.Id);
-
-                var batchDict = existingBatches.ToDictionary(
-                    b => (
-                       b.ManuFactureDate.HasValue
-                            ? DateOnly.FromDateTime(b.ManuFactureDate.Value)
-                            : (DateOnly?)null,
-                        b.ExpiryDate.HasValue
-                            ? DateOnly.FromDateTime(b.ExpiryDate.Value)
-                            : (DateOnly?)null
-                    )
-                );
-
                 foreach (var batchRequest in request.ProductBatch)
                 {
                     if (batchRequest.Quantity <= 0)
@@ -237,35 +223,25 @@ public class ProductService : BaseService<ProductService>, IProductService
                     var (manufactureDate, expiryDate) =
                         NormalizeDates(batchRequest, product.LifeSpan);
 
-                    var key = (manufactureDate, expiryDate);
-
-                    if (batchDict.TryGetValue(key, out var existingBatch))
+                    var newBatch = new ProductBatch
                     {
-                        existingBatch.Quantity += batchRequest.Quantity;
-                        batchRepo.Update(existingBatch);
-                    }
-                    else
-                    {
-                        var newBatch = new ProductBatch
-                        {
-                            ProductId = product.Id,
-                            ManuFactureDate = DateTime.SpecifyKind(
+                        ProductId = product.Id,
+                        ManuFactureDate = DateTime.SpecifyKind(
                             manufactureDate.ToDateTime(TimeOnly.MinValue),
                             DateTimeKind.Utc),
 
-                            ExpiryDate = DateTime.SpecifyKind(
+                        ExpiryDate = DateTime.SpecifyKind(
                             expiryDate.ToDateTime(TimeOnly.MinValue),
                             DateTimeKind.Utc),
-                            Quantity = batchRequest.Quantity
-                        };
 
-                        await batchRepo.InsertAsync(newBatch);
+                        Quantity = batchRequest.Quantity
+                    };
 
-                        batchDict[key] = newBatch;
-                    }
+                    await batchRepo.InsertAsync(newBatch);
 
                     product.Quantity += batchRequest.Quantity;
                 }
+
                 productRepo.Update(product);
             }
         });
@@ -372,7 +348,7 @@ public class ProductService : BaseService<ProductService>, IProductService
 
         var totalProducts = await query.CountAsync();
 
-        var lowStock = await query.CountAsync(p => p.Quantity < 30); 
+        var lowStock = await query.CountAsync(p => p.Quantity < 30);
 
         var totalBrands = await query
             .Where(p => p.IsActive == true && p.Quantity > 0)
@@ -386,5 +362,27 @@ public class ProductService : BaseService<ProductService>, IProductService
             LowStockProducts = lowStock,
             TotalBrands = totalBrands
         };
+    }
+
+    public async Task UpdateBatchExpiryAsync(CancellationToken ct = default)
+    {
+        var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+        var now = DateTime.UtcNow;
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var expiredBatches = await batchRepo.GetListAsync(
+            predicate: b =>
+                b.ExpiryDate.HasValue &&
+                b.ExpiryDate <= now &&
+                (b.IsExpired == null || b.IsExpired == false)
+        );
+
+            foreach (var batch in expiredBatches)
+            {
+                batch.IsExpired = true;
+                batch.IsActive = false;
+                batchRepo.Update(batch);
+            }
+        });
     }
 }

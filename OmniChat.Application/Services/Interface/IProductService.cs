@@ -25,4 +25,6 @@ public interface IProductService
     Task<PagingResponse<GetProductBatchesResponse>> GetProductBatchesAsync(Guid productId, bool? isNewest, int pageNumber = 1, int pageSize = 20);
 
     public  Task<InventoryDashboardResponse> GetInventoryDashboardAsync();
+
+    Task UpdateBatchExpiryAsync();
 } 
