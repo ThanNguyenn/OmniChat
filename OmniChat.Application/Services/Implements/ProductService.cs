@@ -364,7 +364,7 @@ public class ProductService : BaseService<ProductService>, IProductService
         };
     }
 
-    public async Task UpdateBatchExpiryAsync(CancellationToken ct = default)
+    public async Task UpdateBatchExpiryAsync()
     {
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
         var now = DateTime.UtcNow;

@@ -20,18 +20,25 @@ public class BatchExpiryBackgroundWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var interval = TimeSpan.FromHours(1);
-
         while (!stoppingToken.IsCancellationRequested)
         {
+            var now = DateTime.UtcNow;
+
+            var nextRun = now.Date.AddDays(1).AddMinutes(1);
+
+            var delay = nextRun - now;
+
+            if (delay < TimeSpan.Zero)
+                delay = TimeSpan.Zero;
+
+            await Task.Delay(delay, stoppingToken);
+
             using var scope = _serviceProvider.CreateScope();
 
             var productService = scope.ServiceProvider
                 .GetRequiredService<IProductService>();
 
             await productService.UpdateBatchExpiryAsync();
-
-            await Task.Delay(interval, stoppingToken);
         }
     }
 }
