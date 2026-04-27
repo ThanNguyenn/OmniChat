@@ -98,19 +98,27 @@ namespace OmniChat.Application.Services.Implements
         {
             try
             {
-               
+                _logger.LogInformation(">>> Processing Webhook Data...");
                 var verifiedData = _payOS.verifyPaymentWebhookData(body);
-
                 long payOsOrderCode = verifiedData.orderCode;
 
                 var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
                 var invoice = await invoiceRepo.SingleOrDefaultAsync(
-                    predicate: x => x.InvoiceCode == payOsOrderCode, // Tìm theo InvoiceCode
-                    include: x => x.Include(i => i.Orders).Include(i => i.CustomerProfile)
+                    predicate: x => x.InvoiceCode == payOsOrderCode,
+                    include: x => x.Include(i => i.Orders).Include(i => i.CustomerProfile) // Đã load CustomerProfile ở đây rồi
                 );
 
-                if (invoice == null) return true;
+                // 1. Kiểm tra NULL trước khi làm bất cứ việc gì khác
+                if (invoice == null)
+                {
+                    _logger.LogWarning($">>> Invoice with Code {payOsOrderCode} not found.");
+                    return true;
+                }
+
                 if (invoice.InvoiceStatus == InvoiceStatus.Completed) return true;
+
+                // 2. Lấy thông tin email từ CustomerProfile đã được Include (không cần query thêm)
+                var customerEmail = invoice.CustomerProfile?.Email;
 
                 if (body.code == "00")
                 {
@@ -121,12 +129,16 @@ namespace OmniChat.Application.Services.Implements
                     foreach (var order in invoice.Orders)
                     {
                         order.Status = OrderStatus.Completed;
-                        await _mailService.SendEmailAsync(new MailContent
+
+                        if (!string.IsNullOrEmpty(customerEmail))
                         {
-                            To = order.CustomerProfile.Email,
-                            Subject = "Order Completed",
-                            Body = $"Your order {order.Name} has been completed. Thank you for shopping with us!"
-                        });
+                            await _mailService.SendEmailAsync(new MailContent
+                            {
+                                To = customerEmail,
+                                Subject = "Order Completed",
+                                Body = $"Your order {order.Name} has been completed. Thank you!"
+                            });
+                        }
                     }
                     invoiceRepo.Update(invoice);
                     await _unitOfWork.CommitAsync();
@@ -134,15 +146,16 @@ namespace OmniChat.Application.Services.Implements
                 }
                 else
                 {
-                    await _mailService.SendEmailAsync(new MailContent
+                    if (!string.IsNullOrEmpty(customerEmail))
                     {
-                        To = invoice.CustomerProfile.Email,
-                        Subject = "Payment Failed",
-                        Body = $"Your payment for invoice {invoice.Id} has failed. Please try again or contact support."
-                    });
+                        await _mailService.SendEmailAsync(new MailContent
+                        { To = customerEmail,
+                          Subject = "Order Failed",
+                          Body = $"Your invoice has Payment failed. Please try again later."
+                        });
+                    }
                     return true;
                 }
-
             }
             catch (Exception ex)
             {
