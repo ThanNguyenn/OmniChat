@@ -108,15 +108,15 @@ namespace OmniChat.Application.Services.Implements
         public async Task HandleEnrichCustomerAsync(EnrichCustomerRequest dto)
         {
 
-            _logger.LogInformation("Start EnrichCustomer | ProfileId: {ProfileId}", dto.ProfileId);
+            _logger.LogInformation("Start EnrichCustomer | ProfileId: {ProfileId}", dto.ActiveCustomerId);
 
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-            var current = await _customerProfileService.GetCustomerProfileByIdAsync(dto.ProfileId);
+            var current = await _customerProfileService.GetCustomerProfileByIdAsync(dto.ActiveCustomerId);
 
             if (current == null)
             {
-                _logger.LogError("Profile not found: {ProfileId}", dto.ProfileId);
+                _logger.LogError("Profile not found: {ProfileId}", dto.ActiveCustomerId);
                 throw new NotFoundException("Profile not found");
             }
 

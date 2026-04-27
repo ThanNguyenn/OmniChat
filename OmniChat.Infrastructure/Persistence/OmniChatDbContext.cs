@@ -1274,6 +1274,19 @@ namespace OmniChat.Infrastructure.Persistence
             modelBuilder.Entity<Invoice>()
                 .HasIndex(i => i.CustomerId); // index scan Invoice by customer faster
 
+            modelBuilder.HasSequence<long>("InvoiceCodeSeq")
+            .StartsAt(100000)
+            .IncrementsBy(1);
+
+            modelBuilder.Entity<Invoice>()
+                .HasIndex(i => i.InvoiceCode)
+                .IsUnique();
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.InvoiceCode)
+                .HasDefaultValueSql("nextval('\"InvoiceCodeSeq\"')")
+                .ValueGeneratedOnAdd();
+
             // ==== Order - CreditNote (one - Many)
 
             modelBuilder.Entity<CreditNote>()

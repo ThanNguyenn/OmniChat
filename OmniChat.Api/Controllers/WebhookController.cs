@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Net.payOS.Types;
+using Newtonsoft.Json;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
@@ -106,6 +107,7 @@ namespace OmniChat.Api.Controllers
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> HandlePayOsWebhook([FromBody] WebhookType body)
         {
+            _logger.LogInformation(">>> PAYOS WEBHOOK RECEIVED: {0}", JsonConvert.SerializeObject(body));
             var result = await _payOsService.HandleWebhookAsync(body);
 
             return Ok(new ApiResponse<object>

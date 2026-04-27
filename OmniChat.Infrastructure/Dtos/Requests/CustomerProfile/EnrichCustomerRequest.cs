@@ -8,7 +8,7 @@ namespace OmniChat.Infrastructure.Dtos.Requests.CustomerProfile
 {
     public class EnrichCustomerRequest
     {
-        public Guid ProfileId { get; set; }
+        public Guid ActiveCustomerId { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
         public string Address { get; set; }

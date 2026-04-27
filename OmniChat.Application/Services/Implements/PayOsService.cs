@@ -55,7 +55,7 @@ namespace OmniChat.Application.Services.Implements
             var paid = invoice.PaidAmount;
             var remainingAmount = total - deducted - paid;
 
-            long payOsOrderCode = long.Parse(DateTimeOffset.Now.ToString("MMddHHmmss"));
+            long payOsOrderCode = invoice.InvoiceCode;
 
             var items = invoice.Orders.Select(order => new ItemData(
                 name: order.Name,
@@ -67,7 +67,7 @@ namespace OmniChat.Application.Services.Implements
             var paymentData = new PaymentData(
               orderCode: payOsOrderCode,
                 amount: (int)remainingAmount,
-                 description: $"INV|{invoice.Id}",
+                 description: $"Payment for{invoice.CreateAt:dd-MM}",
                      cancelUrl: "https://omni-chat-web.vercel.app/payment?status=fail",
                          returnUrl: "https://omni-chat-web.vercel.app/payment?status=success",
                             items: items
@@ -98,26 +98,20 @@ namespace OmniChat.Application.Services.Implements
         {
             try
             {
-
+               
                 var verifiedData = _payOS.verifyPaymentWebhookData(body);
-                string description = verifiedData.description;
-                if (string.IsNullOrEmpty(description) || !description.StartsWith("INV|"))
-                    return true;
 
-                if (!Guid.TryParse(description.Split('|')[1], out Guid invoiceId))
-                    return true;
-
+                long payOsOrderCode = verifiedData.orderCode;
 
                 var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
                 var invoice = await invoiceRepo.SingleOrDefaultAsync(
-                    predicate: x => x.Id == invoiceId,
+                    predicate: x => x.InvoiceCode == payOsOrderCode, // Tìm theo InvoiceCode
                     include: x => x.Include(i => i.Orders).Include(i => i.CustomerProfile)
                 );
 
                 if (invoice == null) return true;
                 if (invoice.InvoiceStatus == InvoiceStatus.Completed) return true;
 
-                // Kiểm tra mã thành công (code "00")
                 if (body.code == "00")
                 {
                     invoice.InvoiceMethod = InvoiceMethod.BankTransfer;

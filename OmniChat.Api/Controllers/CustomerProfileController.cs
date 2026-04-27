@@ -158,7 +158,7 @@ namespace OmniChat.Api.Controllers
             [FromBody] EnrichCustomerRequest request)
         {
 
-            if (request == null || request.ProfileId == Guid.Empty)
+            if (request == null || request.ActiveCustomerId == Guid.Empty)
             {
                 return BadRequest(new ApiResponse<bool>
                 {
