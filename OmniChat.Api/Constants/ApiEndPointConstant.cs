@@ -290,6 +290,7 @@ public class ApiEndPointConstant
         public const string ExportToExcel = Base + "/{id}/export";
         public const string GetAll = Base + "/get";
         public const string GetById = Base + "/get/{id}";
+        public const string ConfirmPayment = Base + "/confirm-payment";
 
     }
 

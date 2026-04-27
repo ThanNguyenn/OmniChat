@@ -68,8 +68,8 @@ namespace OmniChat.Application.Services.Implements
               orderCode: payOsOrderCode,
                 amount: (int)remainingAmount,
                  description: $"Payment for{invoice.CreateAt:dd-MM}",
-                     cancelUrl: "https://omni-chat-web.vercel.app/payment?status=fail",
-                         returnUrl: "https://omni-chat-web.vercel.app/payment?status=success",
+                     cancelUrl: "https://omnichat.click/api/v1/invoices/confirm-payment",
+                         returnUrl: "https://omnichat.click/api/v1/invoices/confirm-payment",
                             items: items
              );
 
@@ -102,13 +102,14 @@ namespace OmniChat.Application.Services.Implements
                 var verifiedData = _payOS.verifyPaymentWebhookData(body);
                 long payOsOrderCode = verifiedData.orderCode;
 
+                var orderRepo = _unitOfWork.GetRepository<Order>();
                 var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
                 var invoice = await invoiceRepo.SingleOrDefaultAsync(
                     predicate: x => x.InvoiceCode == payOsOrderCode,
-                    include: x => x.Include(i => i.Orders).Include(i => i.CustomerProfile) // Đã load CustomerProfile ở đây rồi
+                    include: x => x.Include(i => i.Orders).Include(i => i.CustomerProfile) 
                 );
 
-                // 1. Kiểm tra NULL trước khi làm bất cứ việc gì khác
+               
                 if (invoice == null)
                 {
                     _logger.LogWarning($">>> Invoice with Code {payOsOrderCode} not found.");
@@ -117,7 +118,7 @@ namespace OmniChat.Application.Services.Implements
 
                 if (invoice.InvoiceStatus == InvoiceStatus.Completed) return true;
 
-                // 2. Lấy thông tin email từ CustomerProfile đã được Include (không cần query thêm)
+
                 var customerEmail = invoice.CustomerProfile?.Email;
 
                 if (body.code == "00")
@@ -140,6 +141,8 @@ namespace OmniChat.Application.Services.Implements
                             });
                         }
                     }
+
+                    orderRepo.UpdateRange(invoice.Orders);
                     invoiceRepo.Update(invoice);
                     await _unitOfWork.CommitAsync();
                     return true;
