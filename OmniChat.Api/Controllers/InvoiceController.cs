@@ -127,18 +127,15 @@ public class InvoiceController : BaseController<InvoiceController>
     public async Task<IActionResult> ConfirmPayment(
     [FromQuery] string status,
     [FromQuery] string code,
-    [FromQuery] string cancel) // Thêm tham số cancel ở đây
+    [FromQuery] string cancel) 
     {
         _logger.LogInformation("Redirect received: Code={0}, Status={1}, Cancel={2}", code, status, cancel);
 
-        // BẮT PHẢI CÓ: Nếu khách bấm nút Hủy, PayOS sẽ gửi cancel=true
-        // Hoặc nếu code khác 00 thì chắc chắn là không thành công
         if (cancel == "true" || code != "00")
         {
             return Redirect("https://omni-chat-web.vercel.app/payment?status=fail");
         }
 
-        // Chỉ khi code=00 VÀ cancel không phải true thì mới cho success
         if ("00".Equals(code))
         {
             return Redirect("https://omni-chat-web.vercel.app/payment?status=success");
