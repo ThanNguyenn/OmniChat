@@ -2,6 +2,7 @@
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.Performance;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -28,7 +29,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Initialize Performance For Staff Successfully",
+                Message = "Khởi tạo chỉ số hiệu suất cho nhân viên thành công",
                 IsSuccess = true,
                 Data = true
             });
@@ -44,7 +45,7 @@ namespace OmniChat.Api.Controllers
         {
             var targetYear = year ?? DateTime.UtcNow.Year;
             var result = await _staffPerformanceService.GetMonthlyAverageAsync(targetYear);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get monthly average successfully", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, $"Lấy dữ liệu hiệu suất trung bình năm {targetYear} thành công", result);
             return StatusCode(StatusCodes.Status200OK, response);
         }
     }

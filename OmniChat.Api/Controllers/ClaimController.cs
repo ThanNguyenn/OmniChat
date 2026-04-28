@@ -34,7 +34,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Claim History Successfully",
+                Message = "Lấy lịch sử khiếu nại thành công",
                 IsSuccess = true,
                 Data = claims
             });
@@ -54,7 +54,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Pending Claims Successfully",
+                Message = "Lấy danh sách khiếu nại đang chờ xử lý thành công",
                 IsSuccess = true,
                 Data = claims
             });
@@ -73,7 +73,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Create Claim Successfully",
+                Message = "Tạo khiếu nại thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -91,7 +91,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<ClaimDashboardResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Claim Dashboard Successfully",
+                Message = "Lấy dữ liệu dashboard thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -109,7 +109,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Update Claim Successfully",
+                Message = "Cập nhật khiếu nại thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -127,7 +127,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<ClaimDetailResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Approve Claim Successfully",
+                Message = "Phê duyệt khiếu nại thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -146,7 +146,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<ClaimDetailResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Reject Claim Successfully",
+                Message = "Từ chối khiếu nại thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -165,7 +165,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Claims by StaffId Successfully",
+                Message = "Lấy danh sách khiếu nại của nhân viên thành công",
                 IsSuccess = true,
                 Data = claims
             });
@@ -229,7 +229,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<ClaimDetailResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Pending Change Task Successfully",
+                Message = "Lấy danh sách yêu cầu đổi việc đang chờ xử lý thành công",
                 IsSuccess = true,
                 Data = claims
             });

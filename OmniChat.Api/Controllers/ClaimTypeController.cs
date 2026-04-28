@@ -29,7 +29,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<IEnumerable<GetClaimTypeResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get All ClaimType Successfully",
+                Message = "Lấy danh sách loại khiếu nại thành công",
                 IsSuccess = true,
                 Data = claimTypes
             });
@@ -48,7 +48,7 @@ namespace OmniChat.Api.Controllers
             return StatusCode(StatusCodes.Status201Created, new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status201Created,
-                Message = "Create ClaimType Successfully",
+                Message = "Tạo loại khiếu nại mới thành công",
                 IsSuccess = true,
                 Data = true
             });
@@ -69,7 +69,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Update ClaimType Successfully",
+                Message = "Cập nhật loại khiếu nại thành công",
                 IsSuccess = true,
                 Data = true
             });
@@ -89,7 +89,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Delete ClaimType Successfully",
+                Message = "Xóa loại khiếu nại thành công",
                 IsSuccess = true,
                 Data = true
             });

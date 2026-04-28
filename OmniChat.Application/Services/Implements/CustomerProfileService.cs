@@ -116,7 +116,7 @@ namespace OmniChat.Application.Services.Implements
                 );
 
             if(existCustomerProfile == null)
-                throw new NotFoundException("No CustomerProfile foundd");
+                throw new NotFoundException("Không tìm thấy hồ sơ khách hàng với ID: {customerProfileId}");
             
             return existCustomerProfile;
         }
@@ -124,7 +124,7 @@ namespace OmniChat.Application.Services.Implements
         public async Task<GetCustomerProfileResponse> GetCustomerProfileByEmailOrPhoneAsync(string keyword)
         {
             if (string.IsNullOrWhiteSpace(keyword))
-                throw new BadRequestException("Email or Phone is required");
+                throw new BadRequestException("Vui lòng cung cấp Email hoặc Số điện thoại để tìm kiếm.");
 
             var searchRequest = keyword.Trim();
 
@@ -137,7 +137,7 @@ namespace OmniChat.Application.Services.Implements
              );
 
             if (existCustomProfile == null)
-                throw new NotFoundException("No CustomerProfile Found");
+                throw new NotFoundException("Không tìm thấy khách hàng với thông tin đã cung cấp.");
 
             var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile);
 
@@ -152,7 +152,7 @@ namespace OmniChat.Application.Services.Implements
         public async Task<GetCustomerProfileResponse> GetCustomerProfileByCustomerIdAsync(Guid CustomerId)
         {
             if(CustomerId == Guid.Empty)
-                throw new BadRequestException("CustomerId is required");
+                throw new BadRequestException("Mã khách hàng (CustomerId) không được để trống.");
 
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
@@ -161,6 +161,9 @@ namespace OmniChat.Application.Services.Implements
                 include: cp => cp.Include(o => o.Orders)
                .Include(p => p.Invoices)
                );
+
+            if (existCustomProfile == null)
+                throw new NotFoundException("Hồ sơ khách hàng không tồn tại.");
 
             var result = _mapper.Map<GetCustomerProfileResponse>(existCustomProfile);
 
@@ -175,7 +178,7 @@ namespace OmniChat.Application.Services.Implements
         public async Task<GetCustomerProfileResponse> UpdateCustomerProfileByIdAsync(Guid customerId,UpdateCustomerProfileRequest newInfor)
         {
             if (customerId == Guid.Empty)
-                throw new BadRequestException("CustomerId is required");
+                throw new BadRequestException("Mã khách hàng (CustomerId) không hợp lệ.");
 
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
             {
@@ -184,7 +187,7 @@ namespace OmniChat.Application.Services.Implements
                 var customer = await repo.SingleOrDefaultAsync(predicate: x => x.Id == customerId);
 
                 if (customer == null)
-                    throw new NotFoundException("Customer not found");
+                    throw new NotFoundException("Không tìm thấy khách hàng để cập nhật.");
 
             
                 customer.CustomerName = newInfor.CustomerName ?? customer.CustomerName;
@@ -212,21 +215,21 @@ namespace OmniChat.Application.Services.Implements
         public async Task<CustomerDetailResponse> GetCustomerDetailByConversationIdAsync(Guid conversationId)
         {
             if (conversationId == Guid.Empty)
-                throw new BadRequestException("conversationId is required");
+                throw new BadRequestException("Mã hội thoại (ConversationId) là bắt buộc.");
 
             var supportConversation = await _unitOfWork.GetRepository<SupportConversation>().SingleOrDefaultAsync(
                 predicate: x => x.Id == conversationId,
                 include: sc => sc.Include(sc => sc.Providers)
             );
 
-            if (supportConversation == null) throw new NotFoundException("supportConversation not found");
+            if (supportConversation == null) throw new NotFoundException("Cuộc hội thoại hỗ trợ không tồn tại.");
 
             var customer = await _unitOfWork.GetRepository<CustomerProfile>().SingleOrDefaultAsync(
                 predicate: x => x.Id == supportConversation.ActiveCustomerId,
                 include: cp => cp.Include(o => o.Orders).Include(x => x.Invoices)
             );
 
-            if (customer == null) throw new NotFoundException("customer not found");
+            if (customer == null) throw new NotFoundException("Không tìm thấy thông tin khách hàng liên quan đến hội thoại này.");
 
             var provider = await _unitOfWork.GetRepository<Provider>().SingleOrDefaultAsync(
                 predicate: p => p.Id == supportConversation.ProvidersId
@@ -258,12 +261,15 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task UpdateIsformSentCustomerProfileAsync(Guid customerProfileId)
         {
+            if (customerProfileId == Guid.Empty)
+                throw new BadRequestException("Mã hồ sơ khách hàng không hợp lệ.");
+
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
             var customerProfile = await repo.GetByIdAsync(customerProfileId);
 
             if (customerProfile == null)
-                throw new NotFoundException("CustomerProfile not found");
+                throw new NotFoundException("Hồ sơ khách hàng không tồn tại để cập nhật trạng thái Form.");
 
             customerProfile.IsFormSent = true;
 

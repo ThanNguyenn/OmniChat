@@ -9,6 +9,7 @@ using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,14 +30,15 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> CreateProviderAsync(CreateProviderRequest CreateProviderRequest)
         {
-
+            if (string.IsNullOrWhiteSpace(CreateProviderRequest.ProviderName))
+                throw new BadRequestException("ứng dụng liên kết không được để trống.");
             return await _unitOfWork.ProcessInTransactionAsync(async () =>
             {
                 var existProvider = await GetProviderByNameAsync(CreateProviderRequest.ProviderName);
                 if (existProvider != null)
                 {
                     // provider early exist
-                    throw new BadRequestException("Provider already exist.");
+                    throw new BadRequestException("ứng dụng liên kết này đã tồn tại trong hệ thống.");
                 }
 
                 // Map request 
@@ -90,8 +92,17 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<Provider> GetProviderByIdAsync(Guid providerId)
         {
+
+            if (providerId == Guid.Empty)
+                throw new BadRequestException("Mã ứng dụng liên kết không hợp lệ.");
+
             var repo = _unitOfWork.GetRepository<Provider>();
-            return await repo.SingleOrDefaultAsync(predicate: x => x.Id == providerId);
+            var provider = await repo.SingleOrDefaultAsync(predicate: x => x.Id == providerId);
+
+            if (provider == null)
+                throw new NotFoundException("Không tìm thấy ứng dụng liên kết yêu cầu.");
+
+            return provider;
         }
 
         

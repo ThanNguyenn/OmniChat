@@ -35,7 +35,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<WarningDetailRepsone>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get All Conversation Warning Successfully",
+                Message = "Lấy danh sách cảnh báo thành công",
                 IsSuccess = true,
                 Data = warnings
             });
@@ -55,7 +55,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<WarningDetailRepsone>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Conversation Warning By Id Successfully",
+                Message = "Lấy thông tin chi tiết cảnh báo thành công",
                 IsSuccess = true,
                 Data = warning
             });

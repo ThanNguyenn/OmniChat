@@ -2,6 +2,7 @@
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.Staff;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -30,7 +31,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<ShipperResposne>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Retrieved shippers successfully",
+                Message = "Lấy danh sách nhân viên giao hàng thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -50,7 +51,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<object>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Assigned order to shipper successfully",
+                Message = "Bàn giao đơn hàng thành công",
                 IsSuccess = true,
                 Data = null
             });
@@ -58,6 +59,7 @@ namespace OmniChat.Api.Controllers
 
         [HttpGet(ApiEndPointConstant.Shipper.GetById)]
         [ProducesResponseType(typeof(ApiResponse<ShipperResposne>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
            Summary = "Lấy thông tin shipper theo id",
@@ -69,7 +71,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<ShipperResposne>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Retrieved shipper successfully",
+                Message = "Lấy thông tin nhân viên giao hàng thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -87,7 +89,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<ShipperDashboardResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Retrieved shipper dashboard successfully",
+                Message = "Lấy thông tin dashboard thành công",
                 IsSuccess = true,
                 Data = result
             });

@@ -36,7 +36,7 @@ namespace OmniChat.Application.Services.Implements
 
                 if (existed != null)
                 {
-                    throw new BadRequestException("ClaimType already exists");
+                    throw new BadRequestException("Loại khiếu nại này đã tồn tại trong hệ thống.");
                 }
                 // Map request to entity
 
@@ -73,13 +73,13 @@ namespace OmniChat.Application.Services.Implements
 
                 if(existClaimType == null || existClaimType.IsActive == false)
                 {
-                    throw new NotFoundException("ClaimType not found");
+                    throw new NotFoundException("Không tìm thấy loại khiếu nại hoặc loại khiếu nại đã bị ngưng hoạt động.");
                 }
 
                 // check null
                 if (typeRequest == null)
                 {
-                    throw new BadRequestException("New ClaimType is invalid");
+                    throw new BadRequestException("Dữ liệu cập nhật không hợp lệ.");
                 }
 
                 // map newClaim type -> exit claim type
@@ -101,7 +101,7 @@ namespace OmniChat.Application.Services.Implements
 
                 if (existClaimType == null || existClaimType.IsActive == false)
                 {
-                    throw new NotFoundException("ClaimType not found");
+                    throw new NotFoundException("Loại khiếu nại không tồn tại hoặc đã được xóa trước đó.");
                 }
 
                 existClaimType.IsActive = false;
