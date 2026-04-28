@@ -30,7 +30,7 @@ public class WalletController : BaseController<WalletController>
     public async Task<IActionResult> PaymentAsync([FromBody] WalletPaymentRequest walletPaymentRequest)
     {
         var result = await _walletService.AddCreditToWallet(walletPaymentRequest.CustomerId, walletPaymentRequest.Amount);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Payment successful", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Thanh toán thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -45,7 +45,7 @@ public class WalletController : BaseController<WalletController>
     public async Task<IActionResult> GetWalletByCustomerIdAsync([FromRoute] Guid id)
     {
         var result = await _walletService.CalculateWallet(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get wallet successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem ví thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 

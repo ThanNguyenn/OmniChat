@@ -31,7 +31,7 @@ public class ProductBrandController : BaseController<ProductBrandController>
     public async Task<IActionResult> GetAllProductBrands()
     {
         var result = await _productBrandService.GetAllProductBrandsAsync();
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product brands retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Tạo brand sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -44,7 +44,7 @@ public class ProductBrandController : BaseController<ProductBrandController>
     public async Task<IActionResult> GetProductByBrandIdAsync([FromRoute]Guid id)
     {
         var result = await _productBrandService.GetTotalProductByBrandIdAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product brand get successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem brand sản phẩm thành công", result);
 
         return StatusCode(StatusCodes.Status200OK, response);
     }

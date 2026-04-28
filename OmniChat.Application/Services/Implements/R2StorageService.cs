@@ -60,7 +60,7 @@
         public async Task<bool> DeleteImageByRelatedIdAsync(string category, Guid relatedId)
         {
             if (string.IsNullOrWhiteSpace(category))
-                throw new BusinessException($"Unsupported category '{category}'.");
+                throw new BusinessException($"File không hỗ trợ '{category}'.");
 
             category = category.ToLowerInvariant().Trim('/');
             string? fileUrl = null;
@@ -72,7 +72,7 @@
                     case "products":
                         var productRepo = _unitOfWork.GetRepository<Product>();
                         var product = await productRepo.GetByIdAsync(relatedId);
-                        if (product == null) throw new BusinessException("Product not found.");
+                        if (product == null) throw new BusinessException("Không tìm thấy sản phẩm");
 
                         fileUrl = product.ImageUrl;
                         product.ImageUrl = _defaultImages["products"];
@@ -82,13 +82,13 @@
                         var staffRepo = _unitOfWork.GetRepository<Staff>();
                         var staff = await staffRepo.GetQueryable(s => s.Id == relatedId, q => q.Include(s => s.Account)).FirstOrDefaultAsync();
 
-                        if (staff == null) throw new BusinessException("Staff not found.");
+                        if (staff == null) throw new BusinessException("Không tìm thấy nhân viên");
 
                         fileUrl = staff.Account?.AvatarUrl;
                         staff.Account.AvatarUrl = _defaultImages["staff"];
                         break;
                     default:
-                        throw new BusinessException($"Unsupported category '{category}'.");
+                        throw new BusinessException($"File không hỗ trợ '{category}'.");
                 }
             });
 
@@ -118,7 +118,7 @@
         public async Task<bool> UploadImageAsync(Stream fileStream, string fileName, string category, Guid? relatedId = null)
         {
             if (fileStream == null || string.IsNullOrWhiteSpace(fileName))
-                throw new BusinessException("Invalid file upload parameters.");
+                throw new BusinessException("File không hỗ trợ.");
 
             category = category.ToLowerInvariant().Trim('/');
 
@@ -150,7 +150,7 @@
                             var product = await productRepo.GetByIdAsync(relatedId.Value);
 
                             if (product is null)
-                                throw new BusinessException("Product not found");
+                                throw new BusinessException("Không tìm thấy sản phẩm");
 
                             product.ImageUrl = fileUrl;
                             productRepo.Update(product);
@@ -160,12 +160,12 @@
                             var staffRepo = _unitOfWork.GetRepository<Staff>();
                             var staff = await staffRepo.GetQueryable(s => s.Id == relatedId.Value, q => q.Include(s => s.Account)).FirstOrDefaultAsync();
                             if (staff is null || staff.Account is null)
-                                throw new BusinessException("Staff or associated account not found");
+                                throw new BusinessException("Không tìm thấy nhân viên");
                             staff.Account.AvatarUrl = fileUrl;
                             break;
 
                         default:
-                            throw new BusinessException($"Unsupported or missing category: {category}");
+                            throw new BusinessException($"File không hỗ trợ: {category}");
                     }
                 }
                 catch
@@ -241,7 +241,7 @@
                         break;
 
                     default:
-                        throw new BusinessException($"Unsupported category '{category}'.");
+                        throw new BusinessException($"File không hỗ trợ '{category}'.");
                 }
             }
 

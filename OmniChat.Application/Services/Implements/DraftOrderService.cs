@@ -234,7 +234,7 @@ private void ApplyToContext(DraftOrderContext context, List<DraftOrderItem> newI
         }
 
         if (!orderItems.Any())
-            throw new BusinessException("Empty order");
+            throw new BusinessException("Tự động tạo đon thất bại");
 
         return await _orderService.CreateOrderAsync(new CreateOrderRequest
         {
@@ -249,7 +249,7 @@ private void ApplyToContext(DraftOrderContext context, List<DraftOrderItem> newI
         var parsedItems = Parse(message);
 
         if (parsedItems == null || parsedItems.Count == 0)
-            throw new BusinessException("Fail to parse messgae");
+            throw new BusinessException("Tự động tạo đon thất bại");
 
         var orderItems = new List<AddOrderItemRequest>();
 
@@ -275,7 +275,7 @@ private void ApplyToContext(DraftOrderContext context, List<DraftOrderItem> newI
             }
         }
         if (orderItems.Count == 0 || orderItems == null)
-            throw new BusinessException("Fail to auto draft");
+            throw new BusinessException("Tự động tạo đon thất bại");
         _logger.LogInformation("Creating draft order for customer {CustomerId} with {orderItems} items", customerId, orderItems);
         var request = new CreateOrderRequest
         {
@@ -292,7 +292,7 @@ private void ApplyToContext(DraftOrderContext context, List<DraftOrderItem> newI
         var parsedItems = Parse(message);
 
         if (parsedItems == null || parsedItems.Count == 0)
-            throw new BusinessException("Fail to parse messgae");
+            throw new BusinessException("Tự động tạo đon thất bại");
 
         var orderItems = new List<AddOrderItemRequest>();
 
@@ -318,7 +318,7 @@ private void ApplyToContext(DraftOrderContext context, List<DraftOrderItem> newI
             }
         }
         if (orderItems.Count == 0 || orderItems == null)
-            throw new BusinessException("Fail to auto draft");
+            throw new BusinessException("Tự động tạo đon thất bại");
         _logger.LogInformation("Creating draft order for customer {CustomerId} with {orderItems} items", customerId, orderItems);
         var request = new CreateOrderRequest
         {

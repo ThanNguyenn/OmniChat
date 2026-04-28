@@ -32,7 +32,7 @@ public class AuthController : BaseController<AuthController>
     public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
     {
         var result = await _authService.LoginAsync(loginRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Login successful", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Đăng nhập thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -47,7 +47,7 @@ public class AuthController : BaseController<AuthController>
     public async Task<IActionResult> Logout()
     {
         var result = await _authService.LogoutAsync();
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Logout successful", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Đăng xuất thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -62,7 +62,7 @@ public class AuthController : BaseController<AuthController>
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordResquest changePasswordRequest)
     {
         var result = await _authService.ChangePasswordAsync(changePasswordRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Password changed successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Thay đổi mật khẩu thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -77,7 +77,7 @@ public class AuthController : BaseController<AuthController>
     public async Task<IActionResult> RefreshToken([FromBody] RefreshAccessTokenRequest refreshAccessTokenRequest)
     {
         var result = await _authService.RefreshAccessToken(refreshAccessTokenRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Access token refreshed successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Làm mới access token thành công.", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 

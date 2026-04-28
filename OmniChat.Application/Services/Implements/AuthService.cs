@@ -37,11 +37,11 @@ public class AuthService : BaseService<AuthService>, IAuthService
     {
         var accountRepo = _unitOfWork.GetRepository<Account>();
 
-        var account = await accountRepo.SingleOrDefaultAsync(predicate: a => a.UserName == loginRequest.Username || a.Staff.Email == loginRequest.Username, include: q => q.Include(a => a.Role).Include(a => a.Staff)) ?? throw new UnauthorizedException("Username or password incorect");
+        var account = await accountRepo.SingleOrDefaultAsync(predicate: a => a.UserName == loginRequest.Username || a.Staff.Email == loginRequest.Username, include: q => q.Include(a => a.Role).Include(a => a.Staff)) ?? throw new UnauthorizedException("Tên đăng nhập hoặc mật khẩu không chính xác");
 
         if (!await PasswordUtil.VerifyPassword(loginRequest.Password,account.Password))
         {
-            throw new UnauthorizedException("Username or password incorect");
+            throw new UnauthorizedException("Tên đăng nhập hoặc mật khẩu không chính xác");
         }
 
         var guidSecurityClaim = new Tuple<string, Guid>("UserId", account.Id);
@@ -84,11 +84,11 @@ public class AuthService : BaseService<AuthService>, IAuthService
         var repo = _unitOfWork.GetRepository<Account>();
 
         var account = await repo.SingleOrDefaultAsync(predicate: a => a.Id == accountId) ??
-            throw new UnauthorizedException("Account not found.");
+            throw new UnauthorizedException("Không tìm thấy tài khoản");
 
         if (!await PasswordUtil.VerifyPassword(request.OldPassword, account.Password))
         {
-            throw new UnauthorizedException("Old password is incorrect.");
+            throw new UnauthorizedException("Mật khẩu cũ không chính xác");
         }
 
         var newHashedPassword = await PasswordUtil.HashPassword(request.NewPassword);
@@ -107,7 +107,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
         var token = await _refreshTokenService.ValidateRefreshTokenAsync(refreshAccessTokenRequest.RefreshToken);
         if (token == null)
         {
-            throw new UnauthorizedException("Invalid refresh token");
+            throw new UnauthorizedException("Refresh token không chính xác ");
         }
         var guidSecurityClaim = new Tuple<string, Guid>("UserId", token.AccountId);
         var newAccessToken = _jwtUtil.GenerateJwtToken(token.Account, guidSecurityClaim, token.UniqueIdentity);

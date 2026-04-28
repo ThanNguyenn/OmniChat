@@ -131,7 +131,7 @@ public class KeywordService : BaseService<KeywordService>, IKeywordService
         var keywordRepo = _unitOfWork.GetRepository<Keyword>();
         return _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var existingKeyword = await keywordRepo.SingleOrDefaultAsync(predicate: k => k.Id == keywordId && k.IsDeleted != true) ?? throw new NotFoundException($"Keyword {keywordId} not found");
+            var existingKeyword = await keywordRepo.SingleOrDefaultAsync(predicate: k => k.Id == keywordId && k.IsDeleted != true) ?? throw new NotFoundException($"Không tìm thấy từ khóa");
             _mapper.Map(updateKeywordRequest, existingKeyword);
             keywordRepo.Update(existingKeyword);
             return true;

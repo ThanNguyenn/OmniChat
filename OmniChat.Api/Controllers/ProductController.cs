@@ -33,7 +33,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> CreateProduct([FromForm] CreateProductRequest createProductRequest)
     {
         var result = await _productService.CreateProductAsync(createProductRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Product created successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
@@ -50,7 +50,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> UpdateProduct([FromRoute]Guid id,[FromBody] UpdateProductRequest updateProductRequest)
     {
         var result = await _productService.UpdateProductAsync(id, updateProductRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product updated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cập nhật sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -68,7 +68,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> UpdateProductImage([FromRoute] Guid id, [FromForm] UpdateProductImageRequest updateProductRequest)
     {
         var result = await _productService.UpdateProductImageAsync(id, updateProductRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product updated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cập nhật sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -85,7 +85,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> DeleteProduct([FromRoute]Guid id)
     {
         var result = await _productService.DeleteProductAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Product deleted successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -111,7 +111,7 @@ public class ProductController : BaseController<ProductController>
             sortBy ?? "createdate",
             descending ?? true
             );
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get all products successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -127,7 +127,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> GetAllProductsCreateOrder([FromQuery] GetAllProductsCreateOrderQueryRequest getAllProductsCreateOrderQueryRequest)
     {
         var result = await _productService.GetProductForCreateOrderByIdAsync(getAllProductsCreateOrderQueryRequest);      
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get all products successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -143,7 +143,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> GetProductById([FromRoute]Guid id)
     {
         var result = await _productService.GetProductByIdAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get product by id successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -191,7 +191,7 @@ public class ProductController : BaseController<ProductController>
         return Ok(new ApiResponse<InventoryDashboardResponse>
         {
             StatusCode = StatusCodes.Status200OK,
-            Message = "Get Inventory Dashboard Successfully",
+            Message = "Xem thống kê kho thành công",
             IsSuccess = true,
             Data = result
         });

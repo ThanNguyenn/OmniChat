@@ -78,7 +78,7 @@ public class ProductService : BaseService<ProductService>, IProductService
             var existingProduct = await productRepo.SingleOrDefaultAsync(predicate: p => p.Id == ProductId);
             if (existingProduct == null)
             {
-                throw new NotFoundException("Product not found");
+                throw new NotFoundException("Không tìm thấy sản phẩm");
             }
             existingProduct.IsActive = false;
             productRepo.Update(existingProduct);
@@ -94,7 +94,7 @@ public class ProductService : BaseService<ProductService>, IProductService
             var existingProduct = await productRepo.SingleOrDefaultAsync(predicate: p => p.Id == ProductId);
             if (existingProduct == null)
             {
-                throw new NotFoundException("Product not found");
+                throw new NotFoundException("Không tìm thấy sản phẩm");
             }
             _mapper.Map(updateProductRequest, existingProduct);
             productRepo.Update(existingProduct);
@@ -105,7 +105,7 @@ public class ProductService : BaseService<ProductService>, IProductService
     public async Task<bool> UpdateProductImageAsync(Guid productId, UpdateProductImageRequest request)
     {
         if (request?.Image == null || request.Image.Length == 0)
-            throw new BusinessException("Invalid image file.");
+            throw new BusinessException("File không hỗ trợ");
 
         var stream = request.Image.OpenReadStream();
         var fileName = request.Image.FileName;
@@ -191,7 +191,7 @@ public class ProductService : BaseService<ProductService>, IProductService
         var product = await productRepo.SingleOrDefaultAsync(
             predicate: p => p.Id == productId && p.IsActive != false,
             include: query => query.Include(p => p.ProductBatches).Include(p => p.Brand)
-        ) ?? throw new NotFoundException($"Product {productId} not found");
+        ) ?? throw new NotFoundException($"Không tìm thấy sản phẩm");
         var response = _mapper.Map<GetProductResponse>(product);
         return response;
     }
@@ -213,13 +213,10 @@ public class ProductService : BaseService<ProductService>, IProductService
             foreach (var request in requests)
             {
                 if (!productDict.TryGetValue(request.ProductId, out var product))
-                    throw new NotFoundException($"Product {request.ProductId} not found");
+                    throw new NotFoundException($"Không tìm thấy sản phẩm");
 
                 foreach (var batchRequest in request.ProductBatch)
                 {
-                    if (batchRequest.Quantity <= 0)
-                        throw new BadRequestException("Quantity must be greater than zero");
-
                     var (manufactureDate, expiryDate) =
                         NormalizeDates(batchRequest, product.LifeSpan);
 
@@ -262,7 +259,7 @@ public class ProductService : BaseService<ProductService>, IProductService
             var expectedExpiry = manufactureDate.Value.AddDays(lifeSpanDays);
 
             if (expectedExpiry != expiryDate.Value)
-                throw new BusinessException("ExpiryDate does not match product lifespan");
+                throw new BusinessException("Ngày hết hạn không khớp với vòng đời sản phẩm");
 
             return (manufactureDate.Value, expiryDate.Value);
         }
@@ -279,7 +276,7 @@ public class ProductService : BaseService<ProductService>, IProductService
             return (manufacture, expiryDate.Value);
         }
 
-        throw new BadRequestException("Either ManufactureDate or ExpiryDate must be provided");
+        throw new BadRequestException("Ngày hết hạn không khớp với vòng đời sản phẩm");
     }
 
     public async Task<PagingResponse<GetProductBatchesResponse>> GetProductBatchesAsync(

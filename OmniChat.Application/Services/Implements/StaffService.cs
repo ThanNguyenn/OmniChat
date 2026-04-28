@@ -41,7 +41,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
             var existingStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Email == createStaffRequest.Email || s.Phone == createStaffRequest.Phone);
             if (existingStaff != null)
             {
-                throw new BusinessException("Staff with the same email or phone number already exists.");
+                throw new BusinessException("Nhân viên có cùng email hoặc số điện thoại đã tồn tại");
             }
 
             var staff = _mapper.Map<Staff>(createStaffRequest);
@@ -84,7 +84,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
             var existingStaff = await staffRepository.GetByIdAsync(StaffId);
             if (existingStaff == null)
             {
-                throw new BusinessException("Staff not found.");
+                throw new BusinessException("Không tìm thấy nhân viên");
             }
             _mapper.Map(updateStaffRequest, existingStaff);
             staffRepository.Update(existingStaff);
@@ -101,7 +101,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
             var existingStaff = await staffRepository.GetByIdAsync(StaffId);
             if (existingStaff == null)
             {
-                throw new BusinessException("Staff not found.");
+                throw new BusinessException("Không tìm thấy nhân viên");
             }
             staffRepository.Delete(existingStaff);
             return true;
@@ -177,7 +177,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
         if (activeIntents.Count != intentIds.Count)
         {
-            throw new NotFoundException("One or more intent types not found or inactive.");
+            throw new NotFoundException("Không tìm thấy loại yêu cầu hỗ trợ");
         }
 
         var existingAssignmentIds = (await staffIntentTypeRepo.GetListAsync(predicate: sit =>
@@ -211,7 +211,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();
 
         var existingStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == staffId && s.IsActive != false)
-            ?? throw new NotFoundException($"Staff {staffId} not found or inactive");
+            ?? throw new NotFoundException($"Không tìm thấy nhân viên");
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -237,7 +237,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
             if (validIntents.Count != newIntentIds.Count)
             {
-                throw new NotFoundException("One or more intent types not found or inactive.");
+                throw new NotFoundException("Không tìm thấy loại yêu cầu hỗ trợ");
             }
         }
 
@@ -372,7 +372,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         var order = await orderRepo.GetByIdAsync(orderId);
         if (order == null || order.IsDeleted == true)
         {
-            throw new NotFoundException("Order not found.");
+            throw new NotFoundException("Không tìm thấy đơn hàng");
         }
 
         var staff = await staffRepo.SingleOrDefaultAsync(
@@ -382,32 +382,32 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
         if (staff == null)
         {
-            throw new NotFoundException("Staff not found.");
+            throw new NotFoundException("Không tìm thấy nhân viên");
         }
 
 
         var roleName = staff.Account?.Role?.Name;
         if (roleName == null || roleName != "Shipper")
         {
-            throw new BadRequestException("Staff is not a shipper.");
+            throw new NotFoundException("Không tìm thấy nhân viên");
         }
 
 
         if (staff.IsActive != true)
         {
-            throw new BadRequestException("Staff is not active.");
+            throw new NotFoundException("hông tìm thấy nhân viên");
         }
 
 
         if (staff.Status != StaffStatus.Online)
         {
-            throw new BadRequestException("Shipper is not online.");
+            throw new NotFoundException("hông tìm thấy nhân viên");
         }
 
 
         if (order.DriverId != null)
         {
-            throw new BadRequestException("Order already has a shipper.");
+            throw new BusinessException("Đơn hàng đã dươc phân công");
         }
 
 
@@ -488,7 +488,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
         if (shipper == null)
         {
-            throw new NotFoundException("Shipper not found");
+            throw new NotFoundException("Không tìm thấy nhân viên");
         }
 
         return shipper;
@@ -530,7 +530,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
     public async Task<bool> UploadStaffImage(Guid staffId, UploadStaffImageRequest request)
     {
         if (request?.Image == null || request.Image.Length == 0)
-            throw new BusinessException("Invalid image file.");
+            throw new BusinessException("File không được hỗ trợ");
 
         var stream = request.Image.OpenReadStream();
         var fileName = request.Image.FileName;

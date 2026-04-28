@@ -132,7 +132,7 @@ public class SheetExportService : BaseService<SheetExportService>, ISheetExportS
                         .Where(ps => ps.Status == PostSaleRequestStatus.Approved &&
                                      ps.Type == PostSaleRequestType.Return))
                         .ThenInclude(ps => ps.PostSaleItems),
-            asNoTracking: true).AsSplitQuery().FirstOrDefaultAsync() ?? throw new NotFoundException($"Invoice {invoiceId} not found");
+            asNoTracking: true).AsSplitQuery().FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy phiếu thanh toán");
         return invoice;
     }
 

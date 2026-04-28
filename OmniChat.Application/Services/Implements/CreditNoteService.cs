@@ -26,7 +26,7 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
     public async Task<bool> CreateCreditNoteAdjustmentAsync(Guid orderId, double amount)
     {
         if (amount <= 0)
-            throw new BusinessException("Amount must be > 0");
+            throw new BusinessException("Số lượng phải > 0");
 
         var creditNoteRepo = _unitOfWork.GetRepository<CreditNote>();
         var creditNote = new CreditNote
@@ -47,7 +47,7 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
     public async Task<bool> CreateCreditNoteRefundAsync(Guid orderId, double amount)
     {
         if (amount <= 0)
-            throw new BusinessException("Amount must be > 0");
+            throw new BusinessException("Số lượng phải > 0");
 
         var creditNoteRepo = _unitOfWork.GetRepository<CreditNote>();
         var orderRepo = _unitOfWork.GetRepository<Order>();

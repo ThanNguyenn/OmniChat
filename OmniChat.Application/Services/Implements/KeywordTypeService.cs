@@ -33,7 +33,7 @@ public class KeywordTypeService : BaseService<KeywordTypeService>, IKeywordTypeS
     public async Task<bool> DeleteKeywordTypeAsync(Guid keywordTypeId)
     {
         var keywordTypeRepo = _unitOfWork.GetRepository<IntentType>();
-        var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId) ?? throw new NotFoundException($"Keyword type {keywordTypeId} not found");
+        var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId) ?? throw new NotFoundException($"Không tìm thấy loại từ khóa");
         existingKeywordType.IsActive = false;
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -52,7 +52,7 @@ public class KeywordTypeService : BaseService<KeywordTypeService>, IKeywordTypeS
     public async Task<GetKeywordTypeResponse> GetKeywordTypeAsync(Guid keywordTypeId)
     {
         var keywordTypeRepo = _unitOfWork.GetRepository<IntentType>();
-        var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId && kt.IsActive != false) ?? throw new NotFoundException($"Keyword type {keywordTypeId} not found");
+        var existingKeywordType = await keywordTypeRepo.SingleOrDefaultAsync(predicate: kt => kt.Id == keywordTypeId && kt.IsActive != false) ?? throw new NotFoundException($"Không tìm thấy loại từ khóa");
         var response = _mapper.Map<GetKeywordTypeResponse>( existingKeywordType);
         return response;
     }
