@@ -39,7 +39,7 @@ public class InvoiceController : BaseController<InvoiceController>
     public async Task<IActionResult> TotalRevenueAsync([FromQuery] string period)
     {
         var result = await _invoiceService.GetTotalIncomeAsync(period);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Total revenue calculated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem thống kê tổng doanh thu thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -56,7 +56,7 @@ public class InvoiceController : BaseController<InvoiceController>
     public async Task<IActionResult> TotalUnpaidAsync([FromQuery] string period)
     {
         var result = await _invoiceService.GetTotalUnpaidAsync(period);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Total unpaid calculated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem thống kê tổng nợu thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -91,7 +91,7 @@ public class InvoiceController : BaseController<InvoiceController>
         Summary = "Lấy danh sách Invoice",
         Description = "Lấy danh sách Invoice có phân trang, và sắp xếp theo field chỉ định."
     )]
-    public async Task<IActionResult> GetAllProducts([FromQuery] Guid? customerId, string? customerName, InvoiceStatus? status, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    public async Task<IActionResult> GetAllInvoices([FromQuery] Guid? customerId, string? customerName, InvoiceStatus? status, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _invoiceService.GetInvoicesAsync(
             customerId,
@@ -102,7 +102,7 @@ public class InvoiceController : BaseController<InvoiceController>
             sortBy ?? "createddate",
             descending ?? true
             );
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get all products successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách phiếu thanh toán thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -118,7 +118,7 @@ public class InvoiceController : BaseController<InvoiceController>
     public async Task<IActionResult> GetInvoiceById([FromRoute] Guid id)
     {
         var result = await _invoiceService.GetInvoiceAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get invoice by id successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem phiếu thanh toán thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
 
     }
