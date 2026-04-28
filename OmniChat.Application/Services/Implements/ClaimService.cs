@@ -52,7 +52,7 @@ namespace OmniChat.Application.Services.Implements
                
                  var claimType = await _claimTypeRepo.GetByIdAsync(claimRequest.ClaimTypeId);
                  if (claimType == null)
-                     throw new Exception("Loại khiếu nại (Claim Type) không tồn tại.");
+                     throw new NotFoundException("Loại khiếu nại (Claim Type) không tồn tại.");
 
                  var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
 
@@ -61,13 +61,16 @@ namespace OmniChat.Application.Services.Implements
                      if (!claimRequest.SupportConversationId.HasValue || claimRequest.SupportConversationId == Guid.Empty)
                      {
                         
-                         throw new Exception("Yêu cầu thay đổi công việc (CHANGETASK) bắt buộc phải đính kèm cuộc hội thoại hỗ trợ.");
+                         throw new BadRequestException("Yêu cầu thay đổi công việc (CHANGETASK) bắt buộc phải đính kèm cuộc hội thoại hỗ trợ.");
                      }
                      var conversation = await _conversationRepo.SingleOrDefaultAsync(
                          predicate: x => x.Id == claimRequest.SupportConversationId.Value,
                             include: c => c.Include(conv => conv.SupportTasks)
                      );
-                      
+
+                     if (conversation == null)
+                         throw new NotFoundException("Không tìm thấy cuộc hội thoại được yêu cầu thay đổi.");
+
                      conversation.Status = ConversationStatus.PendingReassign;
 
                      foreach (var task in conversation.SupportTasks)
@@ -322,22 +325,22 @@ namespace OmniChat.Application.Services.Implements
             var claimRepo = _unitOfWork.GetRepository<Claim>();
 
             var claim = await claimRepo.SingleOrDefaultAsync(predicate: c => c.Id == claimId);
-            if (claim == null) throw new NotFoundException($"Claim {claimId} not found");
+            if (claim == null) throw new NotFoundException($"Không tìm thấy yêu cầu khiếu nại (ID: {claimId})");
 
             claim.Status = ClaimStatus.Approved;
             claimRepo.Update(claim);
 
             var conversation = await converRepo.SingleOrDefaultAsync(predicate: cs => cs.Id == conversationReAssignId,
                 include: c => c.Include(x => x.SupportTasks));
-            if (conversation == null) throw new NotFoundException($"Conversation {conversationReAssignId} not found");
+            if (conversation == null) throw new NotFoundException($"Hội thoại không tồn tại hoặc đã bị xóa.");
 
             var oldStaffId = conversation.ActiveStaffId;
             if (oldStaffId == null)
-                throw new BusinessException("Conversation has no assigned staff to reassign");
+                throw new BadRequestException("Cuộc hội thoại này hiện không có nhân viên phụ trách để thực hiện bàn giao.");
 
             var newStaff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == newStaffAssignId,
          include: s => s.Include(x => x.StaffIntentTypes));
-            if (newStaff == null) throw new NotFoundException($"Staff {newStaffAssignId} not found");
+            if (newStaff == null) throw new NotFoundException($"Nhân viên mới nhận bàn giao không tồn tại trong hệ thống.");
 
 
            
@@ -373,7 +376,7 @@ namespace OmniChat.Application.Services.Implements
                     Action = TaskActionType.Reassigned,
                     ActionById = oldStaffId.Value,
                     ActionToId = newStaffAssignId,
-                    Reason = $"Task reassigned from Staff {oldStaffId} to Staff {newStaffAssignId} due to conversation reassignment"
+                    Reason = $"Chuyển giao từ nhân viên {oldStaffId} sang {newStaffAssignId} theo yêu cầu thay đổi công việc."
                 });
             }
 
@@ -436,7 +439,7 @@ namespace OmniChat.Application.Services.Implements
 
          
                 var claim = await claimRepo.GetByIdAsync(claimId);
-                if (claim == null) throw new NotFoundException("Không tìm thấy yêu cầu Reassign.");
+                if (claim == null) throw new NotFoundException("Không tìm thấy yêu cầu chuyển giao công việc.");
 
                 claim.Status = ClaimStatus.Rejected;
                 claimRepo.Update(claim);
@@ -445,11 +448,13 @@ namespace OmniChat.Application.Services.Implements
                     predicate: c => c.Id == claim.SupportConversationId,
                     include: c => c.Include(x => x.SupportTasks));
 
-                if (conversation == null) throw new NotFoundException("Hội thoại không tồn tại.");
+                if (conversation == null) throw new NotFoundException("Hội thoại liên quan đến yêu cầu này không tồn tại.");
 
                 var staffId = conversation.ActiveStaffId;
 
-              
+                if (staffId == null)
+                    throw new BadRequestException("Không xác định được nhân viên đang phụ trách hội thoại.");
+
                 var currentPendingCount = await conversationRepo.CountAsync(
                     predicate: c => c.ActiveStaffId == staffId &&
                                    c.Status == ConversationStatus.Pending &&
@@ -479,7 +484,7 @@ namespace OmniChat.Application.Services.Implements
                         Action = TaskActionType.Reassigned,
                         ActionById = claim.StaffId,
                         ActionToId = ManagerId,
-                        Reason = $"Reassignment request rejected. Status set to {statusAfterReject}."
+                        Reason = $"Yêu cầu chuyển giao bị từ chối. Trạng thái hội thoại được đưa về: {statusAfterReject}."
                     });
                 }
 

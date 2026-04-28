@@ -31,7 +31,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<IEnumerable<GetsIntentTypeResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get IntentTypes History Successfully",
+                Message = "Lấy danh sách loại yêu cầu thành công",
                 IsSuccess = true,
                 Data = response
             });

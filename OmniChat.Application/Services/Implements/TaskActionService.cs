@@ -63,7 +63,7 @@ namespace OmniChat.Application.Services.Implements
             var taskAction = await taskActionRepo.SingleOrDefaultAsync(predicate: x => x.Id == id);
             if (taskAction == null)
             {
-                throw new NotFoundException("Task Action not found");
+                throw new NotFoundException("Không tìm thấy hành động công việc yêu cầu.");
             }
             return _mapper.Map<TaskActionResponse>(taskAction);
         }

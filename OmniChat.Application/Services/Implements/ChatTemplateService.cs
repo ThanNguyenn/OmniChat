@@ -35,7 +35,7 @@ namespace OmniChat.Application.Services.Implements
 
             if (existingTemplate != null)
             {
-                throw new BadRequestException($"Chat template with code '{request.Code}' already exists");
+                throw new BadRequestException($"Mã Chat template'{request.Code}' đã tồn tại");
             }
 
             var newTemplate = _mapper.Map<ChatTemplate>(request);
@@ -58,13 +58,13 @@ namespace OmniChat.Application.Services.Implements
             
             if (existingTemplate == null)
             {
-                throw new NotFoundException($"Chat template with id '{id}' not found");
+                throw new NotFoundException($"Không tìm thấy Chat template");
             }
             var duplicateTemplate = await repo.SingleOrDefaultAsync(predicate: t => t.Code == request.Code && t.Id != id);
           
             if (duplicateTemplate != null)
             {
-                throw new BadRequestException($"Chat template with code '{request.Code}' already exists");
+                throw new BadRequestException($"Mã Chat template '{request.Code}' đã tồn tại");
             }
 
             _mapper.Map(request, existingTemplate);
@@ -81,7 +81,7 @@ namespace OmniChat.Application.Services.Implements
             var existingTemplate = await repo.GetByIdAsync(id);
             if (existingTemplate == null)
             {
-                throw new NotFoundException($"Chat template with id '{id}' not found");
+                throw new NotFoundException($"Không tìm thấy Chat template");
             }
             repo.Delete(existingTemplate);
             await _unitOfWork.CommitAsync();
@@ -94,7 +94,7 @@ namespace OmniChat.Application.Services.Implements
             var existingTemplate = await repo.GetByIdAsync(id);
             if (existingTemplate == null)
             {
-                throw new NotFoundException($"Chat template with id '{id}' not found");
+                throw new NotFoundException($"Không tìm thấy Chat template");
             }
             return _mapper.Map<ChatTemplateResponse>(existingTemplate);
         }
@@ -156,10 +156,10 @@ namespace OmniChat.Application.Services.Implements
         {
             var codePattern = @"^[A-Za-z]{1,5}\d{1,3}$";
             if (string.IsNullOrWhiteSpace(request.Code) || !Regex.IsMatch(request.Code, codePattern))
-                throw new BadRequestException("Code must follow format: 1-5 letters + 1-3 digits (e.g. H01, TK002)");
+                throw new BadRequestException("Mã ChatTemplate không hợp lệ (Định dạng đúng: 1-5 chữ cái + 1-3 chữ số)");
 
             if (string.IsNullOrWhiteSpace(request.Content) || request.Content.Length > 500)
-                throw new BadRequestException("Content is required and must not exceed 500 characters");
+                throw new BadRequestException("Nội dung ChatTemplate không hợp lệ (Yêu cầu nội dung và không quá 500 ký tự)");
         }
     }
 }

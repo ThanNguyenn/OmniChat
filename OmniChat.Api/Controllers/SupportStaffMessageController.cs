@@ -3,6 +3,7 @@ using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -33,7 +34,11 @@ namespace OmniChat.Api.Controllers
                 pageSize,
                 staffId);
 
-            return Ok(result);
+            var response = ApiResponseBuilder.BuildResponse(
+                StatusCodes.Status200OK, 
+                "Lấy danh sách tin nhắn thành công", 
+                result);
+            return StatusCode(StatusCodes.Status200OK, response);
         }
 
         /// Send message to Zalo
@@ -48,10 +53,14 @@ namespace OmniChat.Api.Controllers
             [FromBody] CreateSupportStaffMessageRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                throw new BadRequestException("Dữ liệu tin nhắn không hợp lệ.");
 
             await _supportStaffMessageService.SendZaloMessageAsync(request);
-            return Ok(new { message = "Message sent to Zalo successfully" });
+
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK,
+                "Gửi tin nhắn Zalo thành công",
+                true);
+            return StatusCode(StatusCodes.Status200OK, response);
         }
 
         /// Send message to Facebook
@@ -69,7 +78,11 @@ namespace OmniChat.Api.Controllers
             [FromBody] CreateSupportStaffMessageRequest request)
         {
             await _supportStaffMessageService.SendFacebookMesageAsync(request);
-            return Ok(new { message = "Message sent to Facebook successfully" });
+            var response = ApiResponseBuilder.BuildResponse(
+                StatusCodes.Status200OK, 
+                "Gửi tin nhắn Facebook thành công", 
+                true);
+            return StatusCode(StatusCodes.Status200OK, response);
         }
 
         // send message to Instagram

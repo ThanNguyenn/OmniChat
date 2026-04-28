@@ -4,6 +4,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Provider;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
 using OmniChat.Infrastructure.Dtos.Responses.SupportStaffMessage;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -27,24 +28,12 @@ namespace OmniChat.Api.Controllers
             )]
         public async Task<IActionResult> CreateProviderAsync([FromBody] CreateProviderRequest createProviderRequest)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiResponse<object>
-                {
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    Message = "Invalid request",
-                    Reason = "Validation failed",
-                    IsSuccess = false,
-                    Data = ModelState
-                });
-            }
-
             await _providerService.CreateProviderAsync(createProviderRequest);
 
             return StatusCode(StatusCodes.Status201Created, new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status201Created,
-                Message = "Create provider successfully",
+                Message = "Tạo ứng dụng liên kết thành công",
                 IsSuccess = true,
                 Data = true
             });
@@ -68,7 +57,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<GetAllProviderResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get providers successfully",
+                Message = "Lấy danh sách ứng dụng liên kết thành công",
                 IsSuccess = true,
                 Data = result
             });

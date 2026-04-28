@@ -51,7 +51,7 @@ namespace OmniChat.Application.Services.Implements
                     .Include(c => c.Providers));
 
             if (exitSupportConversation == null)
-                throw new NotFoundException("No supportConversation Found");
+                throw new NotFoundException("Không tìm thấy cuộc trò chuyện");
 
             return exitSupportConversation;
         }
@@ -97,14 +97,14 @@ namespace OmniChat.Application.Services.Implements
             
             if (conversation.Status == ConversationStatus.Complete)
             {
-                throw new BadRequestException("Conversation already completed");
+                throw new BadRequestException("Cuộc trò chuyện này đã được hoàn thành trước đó");
             }
 
             var allDone = conversationTasks.All(x => x.Status == SupportTaskStatus.Done);
 
             if (!allDone)
             {
-                throw new BadRequestException("Conversation tasks are not complete yet");
+                throw new BadRequestException("Chưa hoàn thành hết Task");
             }
 
             conversation.Status = ConversationStatus.Complete;
@@ -148,7 +148,7 @@ namespace OmniChat.Application.Services.Implements
             var conversation = await repo.GetByIdAsync(conversationId);
 
             if (conversation == null)
-                throw new Exception("Conversation not found");
+                throw new Exception("Không tìm thấy cuộc trò chuyện");
 
             conversation.UpdateDate = DateTime.UtcNow;
 
@@ -217,7 +217,7 @@ namespace OmniChat.Application.Services.Implements
                 .FirstOrDefaultAsync();
 
             if (conversation == null)
-                throw new NotFoundException("Completed support conversation not found");
+                throw new NotFoundException("Không tìm thấy lịch sử cuộc trò chuyện đã hoàn thành");
 
             var customerProfile = await _customerProfileService
                 .GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
@@ -365,7 +365,7 @@ namespace OmniChat.Application.Services.Implements
             );
 
             if (conversation == null)
-                throw new NotFoundException("No support conversation found");
+                throw new NotFoundException("Không tìm thấy cuộc trò chuyện");
 
           
             await ReadAllCustomerMessageAsync(conversation.CustomerMessages.ToList());
@@ -469,7 +469,7 @@ namespace OmniChat.Application.Services.Implements
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
             if (conversation.Status == ConversationStatus.Complete)
-                throw new BusinessException("Cannot assign completed conversation");
+                throw new BusinessException("Không thể phân công cho cuộc trò chuyện đã hoàn thành");
 
             if (conversation.IsDistributed)
             {

@@ -52,9 +52,9 @@ namespace OmniChat.Application.Services.Implements
             var response = notifications.Select(n => new NotificationResponse
             {
                 Message = n.MessageText,
-                CustomerName = n.SupportConversation?.CustomerName ?? "Unknown",
+                CustomerName = n.SupportConversation?.CustomerName ?? "Khách ẩn danh",
                 ImageUrl = n.SupportConversation?.AvatarUrl,
-                ProviderName = n.SupportConversation?.Providers?.ProviderName ?? "Unknown",
+                ProviderName = n.SupportConversation?.Providers?.ProviderName ?? "Hệ thống",
                 CreatedDate = n.CreatedDate ?? DateTime.UtcNow,
                 TimeStamp = n.CreatedDate.HasValue
                             ? new DateTimeOffset(n.CreatedDate.Value).ToUnixTimeMilliseconds()
@@ -67,6 +67,9 @@ namespace OmniChat.Application.Services.Implements
         // call when call getConversationDetail Api
         public async Task UpdateNotificationIsReadAsync(Guid conversationId)
         {
+            if (conversationId == Guid.Empty) 
+                throw new BadRequestException("Mã cuộc hội thoại không hợp lệ.");
+
             var notificationRepo = _unitOfWork.GetRepository<Notification>();           
             var notifications = await notificationRepo.GetListAsync(
                 predicate: x => x.ConversationId == conversationId && x.IsRead == false

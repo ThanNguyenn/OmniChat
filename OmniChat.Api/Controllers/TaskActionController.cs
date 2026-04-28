@@ -25,7 +25,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<TaskActionResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Task Actions Successfully",
+                Message = "Lấy danh sách hành động thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -39,7 +39,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<TaskActionResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Task Action By Id Successfully",
+                Message = "Lấy thông tin hành động thành công",
                 IsSuccess = true,
                 Data = result
             });
