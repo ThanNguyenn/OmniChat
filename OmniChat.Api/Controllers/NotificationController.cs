@@ -3,6 +3,7 @@ using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.ClaimType;
 using OmniChat.Infrastructure.Dtos.Responses.Notification;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
@@ -20,6 +21,7 @@ namespace OmniChat.Api.Controllers
 
         [HttpGet(ApiEndPointConstant.NotificationEndPoint.GetUnRead)]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<NotificationResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
         Summary = "Lấy tất cả các notification của staff ",
         Description = "Lấy tất cả các notification của staff bằng staff Id")]
@@ -30,7 +32,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<IEnumerable<NotificationResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get All notification Successfully",
+                Message = "Lấy danh sách thông báo thành công",
                 IsSuccess = true,
                 Data = result
             });

@@ -6,6 +6,7 @@ using OmniChat.Infrastructure.Dtos.Requests.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerMessage;
 using OmniChat.Infrastructure.Dtos.Responses.CustomerProfile;
 using OmniChat.Infrastructure.Dtos.Responses.Provider;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -44,7 +45,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<GetCustomerProfileResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get customer profiles successfully",
+                Message = "Lấy danh sách hồ sơ khách hàng thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -65,7 +66,7 @@ namespace OmniChat.Api.Controllers
             {
                 StatusCode = StatusCodes.Status200OK,
                 IsSuccess = true,
-                Message = "Get customer profile successfully",
+                Message = "Lấy chi tiết khách hàng thành công",
                 Data = result
             });
         }
@@ -88,7 +89,7 @@ namespace OmniChat.Api.Controllers
             {
                 StatusCode = StatusCodes.Status200OK,
                 IsSuccess = true,
-                Message = "Get customer profile successfully",
+                Message = "Tìm thấy khách hàng phù hợp",
                 Data = result
             });
         }
@@ -112,7 +113,7 @@ namespace OmniChat.Api.Controllers
             {
                 StatusCode = StatusCodes.Status200OK,
                 IsSuccess = true,
-                Message = "Customer profile updated successfully",
+                Message = "Cập nhật hồ sơ khách hàng thành công",
                 Data = result
             });
         }
@@ -140,7 +141,7 @@ namespace OmniChat.Api.Controllers
             {
                 StatusCode = StatusCodes.Status200OK,
                 IsSuccess = true,
-                Message = "Merge customer profile successfully",
+                Message = "Gộp hồ sơ khách hàng thành công",
                 Data = result
             });
         }
@@ -175,7 +176,7 @@ namespace OmniChat.Api.Controllers
                 {
                     StatusCode = StatusCodes.Status200OK,
                     IsSuccess = true,
-                    Message = "Enrich customer profile successfully",
+                    Message = "Bổ sung thông tin khách hàng thành công",
                     Data = true
                 });
            

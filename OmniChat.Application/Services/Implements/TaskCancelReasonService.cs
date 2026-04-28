@@ -61,7 +61,7 @@ namespace OmniChat.Application.Services.Implements
             var cancelReason = await cancelReasonRepo.SingleOrDefaultAsync(predicate: x => x.SupportTaskId == supportTaskId);
             if (cancelReason == null)
             {
-                throw new NotFoundException("No TaskCancelReason Found");
+                throw new NotFoundException("Không tìm thấy lý do hủy cho công việc này.");
             }
             return _mapper.Map<TaskCancelReasonResponse>(cancelReason);
         }

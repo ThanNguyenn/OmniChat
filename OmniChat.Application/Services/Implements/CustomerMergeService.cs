@@ -53,13 +53,16 @@ namespace OmniChat.Application.Services.Implements
         {
             _logger.LogInformation("Start MergeAndDeleteAsync | SourceId: {SourceId}, TargetId: {TargetId}", sourceId, targetId);
 
+            if (sourceId == targetId)
+                throw new BadRequestException("Không thể gộp một khách hàng vào chính họ.");
+
             var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
 
             var source = await _customerProfileService.GetCustomerProfileByIdAsync(sourceId);
             var target = await _customerProfileService.GetCustomerProfileByIdAsync(targetId);
 
-            if (source.Id == target.Id)
-                throw new BusinessException("Cannot merge same customer");
+            if (source == null || target == null)
+                throw new NotFoundException("Không tìm thấy hồ sơ khách hàng nguồn hoặc đích.");
 
             _logger.LogInformation("Merging profiles | Source: {SourceId} -> Target: {TargetId}", source.Id, target.Id);
 

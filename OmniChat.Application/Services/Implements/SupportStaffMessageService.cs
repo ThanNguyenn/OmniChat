@@ -204,14 +204,14 @@ namespace OmniChat.Application.Services.Implements
 
             // 1. Tạo tin nhắn và kiểm tra điều kiện
             var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
-            if (newStaffSupportMes == null) throw new Exception("Failed to create SupportStaffMessage");
+            if (newStaffSupportMes == null) throw new Exception("Không thể tạo bản ghi tin nhắn trong hệ thống.");
 
             var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
-            if (existConversation == null) throw new NotFoundException("No SupportConversation Found");
+            if (existConversation == null) throw new NotFoundException("Không tìm thấy cuộc hội thoại tương ứng.");
 
             var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
             if (existCustomerProfile == null || string.IsNullOrEmpty(existCustomerProfile.ZaloSenderId))
-                throw new NotFoundException("Customer Zalo ID not found");
+                throw new NotFoundException("Khách hàng này chưa có hoặc đã bị mất định danh Zalo (ZaloSenderId).");
 
             // 2. Gọi API Zalo
             var accessToken = await _zaloOAuthService.GetAccessTokenAsync();
@@ -234,7 +234,7 @@ namespace OmniChat.Application.Services.Implements
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("[ZALO-SEND] API Error: {Body}", result);
-                throw new Exception($"Zalo API Fail: {result}");
+                throw new BusinessException("Lỗi từ phía Zalo API");
             }
 
             // 3. Cập nhật Database
@@ -405,15 +405,15 @@ namespace OmniChat.Application.Services.Implements
             {
                 // 1. Khởi tạo tin nhắn (DB)
                 var newStaffSupportMes = await CreateSupportStaffMessageAsync(newSupportMess);
-                if (newStaffSupportMes == null) throw new ValidationException("Create fail");
+                if (newStaffSupportMes == null) throw new ValidationException("Không thể tạo bản ghi tin nhắn trong hệ thống.");
 
                 // 2. Lấy thông tin hội thoại & khách hàng
                 var existConversation = await _supportConversationService.GetSupportConversationByIdAsync(newStaffSupportMes.SupportConversationId);
-                if (existConversation == null) throw new NotFoundException("No SupportConversation Found");
+                if (existConversation == null) throw new NotFoundException("Không tìm thấy cuộc hội thoại tương ứng.");
 
                 var existCustomerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(existConversation.ActiveCustomerId);
                 if (existCustomerProfile == null || string.IsNullOrEmpty(existCustomerProfile.FacebookSenderId))
-                    throw new NotFoundException("Customer Facebook ID (PSID) is missing");
+                    throw new NotFoundException("Khách hàng này chưa có hoặc đã bị mất định danh Facebook (FacebookSenderId).");
 
                 // 3. Chuẩn bị gọi API Facebook
                 var pageAccessToken = _configuration["facebookWebHook:AccessToken"];
@@ -437,7 +437,7 @@ namespace OmniChat.Application.Services.Implements
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError("[FB-SEND] Meta API Error: {Error}", result);
-                    throw new BusinessException($"Facebook Send API error: {result}");
+                    throw new BusinessException($"Lỗi từ phía Facebook API: {result}");
                 }
 
                 // 4. Cập nhật trạng thái sau khi gửi thành công

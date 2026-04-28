@@ -68,7 +68,7 @@ namespace OmniChat.Application.Services.Implements
             );
 
             if (warning == null)
-                throw new NotFoundException($"Warning {id} not found");
+                throw new NotFoundException($"Không tìm thấy cảnh báo với mã định danh: {id}");
 
             var response = new WarningDetailRepsone
             {

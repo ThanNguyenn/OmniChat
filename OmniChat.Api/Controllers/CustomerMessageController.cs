@@ -38,7 +38,7 @@ namespace OmniChat.Api.Controllers
                 return BadRequest(new ApiResponse<object>
                 {
                     StatusCode = 400,
-                    Message = "customerId is required",
+                    Message = "Mã khách hàng (CustomerId) là bắt buộc và không được để trống.",
                     IsSuccess = false
                 });
             }
@@ -46,7 +46,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<GetAllCustomerMessageResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get customer messages successfully",
+                Message = "Lấy danh sách tin nhắn thành công",
                 IsSuccess = true,
                 Data = result
             });

@@ -3,6 +3,7 @@ using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.FeedBack;
 using OmniChat.Infrastructure.Dtos.Responses.FeedBack;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -20,6 +21,8 @@ namespace OmniChat.Api.Controllers
 
         [HttpGet(ApiEndPointConstant.FeedBackEndPoint.GetByStaffId)] 
         [ProducesResponseType(typeof(ApiResponse<PagingResponse<FeedBackResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
         Summary = "Lấy danh sách FeedBack theo Staff",
         Description = "Lấy danh sách FeedBack được khách hàng gửi về theo từng nhân viên hỗ trợ")]
@@ -32,13 +35,14 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<FeedBackResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Lấy danh sách FeedBack thành công",
+                Message = "Lấy danh sách phản hồi thành công",
                 IsSuccess = true,
                 Data = result
             });
         }
         [HttpGet(ApiEndPointConstant.FeedBackEndPoint.GetById)]
         [ProducesResponseType(typeof(ApiResponse<FeedBackResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(
               Summary = "Lấy thông tin chi tiết FeedBack",
@@ -46,19 +50,11 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetFeedBackByIdAsync([FromRoute] Guid id)
         {
             var result = await _feedBackService.GetFeedBackByIdAsync(id);
-            if (result is null)
-                return NotFound(new ApiResponse<object>
-                {
-                    StatusCode = StatusCodes.Status404NotFound,
-                    Message = $"Không tìm thấy FeedBack với Id '{id}'",
-                    IsSuccess = false,
-                    Data = null
-                });
 
             return Ok(new ApiResponse<FeedBackResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Lấy thông tin chi tiết FeedBack thành công",
+                Message = "Lấy chi tiết phản hồi thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -67,6 +63,7 @@ namespace OmniChat.Api.Controllers
 
         [HttpPost(ApiEndPointConstant.FeedBackEndPoint.Create)]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [SwaggerOperation(Summary = "Nhận feedback từ form của khách hàng",
             Description ="Nhận feed back từ customer gửi về thông qua form gửi từ vercel"
@@ -99,7 +96,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<string>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Khởi tạo link feedback thành công",
+                Message = "Khởi tạo đường dẫn phản hồi thành công",
                 IsSuccess = true,
                 Data = feedbackLink
             });

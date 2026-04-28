@@ -36,7 +36,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<SupportConversationDetailResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Conversation Detail Successfully",
+                Message = "Xem cuộc trò chuyện thành công",
                 IsSuccess = true,
                 Data = conversationDetail
             });
@@ -55,7 +55,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<IEnumerable<StaffConversationSideBarResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Staff Conversation Sidebar Successfully",
+                Message = "Xem danh sách cuộc trò chuyện thành công",
                 IsSuccess = true,
                 Data = sidebarConversations
             });
@@ -74,7 +74,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<SupportConversationDetailResponse>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Completed Conversation Detail Successfully",
+                Message = "Xem chi tiết lịch sử cuộc trò chuyện thành công",
                 IsSuccess = true,
                 Data = conversation
             });
@@ -82,6 +82,7 @@ namespace OmniChat.Api.Controllers
 
         [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.CustomerCompleteConversationHistory)]
         [ProducesResponseType(typeof(ApiResponse<List<CompleteSupportConversationHistoryResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
             Summary = "Lấy lịch sử cuộc trò chuyện đã hoàn thành của khách hàng",
             Description = "Lấy toàn bộ lịch sử cuộc trò chuyện support đã hoàn thành trước đó của khách hàng theo CustomerId"
@@ -89,7 +90,12 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetCustomerCompleteConversationHistoryAsync([FromRoute] Guid customerId)
         {
             if (customerId == Guid.Empty)
-                return BadRequest("CustomerId is invalid");
+                return BadRequest(new ApiResponse<object>
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Mã khách hàng không hợp lệ", 
+                    IsSuccess = false
+                });
 
             var conversations = await _supportConversationService
                 .GetCustomerCompleteSupportConversationHistoryAsync(customerId);
@@ -97,7 +103,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<List<CompleteSupportConversationHistoryResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Customer Complete Conversation History Successfully",
+                Message = "Xem lịch sử cuộc trò chuyện thành công",
                 IsSuccess = true,
                 Data = conversations
             });
@@ -118,7 +124,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Complete Conversation Successfully",
+                Message = "Hoàn thành Conversation thành công",
                 IsSuccess = true,
                 Data = result
             });
@@ -141,7 +147,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<StaffConversationResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Get Staff Conversations For Select Successfully",
+                Message = "Xem danh sách cuộc trò chuyện thành công",
                 IsSuccess = true,
                 Data = result
             });

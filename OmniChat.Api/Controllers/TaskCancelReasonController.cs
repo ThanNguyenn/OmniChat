@@ -25,7 +25,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetAllTaskCancelReasonAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _taskCancelReasonService.GetAllTaskCancelReasonAsync(page, pageSize);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Cancel Reason successfully", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Lấy danh sách lý do hủy thành công", result);
             return StatusCode(StatusCodes.Status200OK, response);
         }
 
@@ -37,7 +37,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetBySupportTaskIdAsync([FromRoute] Guid supportTaskId)
         {
             var result = await _taskCancelReasonService.GetTaskCancelReasonBySupportTaskIdAsync(supportTaskId);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Cancel Reason successfully", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Lấy lý do hủy thành công", result);
             return StatusCode(StatusCodes.Status200OK, response);
         }
     }

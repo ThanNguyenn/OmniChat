@@ -8,6 +8,7 @@ using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.FeedBack;
 using OmniChat.Infrastructure.Dtos.Responses.FeedBack;
 using OmniChat.Infrastructure.Dtos.Responses.TaskAction;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
@@ -69,7 +70,7 @@ namespace OmniChat.Application.Services.Implements
 
             if (feedback == null)
             {
-                return null;
+                throw new NotFoundException($"Không tìm thấy phản hồi với mã định danh: {feedBackId}");
             }
 
             return _mapper.Map<FeedBackResponse>(feedback);
@@ -85,10 +86,10 @@ namespace OmniChat.Application.Services.Implements
             var conversation = await conversationRepo.GetByIdAsync(conversationId);
 
             if (conversation is null)
-                throw new KeyNotFoundException($"Không tìm thấy cuộc hội thoại với Id '{conversationId}'");
+                throw new KeyNotFoundException($"Không tìm thấy cuộc hội thoại với mã: {conversationId}'");
 
             if (conversation.ActiveStaffId is null)
-                throw new InvalidOperationException("Cuộc hội thoại này chưa có nhân viên phụ trách.");
+                throw new InvalidOperationException("Cuộc hội thoại này chưa có nhân viên phụ trách, không thể tạo phản hồi.");
 
         
             var feedbackRepo = _unitOfWork.GetRepository<FeedBack>();
