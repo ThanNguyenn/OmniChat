@@ -29,10 +29,10 @@ public class AccountService : BaseService<AccountService>, IAccountService
         var staffRepo = _unitOfWork.GetRepository<Staff>();
 
         var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.Id == request.StaffId)
-            ?? throw new NotFoundException("Staff not found");
+            ?? throw new NotFoundException("Không tìm thấy nhân viên");
 
         if (staff.AccountId != null)
-            throw new BusinessException("Account for this staff already exists");
+            throw new BusinessException("Tài khoản cho nhân viên này đã tồn tại");
 
         //var defaultPassword = PasswordUtil.GenerateDefaultPassword();
         var defaultPassword = "Omnichat@0294"; //Temporary hardcode password

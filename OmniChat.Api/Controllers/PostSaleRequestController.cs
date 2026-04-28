@@ -32,7 +32,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
     public async Task<IActionResult> GetPostSaleRequests([FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _postSaleRequestService.GetPostSaleRequestsAsync(pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get post sale requests successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách yêu cầu hậu mãi thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -48,7 +48,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
     public async Task<IActionResult> GetPostSaleRequestById([FromRoute] Guid id)
     {
         var result = await _postSaleRequestService.GetPostSaleRequestByIdAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get post sale request successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem yêu cầu hậu mãi thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -64,7 +64,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
     public async Task<IActionResult> CreatePostSaleRequest([FromBody] CreatePostSaleRequestRequest request)
     {
         var result = await _postSaleRequestService.CreatePostSaleRequestAsync(request);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Create post sale request successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo yêu cầu hậu mãi thành công", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
@@ -112,7 +112,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
     public async Task<IActionResult> ApprovePostSaleRequest([FromRoute] Guid id)
     {
         var result = await _postSaleRequestService.AcceptPostSaleRequestAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Approve post sale request successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Phê duyệt yêu cầu hậu mãi thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -128,7 +128,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
     public async Task<IActionResult> RejectPostSaleRequest([FromRoute] Guid id)
     {
         var result = await _postSaleRequestService.RejectPostSaleRequestAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Reject post sale request successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Từ chối yêu cầu hậu mãi thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 }

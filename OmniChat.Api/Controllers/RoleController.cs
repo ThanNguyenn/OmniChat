@@ -29,7 +29,7 @@ public class RoleController : BaseController<RoleController>
     public async Task<IActionResult> GetRoles()
     {
         var roles = await _roleService.GetRolesAsync();
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get roles successfully", roles);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách vai trò thành công", roles);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 }

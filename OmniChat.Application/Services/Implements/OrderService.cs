@@ -65,10 +65,10 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 var batch = batches.FirstOrDefault(b => b.Id == item.ProductBatchId);
 
                 if (batch == null)
-                    throw new NotFoundException("Product batch not found");
+                    throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
                 if (batch.Quantity < item.Quantity)
-                    throw new BusinessException("Insufficient stock");
+                    throw new BusinessException("Không đủ hàng");
 
                 batch.Quantity -= item.Quantity;
 
@@ -100,7 +100,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 var order = await orderRepo.GetByIdAsync(orderId);
                 if (order == null)
                 {
-                    throw new NotFoundException("Order not found");
+                    throw new NotFoundException("Không tìm thấy đơn hàng");
                 }
                 order.IsDeleted = true;
                 orderRepo.Update(order);
@@ -205,7 +205,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
             if (order == null)
             {
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
             }
 
             return _mapper.Map<TResponse>(order);
@@ -234,7 +234,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 var order = await orderRepo.GetByIdAsync(orderId);
                 if (order == null)
                 {
-                    throw new NotFoundException("Order not found");
+                    throw new NotFoundException("Không tìm thấy đơn hàng");
                 }
                 _mapper.Map(updateOrderRequest, order);
                 orderRepo.Update(order);
@@ -252,11 +252,9 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 predicate: o => o.Id == orderId,
                 include: q => q.Include(o => o.OrderItems));
             if (order == null)
-                throw new NotFoundException("Order not found");
-            if (order.Status == OrderStatus.Cancelled)
-                throw new BusinessException("Order already cancelled");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
             if (order.Status != OrderStatus.Pending)
-                throw new BusinessException("Only pending orders can be cancelled");
+                throw new BusinessException("Chỉ các đơn hàng đang chờ xử lý mới có thể bị hủy.");
             await HandleBatchRestockAsync(order.OrderItems, batchRepo);
             order.Status = OrderStatus.Cancelled;
             orderRepo.Update(order);
@@ -276,19 +274,19 @@ public class OrderService : BaseService<OrderService>, IOrderService
         )).ToList();
 
         if (batches.Count != batchIds.Count)
-            throw new NotFoundException("One or more product batches associated with this order are missing.");
+            throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
         var batchDict = batches.ToDictionary(b => b.Id);
 
         foreach (var item in orderItems)
         {
             if (!batchDict.TryGetValue(item.ProductBatchId, out var batch))
-                throw new NotFoundException("Product batch not found");
+                throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
             batch.Quantity += item.Quantity;
 
             if (batch.Product == null)
-                throw new Exception("Product not loaded");
+                throw new NotFoundException("Không tìm thấy sản phẩm");
 
             batch.Product.Quantity += item.Quantity;
         }
@@ -304,7 +302,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             var order = await orderRepo.GetByIdAsync(orderId);
             if (order == null)
             {
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
             }
             order.DeliveryStatus = DeliveryStatus.Completed;
             order.Status = OrderStatus.Shipped;
@@ -322,7 +320,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             var order = await orderRepo.GetByIdAsync(orderId);
             if (order == null)
             {
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
             }
             order.Status = OrderStatus.Returned;
             
@@ -342,7 +340,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             var order = await orderRepo.GetByIdAsync(orderId);
             if (order == null)
             {
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
             }
             order.Status = OrderStatus.Returned;
             orderRepo.Update(order);
@@ -541,11 +539,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
             var order = await orderRepo.GetByIdAsync(orderId);
             if (order == null)
             {
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
             }
             if (order.Status != OrderStatus.Draft)
             {
-                throw new BusinessException("Only pending orders can be submitted");
+                throw new BusinessException("Chỉ các đơn hàng đang chờ xử lý mới có thể nộp.;
             }
             order.Status = OrderStatus.Pending;
             orderRepo.Update(order);
@@ -565,17 +563,17 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null)
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
 
             var batch = await batchRepo
                 .GetQueryable(include: b => b.Include(x => x.Product))
                 .FirstOrDefaultAsync(b => b.Id == request.ProductBatchId);
 
             if (batch == null)
-                throw new NotFoundException("Product batch not found");
+                throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
             if (batch.Quantity < request.Quantity)
-                throw new BusinessException("Insufficient stock");
+                throw new BusinessException("Không đủ hàng");
 
             var existingItem = order.OrderItems
                 .FirstOrDefault(x => x.ProductBatchId == request.ProductBatchId);
@@ -615,20 +613,18 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null)
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
 
             var orderItem = order.OrderItems
                 .FirstOrDefault(i => i.Id == orderItemId);
 
-            if (orderItem == null)
-                throw new NotFoundException("Order item not in this order");
 
             var batch = await batchRepo
                 .GetQueryable(include: b => b.Include(x => x.Product))
                 .FirstOrDefaultAsync(b => b.Id == orderItem.ProductBatchId);
 
             if (batch == null)
-                throw new NotFoundException("Product batch not found");
+                throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
             // restore stock
             batch.Quantity += orderItem.Quantity;
@@ -660,27 +656,27 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null)
-                throw new NotFoundException("Order not found");
+                throw new NotFoundException("Không tìm thấy đơn hàng");
 
             var orderItem = order.OrderItems
                 .FirstOrDefault(i => i.Id == orderItemId);
 
             if (orderItem == null)
-                throw new NotFoundException("Order item not in this order");
+                throw new NotFoundException("Không tìm thấy sảm phẩm trong đơn hàng");
 
             var batch = await batchRepo
                 .GetQueryable(include: b => b.Include(x => x.Product))
                 .FirstOrDefaultAsync(b => b.Id == orderItem.ProductBatchId);
 
             if (batch == null)
-                throw new NotFoundException("Product batch not found");
+                throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
             int delta = request.Quantity - orderItem.Quantity;
 
             if (delta > 0)
             {
                 if (batch.Quantity < delta)
-                    throw new BusinessException("Insufficient stock");
+                    throw new BusinessException("Không đủ hàng");
 
                 batch.Quantity -= delta;
                 batch.Product.Quantity -= delta;

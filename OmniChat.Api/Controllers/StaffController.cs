@@ -32,7 +32,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> CreateStaffAsync([FromBody] CreateStaffRequest createStaffRequest)
     {
         var result = await _staffService.CreateStaffAsync(createStaffRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Account created successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo nhân viên mới thành công", result);
 
         return StatusCode(StatusCodes.Status201Created, response);
     }
@@ -49,7 +49,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> UpdateStaffAsync([FromRoute] Guid id, [FromBody] UpdateStaffRequest updateStaffRequest)
     {
         var result = await _staffService.UpdateStaffAsync(id, updateStaffRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Account updated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cập nhật nhân viên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -65,7 +65,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> DeleteStaffAsync([FromRoute] Guid id)
     {
         var result = await _staffService.DeleteStaffAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Account deleted successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa nhân viên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -88,7 +88,7 @@ public class StaffController : BaseController<StaffController>
             sortBy ?? "createdate",
             descending ?? true
         );
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staffs successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách nhân viên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -104,7 +104,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> AssignIntentToStaffAsync([FromRoute] Guid id, [FromBody] IEnumerable<AssignStaffToIntentTypeRequest> assignIntentRequests)
     {
         var result = await _staffService.AssignIntentToStaffAsync(id, assignIntentRequests);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Assign intent to staff successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Phân công loại yêu cầu hỗ trợ cho nhân viên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
 
     }
@@ -121,7 +121,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> UnassignIntentFromStaffAsync([FromRoute] Guid id, [FromBody] AssignStaffToIntentTypeRequest assignIntentRequests)
     {
         var result = await _staffService.UnassignIntentFromStaffAsync(id, assignIntentRequests);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Unassign intent for staff successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Hủy phân công loại yêu cầu hỗ trợ cho nhân viên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
 
     }
@@ -137,7 +137,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> GetStaffDashboardByIdAsync([FromRoute] Guid id)
     {
         var result = await _staffService.GetStaffDassboardByIdAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff dashboard successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem thống kê nhân viên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -154,7 +154,7 @@ public class StaffController : BaseController<StaffController>
     [FromBody] StaffTaskFilterRequest? request)
     {
         var result = await _staffService.GetStaffTasksAsync(id, request);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get staff tasks successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách task thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -171,7 +171,7 @@ public class StaffController : BaseController<StaffController>
     public async Task<IActionResult> UploadStaffImageAsync([FromRoute] Guid id, [FromForm] UploadStaffImageRequest request)
     {
         var result = await _staffService.UploadStaffImage(id, request);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Upload staff image successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Tải ảnh nhân viên lên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
 
     }

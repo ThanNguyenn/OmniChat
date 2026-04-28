@@ -31,7 +31,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
         var existingWallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId);
         if (existingWallet != null)
         {
-            throw new BusinessException($"Wallet for customer {customerId} already exists");
+            throw new BusinessException($"Ví đã tồn tại");
         }
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
@@ -47,7 +47,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
     public async Task<bool> DeleteWallet(Guid customerId)
     {
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
-        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Wallet for customer {customerId} do not exists");
+        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Ví đã tồn tại");
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -61,7 +61,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
         var customerId = walletPaymentRequest.CustomerId;
         var amount = walletPaymentRequest.Amount;
-        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Wallet for customer {customerId} do not exists");
+        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Ví đã tồn tại");
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             wallet.Transactions.Add(new Transaction
@@ -81,7 +81,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
     public async Task<bool> WithdrawFromWallet(Guid customerId, int amount)
     {
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
-        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Wallet for customer {customerId} do not exists");
+        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Ví đã tồn tại");
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             wallet.Transactions.Add(new Transaction
@@ -99,7 +99,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
     public async Task<bool> AddCreditToWallet(Guid customerId, int amount)
     {
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
-        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Wallet for customer {customerId} do not exists");
+        var wallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.CustomerId == customerId) ?? throw new NotFoundException($"Ví đã tồn tại");
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             wallet.Transactions.Add(new Transaction

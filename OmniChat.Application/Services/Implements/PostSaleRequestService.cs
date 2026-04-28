@@ -59,7 +59,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
-        var postSaleRequest = await postSaleRequestRepo.GetByIdAsync(id) ?? throw new NotFoundException($"Request {id} not found");
+        var postSaleRequest = await postSaleRequestRepo.GetByIdAsync(id) ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -85,7 +85,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
                 s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
 
             if (staff == null)
-                throw new Exception("Staff not found");
+                throw new BusinessException("Không tìm thấy nhân viên");
 
             var postSaleRequest = new PostSaleRequest
             {
@@ -99,7 +99,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
             };
 
             if (request.PostSaleItems == null || !request.PostSaleItems.Any())
-                throw new Exception("PostSaleItems required");
+                throw new BusinessException("Không tìm thấy sản phẩm cần xử lý");
 
             var orderItemIds = request.PostSaleItems.Select(x => x.OrderItemId).ToList();
 
@@ -114,10 +114,10 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
             foreach (var item in request.PostSaleItems)
             {
                 if (!orderItemDict.TryGetValue(item.OrderItemId, out var orderItem))
-                    throw new Exception($"OrderItem {item.OrderItemId} not found");
+                    throw new Exception($"Không tìm thấy sản phẩm cần xử lý");
 
                 if (item.Quantity <= 0 || item.Quantity > orderItem.Quantity)
-                    throw new Exception("Invalid quantity");
+                    throw new Exception("Số lượng phải > 0");
 
                 totalAmount += item.Quantity * orderItem.Price;
 
@@ -151,7 +151,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
         {
             var postSaleRequest = await postSaleRequestRepo.SingleOrDefaultAsync(predicate: p => p.Id == id, include: q => q.Include(p => p.PostSaleItems!));
 
-            if (postSaleRequest == null) throw new NotFoundException($"Request {id} not found");
+            if (postSaleRequest == null) throw new NotFoundException($"Không tìm thấy yêu cầu");
 
             postSaleItemRepo.DeleteRange(postSaleRequest.PostSaleItems!);
             postSaleRequestRepo.Delete(postSaleRequest);
@@ -170,7 +170,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
             .ProjectTo<GetPostSaleRequestByIdResponse>(_mapper.ConfigurationProvider)
             .SingleOrDefaultAsync();
 
-        if (response == null) throw new NotFoundException($"Request {id} not found");
+        if (response == null) throw new NotFoundException($"Không tìm thấy yêu cầu");
 
         return response;
     }

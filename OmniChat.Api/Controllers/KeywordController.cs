@@ -49,7 +49,7 @@ public class KeywordController : ControllerBase
     public async Task<IActionResult> CreateKeyword([FromBody] CreateKeywordRequest createKeywordRequest)
     {
         var result = await _keywordService.CreateKeywordAsync(createKeywordRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Keyword created successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo từ khóa thành công", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
@@ -64,7 +64,7 @@ public class KeywordController : ControllerBase
     public async Task<IActionResult> UpdateKeyword([FromRoute] Guid id,[FromBody] UpdateKeywordRequest updateKeywordRequest)
     {
         var result = await _keywordService.UpdateKeywordAsync(id, updateKeywordRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Keyword updated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cập nhật từ khóa thành công ", result);
         return Ok(response);
     }
 
@@ -79,7 +79,7 @@ public class KeywordController : ControllerBase
     public async Task<IActionResult> DeleteKeyword([FromRoute] Guid id)
     {
         var result = await _keywordService.DeleteKeywordAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Keyword deleted successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa từ khóa thành công", result);
         return Ok(response);
     }
 
@@ -98,7 +98,7 @@ public class KeywordController : ControllerBase
         bool descending = true)
     {
         var result = await _keywordService.GetAllKeywordsAsync(intentTypeId, search, pageNumber, pageSize, sortBy, descending);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Keywords retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách từ khóa thành công", result);
         return Ok(response);
     }
 
@@ -113,7 +113,7 @@ public class KeywordController : ControllerBase
     public async Task<IActionResult> GetKeywordById([FromRoute] Guid id)
     {
         var result = await _keywordService.GetKeywordAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Keyword retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem từ khóa thành công", result);
         return Ok(response);
     }
 }

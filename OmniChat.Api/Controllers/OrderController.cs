@@ -37,7 +37,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest createOrderRequest)
     {
         var result = await _orderService.CreateOrderAsync(createOrderRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Order created successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
@@ -52,7 +52,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> CreateDraftOrder([FromBody] DraftOrderRequest createOrderRequest)
     {
         var result = await _draftOrderService.CreateDraftOrderFromConversationAsync(createOrderRequest.ConversationId);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Order created successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
    
@@ -84,7 +84,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> CancelOrder([FromRoute] Guid id)
     {
         var result = await _orderService.CancelOrderAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order cancelled successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Hủy đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -96,7 +96,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> CompleteDeliveredOrder([FromRoute] Guid id)
     {
         var result = await _orderService.CompleteDeliverdOrderAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order delivery status updated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Giao hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -112,7 +112,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> DeleteOrder([FromRoute] Guid id)
     {
         var result = await _orderService.DeleteOrderAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order deleted successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -128,7 +128,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetOrderById([FromRoute] Guid id)
     {
         var result = await _orderService.GetOrderByIdAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -144,7 +144,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetOrderByIdForPostSale([FromRoute] Guid id)
     {
         var result = await _orderService.GetPostSaleOrderByIdAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -156,7 +156,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetAllOrders([FromQuery] IEnumerable<OrderStatus>? orderStatuses, [FromQuery] string? search, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "orderdate", [FromQuery] bool descending = true)
     {
         var result = await _orderService.GetAllOrdersAsync(orderStatuses, search, pageNumber, pageSize, sortBy, descending);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -172,7 +172,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetOrdersByCustomerId([FromRoute] Guid customerId, [FromQuery] IEnumerable<OrderStatus>? orderStatuses, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20, [FromQuery] string sortBy = "orderdate", [FromQuery] bool descending = true)
     {
         var result = await _orderService.GetOrdersByCustomerIdAsync(customerId, orderStatuses, null, pageNumber, pageSize, sortBy, descending);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -188,7 +188,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetOrderDashboardInfo([FromQuery] IEnumerable<string>? status, [FromQuery] string input)
     {
         var result = await _orderService.GetDashboardAsync(status, input);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order dashboard info retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem thống kê đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
 
     }
@@ -205,7 +205,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetOrdersForShipper([FromQuery] string? search, [FromQuery] int? pageNumber, [FromQuery] int? pageSize, [FromQuery] string? sortBy, [FromQuery] bool? descending)
     {
         var result = await _orderService.GetOrderForShipperAsync(search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "orderdate", descending ?? true);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Orders for shipper retrieved successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -221,7 +221,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> SubmitDraftOrder([FromRoute] Guid id)
     {
         var result = await _orderService.SubmitOrderAsync(id);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Draft order submitted successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Nộp đơn hàng nháp thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -237,7 +237,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> AddOrderItem([FromRoute] Guid id, [FromBody] AddOrderItemRequest addOrderItemRequest)
     {
         var result = await _orderService.AddOrderItemAsync(id, addOrderItemRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order item added successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Tạo sản phẩm vào đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -253,7 +253,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> UpdateOrderItem([FromRoute] Guid orderId, [FromRoute] Guid orderItemId, [FromBody] UpdateOrderItemRequest updateOrderItemRequest)
     {
         var result = await _orderService.UpdateOrderItemAsync(orderId, orderItemId, updateOrderItemRequest);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order item updated successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cập nhật sản phẩm trong đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -269,7 +269,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> RemoveOrderItem([FromRoute] Guid orderId, [FromRoute] Guid orderItemId)
     {
         var result = await _orderService.RemoveOrderItemAsync(orderId, orderItemId);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Order item removed successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa sản phẩm trong đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -283,7 +283,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetPendingOrderByShipper([FromRoute] Guid shipperId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
         var result = await _orderService.GetPendingOrderShipperIdAsync(shipperId, pageNumber, pageSize);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get pending order by shipper successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa sản phẩm trong đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -296,7 +296,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetHistoryOrderByShipper([FromRoute] Guid shipperId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
         var result = await _orderService.OrderShipperHistory(shipperId, pageNumber, pageSize);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get history order by shipper successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -317,7 +317,7 @@ public class OrderController : BaseController<OrderController>
 
         var response = ApiResponseBuilder.BuildResponse(
             StatusCodes.Status200OK,
-            "Retrieved delivered report successfully",
+            "Xem thống kê giao hàng thành công",
             result
         );
 
