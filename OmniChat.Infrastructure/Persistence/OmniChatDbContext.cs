@@ -187,6 +187,10 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(cw => cw.WarningType)
                 .HasConversion<string>();
 
+            modelBuilder.Entity<Claim>()
+                .Property(c => c.Status)
+                .HasConversion<string>();
+
             // default value IsActive = true
 
             modelBuilder.Entity<Account>()
