@@ -109,8 +109,8 @@ public class ExceptionHandlerMiddleware
             #region 401 Unauthorized
             UnauthorizedAccessException =>
                 (HttpStatusCode.Unauthorized, "Unauthorized access", "You don't have permission to perform this action", null),
-            UnauthorizedException =>
-            (HttpStatusCode.Unauthorized, "Unauthorized access", "Username or password incorrect", null),
+            UnauthorizedException unauthorizedException =>
+            (HttpStatusCode.Unauthorized, "Unauthorized access", unauthorizedException.Message, null),
             SecurityTokenException =>
                 (HttpStatusCode.Unauthorized, "Invalid token", "Authentication token is invalid or expired", null),
             WrongPasswordException =>
@@ -156,13 +156,13 @@ public class ExceptionHandlerMiddleware
             IsSuccess = false,
             Data = new
             {
-                ResetToken = exception is PasswordExpiredException expiredException ? expiredException.ResetToken : null,
+                //ResetToken = exception is PasswordExpiredException expiredException ? expiredException.ResetToken : null,
                 Method = context.Request.Method,
                 Path = context.Request.Path,
                 ExceptionType = exception.GetType().Name,
-                ExceptionMessage = exception.Message,
-                InnerException = exception.InnerException?.Message,
-                ErrorId = errorId,
+                //ExceptionMessage = exception.Message,
+                //InnerException = exception.InnerException?.Message,
+                //ErrorId = errorId,
                 Timestamp = DateTime.UtcNow
             }
         };
