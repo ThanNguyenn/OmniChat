@@ -101,20 +101,33 @@ void ConfigureServices()
         options.InvalidModelStateResponseFactory = context =>
         {
             var errors = context.ModelState
-                .Where(e => e.Value.Errors.Count > 0)
-                .Select(e => new
-                {
-                    Field = e.Key,
-                    Errors = e.Value.Errors.Select(x => x.ErrorMessage)
-                });
+                .Where(x => x.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.Value!.Errors
+                        .Select(e => e.ErrorMessage)
+                        .ToArray()
+                );
 
-            return new BadRequestObjectResult(new
-            {
-                Message = "Model binding failed",
-                Errors = errors
-            });
+            var messages = context.ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .SelectMany(x => x.Value!.Errors)
+                .Select(e => e.ErrorMessage)
+                .Distinct()
+                .ToList();
+
+            var response = ApiResponseBuilder.BuildResponse(
+                statusCode: StatusCodes.Status400BadRequest,
+                message: string.Join(" | ", messages),
+                data: errors,
+                reason: "Model validation failed"
+            );
+
+            return new BadRequestObjectResult(response);
         };
     });
+
+
     void ConfigureR2Storage()
     {
         // Configure typed settings
@@ -139,7 +152,10 @@ void ConfigureServices()
             return new AmazonS3Client(credentials, config);
         });
     }
-
+    builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddHttpContextAccessor();
     var licenseKey = builder.Configuration["AutoMapper:LicenseKey"];
