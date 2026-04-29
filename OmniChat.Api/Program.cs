@@ -346,7 +346,7 @@ void ConfigureAuthentication()
                     var errorType = context.HttpContext.Items["AuthError"]?.ToString()
                     ?? "INVALID_TOKEN";
 
-                    var reason = $"Authentication failed. Error: {errorType}";
+                    var reason = $"Không thể xác thực người dùng. Mã lỗi: {errorType}";
 
                     var response = new ApiResponse<object>
                     {

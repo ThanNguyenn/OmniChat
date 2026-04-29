@@ -108,7 +108,7 @@ public class ExceptionHandlerMiddleware
 
             #region 401 Unauthorized
             UnauthorizedAccessException =>
-                (HttpStatusCode.Unauthorized, "Unauthorized access", "You don't have permission to perform this action", null),
+                (HttpStatusCode.Unauthorized, "Unauthorized access", "Không thể xác thực người dùng", null),
             UnauthorizedException unauthorizedException =>
             (HttpStatusCode.Unauthorized, "Unauthorized access", unauthorizedException.Message, null),
             SecurityTokenException =>
