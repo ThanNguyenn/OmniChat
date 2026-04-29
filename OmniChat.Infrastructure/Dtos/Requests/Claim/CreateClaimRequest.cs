@@ -17,10 +17,10 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Claim
         [Required(ErrorMessage = "Lý do không được để trống")]
         public string Reason { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng chọn nhân viên (StaffId)")]
+        [Required(ErrorMessage = "Vui lòng chọn nhân viên")]
         public Guid StaffId { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng chọn loại Claim (ClaimTypeId)")]
+        [Required(ErrorMessage = "Vui lòng chọn loại khiếu nại")]
         public Guid ClaimTypeId { get; set; }
 
         public Guid? SupportConversationId { get; set; }
