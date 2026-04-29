@@ -152,10 +152,6 @@ void ConfigureServices()
             return new AmazonS3Client(credentials, config);
         });
     }
-    builder.Services.Configure<ApiBehaviorOptions>(options =>
-{
-    options.SuppressModelStateInvalidFilter = true;
-});
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddHttpContextAccessor();
     var licenseKey = builder.Configuration["AutoMapper:LicenseKey"];
