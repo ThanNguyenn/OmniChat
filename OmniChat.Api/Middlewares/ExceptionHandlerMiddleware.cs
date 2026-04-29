@@ -102,6 +102,8 @@ public class ExceptionHandlerMiddleware
                 (HttpStatusCode.BadRequest, "Invalid operation", exception.Message, null),
             ArgumentException =>
                 (HttpStatusCode.BadRequest, "Invalid argument", exception.Message, null),
+            //BadRequestException badRequestEx =>
+            //    (HttpStatusCode.BadRequest, "Bad request", badRequestEx.Message, null),
             #endregion
 
             #region 401 Unauthorized
