@@ -41,9 +41,9 @@ public class UnauthorizedException : ApiException
     {
     }
 }
-public class BusinessException : Exception
+public class BusinessException : ApiException
 {
-    public BusinessException(string message) : base(message) { }
+    public BusinessException(string message) : base(message, HttpStatusCode.Conflict) { }
 }
 
 public class ValidationException : Exception
