@@ -116,14 +116,7 @@ void ConfigureServices()
                 .Distinct()
                 .ToList();
 
-            var response = ApiResponseBuilder.BuildResponse(
-                statusCode: StatusCodes.Status400BadRequest,
-                message: string.Join(" | ", messages),
-                data: errors,
-                reason: "Model validation failed"
-            );
-
-            return new BadRequestObjectResult(response);
+            throw new BadRequestException(string.Join(" | ", messages));
         };
     });
 
