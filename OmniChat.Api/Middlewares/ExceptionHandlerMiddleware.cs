@@ -97,7 +97,7 @@ public class ExceptionHandlerMiddleware
            ValidationException validationEx =>
                 (HttpStatusCode.BadRequest, "Validation failed", validationEx.Message, null),
             BusinessException businessEx =>
-                (HttpStatusCode.Conflict, "Business rule violation", businessEx.Message, null),
+                (HttpStatusCode.UnprocessableContent, "Business rule violation", businessEx.Message, null),
             InvalidOperationException =>
                 (HttpStatusCode.BadRequest, "Invalid operation", exception.Message, null),
             ArgumentException =>
