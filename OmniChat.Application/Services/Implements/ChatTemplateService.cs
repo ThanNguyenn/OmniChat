@@ -33,7 +33,7 @@ namespace OmniChat.Application.Services.Implements
 
             if (existingTemplate != null)
             {
-                throw new BadRequestException($"Mã Mẫu Chat '{request.Code}' đã tồn tại");
+                throw new BusinessException($"Mã Mẫu Chat '{request.Code}' đã tồn tại");
             }
 
             var newTemplate = _mapper.Map<ChatTemplate>(request);
@@ -60,7 +60,7 @@ namespace OmniChat.Application.Services.Implements
           
             if (duplicateTemplate != null)
             {
-                throw new BadRequestException($"Mã Mẫu Chat '{request.Code}' đã tồn tại");
+                throw new BusinessException($"Mã Mẫu Chat '{request.Code}' đã tồn tại");
             }
 
             _mapper.Map(request, existingTemplate);
