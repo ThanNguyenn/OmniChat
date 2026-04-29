@@ -27,8 +27,6 @@ namespace OmniChat.Application.Services.Implements
         public async Task<bool> CreateChatTemplateAsync(ChatTemplateRequest request)
         {
 
-            ValidateRequest(request);
-
             var repo = _unitOfWork.GetRepository<ChatTemplate>();
             
             var existingTemplate = await repo.SingleOrDefaultAsync(predicate: t => t.Code == request.Code);
@@ -49,9 +47,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> UpdateChatTemplateAsync(Guid id, ChatTemplateRequest request)
         {
-
-            ValidateRequest(request);
-            
+       
             var repo = _unitOfWork.GetRepository<ChatTemplate>();
             
             var existingTemplate = await repo.GetByIdAsync(id);
@@ -150,16 +146,6 @@ namespace OmniChat.Application.Services.Implements
             );
 
             return result;
-        }
-
-        private void ValidateRequest(ChatTemplateRequest request)
-        {
-            var codePattern = @"^[A-Za-z]{1,5}\d{1,3}$";
-            if (string.IsNullOrWhiteSpace(request.Code) || !Regex.IsMatch(request.Code, codePattern))
-                throw new BadRequestException("Mã Mẫu Chat không hợp lệ (Định dạng đúng: 1-5 chữ cái + 1-3 chữ số)");
-
-            if (string.IsNullOrWhiteSpace(request.Content) || request.Content.Length > 500)
-                throw new BadRequestException("Nội dung Mẫu Chat không hợp lệ (Yêu cầu nội dung và không quá 500 ký tự)");
         }
     }
 }
