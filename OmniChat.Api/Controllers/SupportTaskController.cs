@@ -31,7 +31,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Complete SupportTask Successfully",
+                Message = "Hoàn thành yêu cầu hỗ trợ thành công",
                 IsSuccess = true,
                 Data = result
             });

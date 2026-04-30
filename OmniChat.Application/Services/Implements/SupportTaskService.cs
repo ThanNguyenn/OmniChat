@@ -90,10 +90,10 @@ namespace OmniChat.Application.Services.Implements
             var existSupportTask = await repo.GetByIdAsync(taskId);
 
             if (existSupportTask == null)
-                throw new NotFoundException("No SupportTask found");
+                throw new NotFoundException("Không tìm thấy yêu cầu hỗ trợ ");
 
             if (existSupportTask.Status == SupportTaskStatus.Done)
-                throw new BadRequestException("Task already completed");
+                throw new BadRequestException("Yêu cầu hỗ trợ đã hoàn thành ");
 
             var now = DateTime.UtcNow;
 

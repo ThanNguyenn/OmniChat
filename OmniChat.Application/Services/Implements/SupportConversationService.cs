@@ -90,8 +90,7 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<bool> CompleteConversationAsync(Guid conversationId)
         {
-            var conversationTasks = await _supportTaskService
-                .GetSupportTaskByConversationIdAsync(conversationId);
+            var repo = _unitOfWork.GetRepository<SupportConversation>();
 
             var conversation = await GetSupportConversationByIdAsync(conversationId);
             
@@ -100,17 +99,20 @@ namespace OmniChat.Application.Services.Implements
                 throw new BadRequestException("Cuộc trò chuyện này đã được hoàn thành trước đó");
             }
 
+            var conversationTasks = await _supportTaskService
+                .GetSupportTaskByConversationIdAsync(conversationId);
+
             var allDone = conversationTasks.All(x => x.Status == SupportTaskStatus.Done);
 
             if (!allDone)
             {
-                throw new BadRequestException("Chưa hoàn thành hết Task");
+                throw new BadRequestException("Chưa hoàn thành hết yêu cầu hỗ trợ");
             }
 
             conversation.Status = ConversationStatus.Complete;
             conversation.CloseAt = DateTime.UtcNow;
             conversation.UpdateDate = DateTime.UtcNow;
-
+             repo.Update(conversation);
             await _unitOfWork.CommitAsync();
 
             return true;

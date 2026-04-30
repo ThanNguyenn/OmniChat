@@ -239,13 +239,17 @@ namespace OmniChat.Application.Services.Implements
         {
             var _repo = _unitOfWork.GetRepository<Claim>();
 
-            var claim = await _repo.SingleOrDefaultAsync(predicate: c => c.Id == claimId);
+            var claim = await _repo.SingleOrDefaultAsync(predicate: c => c.Id == claimId,
+                include: c => c.Include(c => c.Staff)
+                               .Include(c => c.ClaimType) 
+                
+                );
 
             if (claim == null)
-                throw new NotFoundException("Claim not found");
+                throw new NotFoundException("Không tìm thấy yêu cầu khiếu nại");
 
             if (claim.Status != ClaimStatus.Pending)
-                throw new BadRequestException("Only pending claim can be modified");
+                throw new BadRequestException("Chỉ có yêu cầu đang chờ xử lý mới có thể được sửa đổi");
 
             return claim;
         }
@@ -290,7 +294,7 @@ namespace OmniChat.Application.Services.Implements
             var totalItems = await query.CountAsync();
 
             if (totalItems == 0)
-                throw new NotFoundException("No claims found for this staff");
+                throw new NotFoundException("Không tìm thấy yêu cầu khiếu nại cho nhân viên này");
 
             var items = await query
                 .OrderByDescending(c => c.SubmitDate)

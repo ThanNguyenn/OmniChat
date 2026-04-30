@@ -120,7 +120,7 @@ namespace OmniChat.Application.Services.Implements
             if (current == null)
             {
                 _logger.LogError("Profile not found: {ProfileId}", dto.ActiveCustomerId);
-                throw new NotFoundException("Profile not found");
+                throw new NotFoundException("Hồ sơ khách hàng không tồn tại");
             }
 
 

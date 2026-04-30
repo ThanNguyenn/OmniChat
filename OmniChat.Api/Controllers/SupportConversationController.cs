@@ -124,7 +124,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Hoàn thành Conversation thành công",
+                Message = "Hoàn thành cuộc trò chuyện thành công",
                 IsSuccess = true,
                 Data = result
             });
