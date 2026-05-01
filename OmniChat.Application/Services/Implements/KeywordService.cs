@@ -123,7 +123,7 @@ public class KeywordService : BaseService<KeywordService>, IKeywordService
     {
         var keywordRepo = _unitOfWork.GetRepository<Keyword>();
 
-        var keyword = await keywordRepo.GetQueryable(predicate: k => k.Id == keywordId && k.IsDeleted != true,include: q=>q.Include(k => k.IntentType), asNoTracking: false).FirstOrDefaultAsync();
+        var keyword = await keywordRepo.GetQueryable(predicate: k => k.Id == keywordId && k.IsDeleted != true,include: q=>q.Include(k => k.IntentType), asNoTracking: true).FirstOrDefaultAsync();
         return _mapper.Map<GetKeywordResponse>(keyword);
     }
     public Task<bool> UpdateKeywordAsync(Guid keywordId, UpdateKeywordRequest updateKeywordRequest)
