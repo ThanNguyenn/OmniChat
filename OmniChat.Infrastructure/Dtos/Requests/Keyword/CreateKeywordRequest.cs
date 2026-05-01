@@ -10,7 +10,7 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Keyword;
 
 public class CreateKeywordRequest : IValidatableObject
 {
-    public required Guid IntentTypeId { get; set; }
+    public Guid IntentTypeId { get; set; }
 
     [Required(ErrorMessage = "KeywordText là bắt buộc")]
     [StringLength(255, ErrorMessage = "KeywordText tối đa 255 ký tự")]

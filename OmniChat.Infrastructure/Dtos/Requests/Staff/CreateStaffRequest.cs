@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Dtos.Requests.Staff;
 
-public class CreateStaffRequest
+public class CreateStaffRequest : IValidatableObject
 {
     [Required(ErrorMessage = "Name là bắt buộc")]
     public string Name { get; set; }
