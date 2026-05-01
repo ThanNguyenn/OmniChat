@@ -9,7 +9,7 @@ namespace OmniChat.Infrastructure.Dtos.Requests.OrderItem;
 
 public class AddOrderItemRequest : IValidatableObject
 {
-    public required Guid ProductBatchId { get; set; }
+    public Guid ProductBatchId { get; set; }
 
     [Range(1, int.MaxValue, ErrorMessage = "Quantity phải >= 1")]
     public int Quantity { get; set; }
