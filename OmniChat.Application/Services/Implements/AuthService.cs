@@ -88,7 +88,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
         if (!await PasswordUtil.VerifyPassword(request.OldPassword, account.Password))
         {
-            throw new UnauthorizedException("Mật khẩu cũ không chính xác");
+            throw new BusinessException("Mật khẩu cũ không chính xác");
         }
 
         var newHashedPassword = await PasswordUtil.HashPassword(request.NewPassword);

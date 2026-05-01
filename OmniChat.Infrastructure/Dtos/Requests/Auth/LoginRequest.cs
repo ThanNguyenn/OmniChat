@@ -9,7 +9,10 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Auth;
 
 public class LoginRequest
 {
+    [Required(ErrorMessage = "Tên đăng nhập là bắt buộc")]
     public string Username { get; set; }
 
+    [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
+    [MinLength(8, ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự.")]
     public string Password { get; set; }
 }

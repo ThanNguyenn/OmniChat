@@ -64,7 +64,14 @@ public class RefreshTokenService : BaseService<RefreshTokenService>, IRefreshTok
     {
         var repo = _unitOfWork.GetRepository<RefreshToken>(); var sendedTokenHash = HashRefreshToken(refreshToken);
 
-        var token = await repo.SingleOrDefaultAsync(predicate: t => t.Token == sendedTokenHash && t.ExpireDate > DateTime.UtcNow, include: q => q.Include(token => token.Account));
+        var token = await repo.SingleOrDefaultAsync(
+            predicate: t => t.Token == sendedTokenHash && t.ExpireDate > DateTime.UtcNow,
+            include: q => q
+                .Include(t => t.Account)
+                    .ThenInclude(a => a.Role)
+                .Include(t => t.Account)
+                    .ThenInclude(a => a.Staff)
+);
         return token;
     }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
@@ -36,6 +37,7 @@ public class AuthController : BaseController<AuthController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [Authorize]
     [HttpPost(ApiEndPointConstant.Auth.Logout)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -51,6 +53,7 @@ public class AuthController : BaseController<AuthController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [Authorize]
     [HttpPost(ApiEndPointConstant.Auth.ChangePassword)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]

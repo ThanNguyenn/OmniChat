@@ -2,6 +2,7 @@
 using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ public class UpdateProductRequest
 
     public string? Description { get; set; }
 
+    [Range(1d, double.MaxValue, ErrorMessage = "Price phải >= 1")]
     public double? Price { get; set; }
 
 }
