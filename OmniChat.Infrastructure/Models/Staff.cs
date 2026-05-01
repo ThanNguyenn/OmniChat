@@ -55,6 +55,8 @@ namespace OmniChat.Infrastructure.Models
         public virtual ICollection<StaffPerformance> StaffPerformances { get; set; } = new List<StaffPerformance>();
 
         public virtual ICollection<ConversationWarning> ConversationWarnings { get; set; } = new List<ConversationWarning>();
+
+        public virtual ICollection<BatchAudit> BatchAudits { get; set; } = new List<BatchAudit>();
     }
 
     public enum StaffStatus

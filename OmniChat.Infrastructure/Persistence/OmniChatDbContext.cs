@@ -1241,6 +1241,15 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasForeignKey(ba => ba.ProductBatchId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+
+            // ==== staff(ActionBy) - BatchAudit ( one to Many ) ====
+            modelBuilder.Entity<Staff>()
+                .HasMany(s => s.BatchAudits)
+                .WithOne(ba => ba.ActionBy)
+                .HasForeignKey(ba => ba.ActionById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
             // ==== Brand - Product ( one to Many ) ====
             modelBuilder.Entity<Brand>()
                 .HasKey(b => b.Id);
