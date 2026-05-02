@@ -9,10 +9,10 @@ namespace OmniChat.Infrastructure.Dtos.Requests.ClaimType
 {
     public class ClaimTypeRequest
     {
-        [Required(ErrorMessage = "TypeName is required")]
-        [StringLength(200, ErrorMessage = "TypeName must not exceed 200 characters")]
+        [Required(ErrorMessage = "Tên loại là bắt buộc")]
+        [StringLength(200, ErrorMessage = "Tên loại không được vượt quá 200 ký tự")]
         [RegularExpression(@"^(?=.*\S)[a-zA-Z0-9 _-]+$",
-         ErrorMessage = "TypeName must not contain special characters or be empty")]
+        ErrorMessage = "Tên loại không được chứa ký tự đặc biệt hoặc chỉ có khoảng trắng")]
         public string TypeName { get; set; }
     }
 }
