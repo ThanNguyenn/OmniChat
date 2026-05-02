@@ -285,7 +285,7 @@ public class OrderController : BaseController<OrderController>
     public async Task<IActionResult> GetPendingOrderByShipper([FromRoute] Guid shipperId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {
         var result = await _orderService.GetPendingOrderShipperIdAsync(shipperId, pageNumber, pageSize);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa sản phẩm trong đơn hàng thành công", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
