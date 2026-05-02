@@ -26,7 +26,7 @@ namespace OmniChat.Api.Controllers
             [FromQuery] string? search = null)
         {
             var result = await _chatTemplateService.GetAllChatTemplateAsync(pageNumber, pageSize, search);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem ChatTemplate thành công", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem Mẫu Chat thành công", result);
             return StatusCode(StatusCodes.Status200OK, response);
         }
 
@@ -36,7 +36,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> GetChatTemplateByIdAsync([FromRoute] Guid id)
         {
             var result = await _chatTemplateService.GetChatTemplateByIdAsync(id);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem ChatTemplate thành công", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem Mẫu Chat thành công", result);
             return StatusCode(StatusCodes.Status200OK, response);
         }
 
@@ -47,7 +47,7 @@ namespace OmniChat.Api.Controllers
         {
             var result = await _chatTemplateService.CreateChatTemplateAsync(request);
 
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo ChatTemplate thành công", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo Mẫu Chat thành công", result);
             return StatusCode(StatusCodes.Status201Created, response);
         }
 
@@ -58,7 +58,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> UpdateChatTemplateAsync([FromRoute] Guid id, [FromBody] ChatTemplateRequest request)
         {
             var result = await _chatTemplateService.UpdateChatTemplateAsync(id, request);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cập nhật ChatTemplate thành công", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Cập nhật Mẫu Chat thành công", result);
             return StatusCode(StatusCodes.Status200OK, response);
         }
 
@@ -68,7 +68,7 @@ namespace OmniChat.Api.Controllers
         public async Task<IActionResult> DeleteChatTemplateAsync([FromRoute] Guid id)
         {
             var result = await _chatTemplateService.DeleteChatTemplateAsync(id);
-            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa ChatTemplate thành công", result);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xóa Mẫu Chat thành công", result);
             return StatusCode(StatusCodes.Status200OK, response);
         }
     }
