@@ -215,6 +215,10 @@ public class OrderService : BaseService<OrderService>, IOrderService
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include( q => q.CustomerProfile).Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
+        if (response == null)
+        {
+            throw new NotFoundException("Không tìm thấy đơn hàng");
+        }
         return _mapper.Map<GetOrderResponse>(response); 
     }
 
@@ -222,6 +226,10 @@ public class OrderService : BaseService<OrderService>, IOrderService
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
+        if (response == null)
+        {
+            throw new NotFoundException("Không tìm thấy đơn hàng");
+        }
         return _mapper.Map<GetPostSaleOrderResponse>(response);
     }
         
@@ -254,7 +262,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             if (order == null)
                 throw new NotFoundException("Không tìm thấy đơn hàng");
             if (order.Status != OrderStatus.Pending)
-                throw new BusinessException("Chỉ các đơn hàng đang chờ xử lý mới có thể bị hủy.");
+                throw new BusinessException("Chỉ các đơn hàng đang chờ xử lý mới có thể bị hủy");
             await HandleBatchRestockAsync(order.OrderItems, batchRepo);
             order.Status = OrderStatus.Cancelled;
             orderRepo.Update(order);
