@@ -551,7 +551,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             }
             if (order.Status != OrderStatus.Draft)
             {
-                throw new BusinessException("Chỉ các đơn hàng đang chờ xử lý mới có thể nộp");
+                throw new BusinessException("Chỉ các đơn hàng nháp mới có thể nộp");
             }
             order.Status = OrderStatus.Pending;
             orderRepo.Update(order);

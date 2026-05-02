@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
@@ -193,6 +194,7 @@ public class OrderController : BaseController<OrderController>
 
     }
 
+    [Authorize]
     [HttpGet(ApiEndPointConstant.Order.Shipper)]
     [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetOrderForShipperResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
