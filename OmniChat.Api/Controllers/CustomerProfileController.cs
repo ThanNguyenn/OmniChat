@@ -79,7 +79,7 @@ namespace OmniChat.Api.Controllers
            Description = "Dùng để tìm customer đã tồn tại trước khi thực hiện merge"
          )]
         public async Task<IActionResult> GetCustomerByEmailOrPhoneAsync(
-       [FromQuery] string keyword)
+       [FromQuery] string? keyword)
         {
             var result =
                 await _customerProfileService
