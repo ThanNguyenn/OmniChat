@@ -31,7 +31,7 @@ public class ProductBrandController : BaseController<ProductBrandController>
     public async Task<IActionResult> GetAllProductBrands()
     {
         var result = await _productBrandService.GetAllProductBrandsAsync();
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Tạo brand sản phẩm thành công", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách brand sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
