@@ -159,7 +159,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> AddStock([FromBody] IEnumerable<AddProductStockRequest> addProductStockRequests)
     {
         await _productService.AddStockAsync(addProductStockRequests);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Stock added successfully", true);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Thêm lô sản phẩm thành công", true);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
@@ -175,7 +175,7 @@ public class ProductController : BaseController<ProductController>
     public async Task<IActionResult> GetProductBatches([FromRoute] Guid id, [FromQuery]int? pageNumber, int? pageSize, bool? isNewest)
     {
         var result = await _productService.GetProductBatchesAsync(id, isNewest, pageNumber ?? 1, pageSize ?? 20);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get product batches successfully", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách lô sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
