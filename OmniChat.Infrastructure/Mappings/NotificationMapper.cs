@@ -15,7 +15,9 @@ namespace OmniChat.Infrastructure.Mappings
         {
             CreateMap<NotificationRequest, Notification>()
                         .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
-                        .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => false));
+                        .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => false))
+                        .ForMember(dest => dest.StaffId, opt => opt.MapFrom(src => src.StaffId))
+                        .ForMember(dest => dest.ConversationId, opt => opt.MapFrom(src => src.ConversationId));
         }
     }
 }

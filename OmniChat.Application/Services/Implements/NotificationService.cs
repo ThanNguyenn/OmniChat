@@ -27,10 +27,17 @@ namespace OmniChat.Application.Services.Implements
         {
             var repo = _unitOfWork.GetRepository<Notification>();
 
+            _logger.LogInformation("[NOTIFICATION] Mapping NotificationRequest for ConversationId: {ConvId}", request.ConversationId);
+
             var entity = _mapper.Map<Notification>(request);
+
+            _logger.LogInformation("[NOTIFICATION] Entity Mapped: StaffId={StaffId}, ConvId={ConvId}, CreatedDate={Date}",
+            entity.StaffId, entity.ConversationId, entity.CreatedDate);
 
             await repo.InsertAsync(entity);
             await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation("[NOTIFICATION] Inserted successfully to DB. ID: {Id}", entity.Id);
             return true;          
         }
 
