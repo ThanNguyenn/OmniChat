@@ -10,6 +10,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Staff;
 
 public class UploadStaffImageRequest
 {
-    [Required(ErrorMessage = "File không hỗ trợ hoặc bị bỏ trống")]
+    [Required(ErrorMessage = "File không hỗ trợ")]
     public IFormFile? Image { get; set; }
 }
