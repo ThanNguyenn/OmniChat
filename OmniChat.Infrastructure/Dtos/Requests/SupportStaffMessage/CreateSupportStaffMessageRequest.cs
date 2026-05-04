@@ -10,16 +10,16 @@ namespace OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage
 {
     public class CreateSupportStaffMessageRequest
     {
-        [Required(ErrorMessage = "SupportConversationId is required")]
+        [Required(ErrorMessage = "Mã cuộc hội thoại là bắt buộc")]
         public Guid SupportConversationId { get; set; }
 
-        [Required(ErrorMessage = "StaffId is required")]
+        [Required(ErrorMessage = "Mã nhân viên là bắt buộc")]
         public Guid StaffId { get; set; }
 
 
-        [Required(ErrorMessage = "Content is required")]
-        [MinLength(1, ErrorMessage = "Content cannot be empty")]
-        [MaxLength(2000, ErrorMessage = "Content maximum length is 2000 characters")]
+        [Required(ErrorMessage = "Nội dung tin nhắn không được để trống")]
+        [MinLength(1, ErrorMessage = "Nội dung tin nhắn phải có ít nhất 1 ký tự")]
+        [MaxLength(2000, ErrorMessage = "Nội dung tin nhắn không được vượt quá 2000 ký tự")]
         public string Content { get; set; }
 
     }
