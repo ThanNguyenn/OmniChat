@@ -72,7 +72,7 @@
                     case "products":
                         var productRepo = _unitOfWork.GetRepository<Product>();
                         var product = await productRepo.GetByIdAsync(relatedId);
-                        if (product == null) throw new BusinessException("Không tìm thấy sản phẩm");
+                        if (product == null) throw new NotFoundException("Không tìm thấy sản phẩm");
 
                         fileUrl = product.ImageUrl;
                         product.ImageUrl = _defaultImages["products"];
@@ -82,7 +82,7 @@
                         var staffRepo = _unitOfWork.GetRepository<Staff>();
                         var staff = await staffRepo.GetQueryable(s => s.Id == relatedId, q => q.Include(s => s.Account)).FirstOrDefaultAsync();
 
-                        if (staff == null) throw new BusinessException("Không tìm thấy nhân viên");
+                        if (staff == null) throw new NotFoundException("Không tìm thấy nhân viên");
 
                         fileUrl = staff.Account?.AvatarUrl;
                         staff.Account.AvatarUrl = _defaultImages["staff"];
@@ -150,7 +150,7 @@
                             var product = await productRepo.GetByIdAsync(relatedId.Value);
 
                             if (product is null)
-                                throw new BusinessException("Không tìm thấy sản phẩm");
+                                throw new NotFoundException("Không tìm thấy sản phẩm");
 
                             product.ImageUrl = fileUrl;
                             productRepo.Update(product);
@@ -160,7 +160,7 @@
                             var staffRepo = _unitOfWork.GetRepository<Staff>();
                             var staff = await staffRepo.GetQueryable(s => s.Id == relatedId.Value, q => q.Include(s => s.Account)).FirstOrDefaultAsync();
                             if (staff is null || staff.Account is null)
-                                throw new BusinessException("Không tìm thấy nhân viên");
+                                throw new NotFoundException("Không tìm thấy nhân viên");
                             staff.Account.AvatarUrl = fileUrl;
                             break;
 
