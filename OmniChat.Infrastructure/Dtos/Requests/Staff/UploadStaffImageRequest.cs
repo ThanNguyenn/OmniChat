@@ -9,5 +9,5 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Staff;
 
 public class UploadStaffImageRequest
 {
-    public IFormFile Image { get; set; }
+    public IFormFile? Image { get; set; }
 }

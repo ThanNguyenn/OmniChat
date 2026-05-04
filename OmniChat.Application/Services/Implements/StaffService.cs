@@ -76,19 +76,44 @@ public class StaffService : BaseService<StaffService>, IStaffService
         };
     }
 
-    public async Task<bool> UpdateStaffAsync(Guid StaffId, UpdateStaffRequest updateStaffRequest)
+    public async Task<bool> UpdateStaffAsync(Guid staffId, UpdateStaffRequest request)
     {
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var staffRepository = _unitOfWork.GetRepository<Staff>();
-            var existingStaff = await staffRepository.GetByIdAsync(StaffId);
+
+            var existingStaff = await staffRepository.GetByIdAsync(staffId);
             if (existingStaff == null)
+                throw new NotFoundException("Không tìm thấy nhân viên");
+
+            var checkEmail = !string.IsNullOrWhiteSpace(request.Email) &&
+                             !string.Equals(request.Email, existingStaff.Email, StringComparison.OrdinalIgnoreCase);
+
+            var checkPhone = !string.IsNullOrWhiteSpace(request.Phone) &&
+                             request.Phone != existingStaff.Phone;
+
+            if (checkEmail || checkPhone)
             {
-                throw new BusinessException("Không tìm thấy nhân viên");
+                var isUsed = await staffRepository
+                    .GetQueryable()
+                    .AnyAsync(s =>
+                        s.Id != staffId &&
+                        (
+                            (checkEmail && s.Email == request.Email) ||
+                            (checkPhone && s.Phone == request.Phone)
+                        )
+                    );
+
+                if (isUsed)
+                    throw new BusinessException("Nhân viên có cùng email hoặc số điện thoại đã tồn tại");
             }
-            _mapper.Map(updateStaffRequest, existingStaff);
+
+            _mapper.Map(request, existingStaff);
+
             staffRepository.Update(existingStaff);
-            await SyncStaffIntentsAsync(existingStaff.Id, updateStaffRequest.StaffIntentTypes);
+            if (request.StaffIntentTypes != null)
+                await SyncStaffIntentsAsync(existingStaff.Id, request.StaffIntentTypes);
+
             return true;
         });
     }
@@ -235,7 +260,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var existingAssignment = await staffIntentTypeRepo.SingleOrDefaultAsync(predicate: sit =>
-                sit.StaffId == staffId && sit.IntentTypeId == unassignStaffFromIntentTypeRequest.IntentId) ?? throw new NotFoundException("Staff havent been assigned with this intent");
+                sit.StaffId == staffId && sit.IntentTypeId == unassignStaffFromIntentTypeRequest.IntentId) ?? throw new NotFoundException("Không tìm thấy loại yêu cầu hỗ trợ");
 
             staffIntentTypeRepo.Delete(existingAssignment);
         });

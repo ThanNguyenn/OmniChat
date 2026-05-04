@@ -159,7 +159,7 @@ public class StaffController : BaseController<StaffController>
     }
 
 
-    [HttpPost(ApiEndPointConstant.Staff.UploadImage)]
+    [HttpPut(ApiEndPointConstant.Staff.UploadImage)]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
