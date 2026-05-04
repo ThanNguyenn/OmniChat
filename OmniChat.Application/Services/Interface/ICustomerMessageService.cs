@@ -20,5 +20,7 @@ namespace OmniChat.Application.Services.Interface
         public  Task UpdateCustomerMessageAfterMergeAsync(CustomerProfile source, CustomerProfile target);
       
         public Task MarkAsReadByConversationIdAsync(Guid conversationId);
+
+        public  Task<CustomerMessage?> GetLastMessageByConversationIdAsync(Guid conversationId);
     }
 }

@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.Intent;
+using OmniChat.Infrastructure.Dtos.Requests.Notification;
+using OmniChat.Infrastructure.Dtos.Responses.Notification;
+using OmniChat.Infrastructure.Models;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -95,7 +98,48 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             if (updatedConv?.ActiveStaffId != null)
                             {
                                 _logger.LogInformation("[AGGREGATION] Staff assigned: {Staff}", updatedConv.ActiveStaffId);
- 
+
+                                // send last message notification to staff
+                                string lastMessageContent = "Bạn có cuộc hội thoại mới đang chờ!";
+                                long finalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+                                using (var internalScope = _scopeFactory.CreateScope())
+                                {
+                                    var messageService = internalScope.ServiceProvider.GetRequiredService<ICustomerMessageService>();
+                                    var notificationService = internalScope.ServiceProvider.GetRequiredService<INotificationService>();
+
+                                    var lastDbMessage = await messageService.GetLastMessageByConversationIdAsync(updatedConv.Id);
+                                    if (lastDbMessage != null)
+                                    {
+                                        lastMessageContent = lastDbMessage.Content;
+                                        finalTimestamp = lastDbMessage.Timestamp;
+                                    }
+
+                                    var notificationReq = new NotificationRequest
+                                    {
+                                        ConversationId = updatedConv.Id,
+                                        StaffId = updatedConv.ActiveStaffId.Value,
+                                        MessageText = lastMessageContent,
+                                        IsRead = false
+                                    };
+
+                                    await notificationService.CreateNotificationAsync(notificationReq);
+                                }
+
+                                var notificationResponse = new NotificationResponse
+                                {
+                                    CustomerName = updatedConv.CustomerName,
+                                    ImageUrl = updatedConv.AvatarUrl,
+                                    Message = lastMessageContent,
+                                    ProviderName = updatedConv.Providers.ProviderName,
+                                    TimeStamp = finalTimestamp, 
+                                };
+
+                                await _hubContext.Clients
+                                .User(conversation.ActiveStaffId.ToString())
+                                .SendAsync("ReceiveNotification", notificationResponse);
+
+
                             }
                             else
                             {

@@ -103,5 +103,17 @@ namespace OmniChat.Application.Services.Implements
                 await _unitOfWork.CommitAsync();
             }
         }
+
+        public async Task<CustomerMessage?> GetLastMessageByConversationIdAsync(Guid conversationId)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerMessage>();
+
+            var lastMessage = await repo.GetQueryable()
+                .Where(m => m.ConversationId == conversationId)
+                .OrderByDescending(m => m.Timestamp)
+                .FirstOrDefaultAsync();
+
+            return lastMessage;
+        }
     }
 }
