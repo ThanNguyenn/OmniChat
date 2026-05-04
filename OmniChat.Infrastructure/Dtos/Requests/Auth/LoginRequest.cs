@@ -13,6 +13,5 @@ public class LoginRequest
     public string Username { get; set; }
 
     [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
-    [MinLength(8, ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự.")]
     public string Password { get; set; }
 }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OmniChat.Infrastructure.Mappings;
 
-public class StaffMapper  : Profile
+public class StaffMapper : Profile
 {
     public StaffMapper()
     {
@@ -26,6 +26,10 @@ public class StaffMapper  : Profile
                 opt => opt.MapFrom(src => src.StaffIntentTypes))
             .ForMember(dest => dest.AvatarUrl,
                opt => opt.MapFrom(src => src.Account != null ? src.Account.AvatarUrl : null))
+            .ForMember(dest => dest.RoleId,
+               opt => opt.MapFrom(src => src.Account.RoleId))
+            .ForMember(dest => dest.RoleName,
+               opt => opt.MapFrom(src => src.Account.Role.Name))
             ;
 
         CreateMap<SupportTask, StaffSupportTaskResponse>()

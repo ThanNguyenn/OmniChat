@@ -110,23 +110,41 @@ public class StaffService : BaseService<StaffService>, IStaffService
 
 
     public async Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(
-        string? search = null,
-        IEnumerable<Guid>? departmentIds = null,
-        int pageNumber = 1,
-        int pageSize = 20,
-        string sortBy = "id",
-        bool descending = true)
+    string? search = null,
+    IEnumerable<Guid>? departmentIds = null,
+    int pageNumber = 1,
+    int pageSize = 20,
+    string sortBy = "id",
+    bool descending = true)
     {
         var staffRepository = _unitOfWork.GetRepository<Staff>();
+
+
+        var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") == true;
 
         var response = await staffRepository.GetPagingListAsync<GetStaffsResponse>(
             predicate: s =>
                 s.IsActive == true &&
+                s.Id != Guid.Empty && 
+
+                (
+                    isAdmin
+                        ? (s.Account != null &&
+                           s.Account.Role != null &&
+                           (s.Account.Role.Name == "Manager" ||
+                            s.Account.Role.Name == "Staff" ||
+                            s.Account.Role.Name == "Shipper")) 
+                        : (s.Account != null &&
+                           s.Account.Role != null &&
+                           s.Account.Role.Name == "Staff")
+                ) &&
+
                 (departmentIds == null || !departmentIds.Any() ||
                     departmentIds.All(id =>
                         s.StaffIntentTypes.Any(sit => sit.IntentTypeId == id)
                     )
                 ) &&
+
                 (string.IsNullOrEmpty(search) ||
                     s.Name.Contains(search) ||
                     s.Email.Contains(search) ||
@@ -136,8 +154,9 @@ public class StaffService : BaseService<StaffService>, IStaffService
             orderBy: q => OrderBy(q, sortBy, descending),
             selector: e => _mapper.Map<GetStaffsResponse>(e),
             include: k => k.Include(s => s.StaffIntentTypes)
-                    .ThenInclude(sit => sit.IntentType)
-                    .Include(s => s.Account),
+                           .ThenInclude(sit => sit.IntentType)
+                           .Include(s => s.Account)
+                               .ThenInclude(a => a.Role),
             page: pageNumber,
             size: pageSize
         );

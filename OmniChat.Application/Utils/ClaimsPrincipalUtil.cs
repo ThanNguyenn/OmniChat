@@ -58,4 +58,19 @@ public static class ClaimsPrincipalUtil
 
         return sessionClaim.Value;
     }
+
+    public static string GetRole(this ClaimsPrincipal user)
+    {
+        if (user == null)
+            throw new UnauthorizedAccessException("User context is missing.");
+
+        var roleClaim = user.Claims.FirstOrDefault(c =>
+            c.Type == ClaimTypes.Role ||
+            string.Equals(c.Type, "role", StringComparison.OrdinalIgnoreCase));
+
+        if (roleClaim == null || string.IsNullOrWhiteSpace(roleClaim.Value))
+            throw new UnauthorizedAccessException("Invalid role claim.");
+
+        return roleClaim.Value;
+    }
 }

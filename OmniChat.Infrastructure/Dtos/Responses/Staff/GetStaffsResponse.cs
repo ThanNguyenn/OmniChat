@@ -20,6 +20,9 @@ public class GetStaffsResponse
 
     public string? AvatarUrl { get; set; }
 
+    public Guid RoleId { get; set; }
+    public string RoleName { get; set; }
+
     public StaffStatus Status { get; set; }
 
     //staff performance metrics

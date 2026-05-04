@@ -37,7 +37,7 @@ public class JwtUtil
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Staff.Id.ToString()),  
-                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim(ClaimTypes.Role, user.Role.Name.ToString()),
                 new Claim("session_id",sessionId)
             };
 
