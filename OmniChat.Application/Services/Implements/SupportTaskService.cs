@@ -136,12 +136,12 @@ namespace OmniChat.Application.Services.Implements
             var existSupportTask = await repo.GetByIdAsync(taskId);
 
             if (existSupportTask == null)
-                throw new NotFoundException("No SupportTask found");
+                throw new NotFoundException("Không tìm thấy yêu cầu hỗ trợ.");
 
             if (existSupportTask.Status == SupportTaskStatus.Done ||
             existSupportTask.Status == SupportTaskStatus.Cancelled ||
-            existSupportTask.Status == SupportTaskStatus.closed)
-                throw new BadRequestException("Task already finalized");
+            existSupportTask.Status == SupportTaskStatus.Closed)
+                throw new BadRequestException("Yêu cầu hỗ trợ đã được hoàn thành hoặc hủy bỏ.");
 
             var now = DateTime.UtcNow;
             var handleTime = existSupportTask.CreatedAt.HasValue
@@ -176,7 +176,7 @@ namespace OmniChat.Application.Services.Implements
                     Action = TaskActionType.Cancelled,
                     ActionById = existSupportTask.CurrentAssignedStaffId.Value,
                     ActionToId = null,
-                    Reason = $"Task cancelled by {existSupportTask.CurrentAssignedStaffId.Value}"
+                    Reason = $"[{cancelReason.ReasonType}] - {cancelReason.Description}"
                 };
                 await _taskActionService.CreateTaskActionAsync(newAction);
             }
@@ -289,7 +289,7 @@ namespace OmniChat.Application.Services.Implements
            
             if (!int.TryParse(input, out int year))
             {
-                throw new BadRequestException("Invalid year format");
+                throw new BadRequestException("Không đúng định dạng năm");
             }
 
            
