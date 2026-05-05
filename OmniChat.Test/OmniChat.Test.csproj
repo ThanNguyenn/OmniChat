@@ -2,16 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
 
     <IsPackable>false</IsPackable>
-    <GenerateProgramFile>false</GenerateProgramFile>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="Tests.fs" />
-    <Compile Include="Program.fs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
@@ -23,6 +19,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OmniChat.Api\OmniChat.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
   </ItemGroup>
 
 </Project>

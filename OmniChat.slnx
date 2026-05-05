@@ -2,5 +2,5 @@
   <Project Path="OmniChat.Api/OmniChat.Api.csproj" />
   <Project Path="OmniChat.Application/OmniChat.Application.csproj" />
   <Project Path="OmniChat.Infrastructure/OmniChat.Infrastructure.csproj" />
-  <Project Path="OmniChat.Test/OmniChat.Test.fsproj" Id="e6b83dfd-e802-4488-ac6c-3f97060c7b25" />
+  <Project Path="OmniChat.Test/OmniChat.Test.csproj" Id="ad3f7560-3bb6-4d94-95ca-3828c7988465" />
 </Solution>
