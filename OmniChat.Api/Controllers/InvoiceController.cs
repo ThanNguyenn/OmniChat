@@ -56,7 +56,7 @@ public class InvoiceController : BaseController<InvoiceController>
     public async Task<IActionResult> TotalUnpaidAsync([FromQuery] string period)
     {
         var result = await _invoiceService.GetTotalUnpaidAsync(period);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem thống kê tổng nợu thành công", result);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem thống kê tổng nợ thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 

@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
@@ -37,7 +38,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
     }
 
     [HttpGet(ApiEndPointConstant.PostSaleRequest.GetById)]
-    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetPostSaleRequestsResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<GetPostSaleRequestsResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
@@ -52,6 +53,7 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [Authorize]
     [HttpPost(ApiEndPointConstant.PostSaleRequest.Create)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]

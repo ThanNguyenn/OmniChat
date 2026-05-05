@@ -15,11 +15,11 @@ public class CreatePostSaleRequestRequest : IValidatableObject
 
     public Guid OrderId { get; set; }
 
-    public Guid PresentByStaffId { get; set; }
+    //public Guid PresentByStaffId { get; set; }
 
     public PostSaleRequestType Type { get; set; }
 
-    public string Reason { get; set; }
+    public string? Reason { get; set; }
 
     [Required(ErrorMessage = "PostSaleItems là bắt buộc")]
     public IEnumerable<CreatePostSaleRequestItemRequest>? PostSaleItems { get; set; }
@@ -33,11 +33,11 @@ public class CreatePostSaleRequestRequest : IValidatableObject
                 new[] { nameof(CustomerId) });
         }
 
-        if (PresentByStaffId == Guid.Empty)
-        {
-            yield return new ValidationResult("PresentByStaffId là bắt buộc",
-                new[] { nameof(PresentByStaffId) });
-        }
+        //if (PresentByStaffId == Guid.Empty)
+        //{
+        //    yield return new ValidationResult("PresentByStaffId là bắt buộc",
+        //        new[] { nameof(PresentByStaffId) });
+        //}
 
         if (OrderId == Guid.Empty)
         {

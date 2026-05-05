@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.Invoice;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
@@ -347,7 +348,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
     public async Task<GetInvoiceResponse> GetInvoiceAsync(Guid invoiceId)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
-        var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: a => a.Id == invoiceId, include: i => i.Include(x => x.CustomerProfile));
+        var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: a => a.Id == invoiceId, include: i => i.Include(x => x.CustomerProfile))?? throw new NotFoundException("Không tìm thấy phiếu thanh toán") ;
         return _mapper.Map<GetInvoiceResponse>(invoice);
     }
 
