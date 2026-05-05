@@ -517,6 +517,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
                      && s.Account.Role.Name == "Shipper")
             .Select(s => new ShipperResposne
             {
+                Id = s.Id,
                 ShipperName = s.Name,
                 ShipperPhone = s.Phone,
                 ShipperStatus = s.Status,

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.Utils;
+using OmniChat.Infrastructure.Dtos.Requests.Mail;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Requests.OrderItem;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
@@ -30,14 +31,18 @@ namespace OmniChat.Application.Services.Implements;
 public class OrderService : BaseService<OrderService>, IOrderService
 {
     private readonly ICreditNoteService creditNoteService;
+
+    private readonly IMailService mailService;
     public OrderService(IUnitOfWork<OmniChatDbContext> unitOfWork,
         ILogger<OrderService> logger,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
-        ICreditNoteService creditNoteService)
+        ICreditNoteService creditNoteService,
+        IMailService mailService)
         : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
         this.creditNoteService = creditNoteService;
+        this.mailService = mailService;
     }
 
     public async Task<bool> CreateOrderAsync(CreateOrderRequest request)
@@ -83,7 +88,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             }
             //log the creator of the order
 
-                var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
             order.CreatorId = staff.Id;
             await orderRepo.InsertAsync(order);
@@ -214,12 +219,12 @@ public class OrderService : BaseService<OrderService>, IOrderService
     public async Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
-        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include( q => q.CustomerProfile).Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
+        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include(q => q.CustomerProfile).Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
         if (response == null)
         {
             throw new NotFoundException("Không tìm thấy đơn hàng");
         }
-        return _mapper.Map<GetOrderResponse>(response); 
+        return _mapper.Map<GetOrderResponse>(response);
     }
 
     public async Task<GetPostSaleOrderResponse> GetPostSaleOrderByIdAsync(Guid orderId)
@@ -232,7 +237,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
         }
         return _mapper.Map<GetPostSaleOrderResponse>(response);
     }
-        
+
 
     public async Task<bool> UpdateOrderAsync(Guid orderId, UpdateOrderRequest updateOrderRequest)
     {
@@ -278,7 +283,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
         var batches = (await batchRepo.GetListAsync(
             predicate: b => batchIds.Contains(b.Id),
-            include: q => q.Include(b => b.Product) 
+            include: q => q.Include(b => b.Product)
         )).ToList();
 
         if (batches.Count != batchIds.Count)
@@ -307,7 +312,8 @@ public class OrderService : BaseService<OrderService>, IOrderService
         var orderRepo = _unitOfWork.GetRepository<Order>();
         return _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var order = await orderRepo.GetByIdAsync(orderId);
+            var order = await orderRepo.SingleOrDefaultAsync(predicate: o => o.Id == orderId, 
+                include: q => q.Include(o => o.CustomerProfile));
             if (order == null)
             {
                 throw new NotFoundException("Không tìm thấy đơn hàng");
@@ -316,6 +322,16 @@ public class OrderService : BaseService<OrderService>, IOrderService
             order.Status = OrderStatus.Shipped;
             order.DeliveriedDate = DateTime.UtcNow;
             orderRepo.Update(order);
+
+            var mailContent = new MailContent
+            {
+                To = order.CustomerProfile.Email,
+                Subject = $"Đơn hàng {order.Code} đã được giao",
+                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được giao thành công vào ngày {order.DeliveriedDate.Value.ToString("dd/MM/yyyy")}.\n\nCảm ơn bạn đã mua sắm tại cửa hàng chúng tôi!"
+            };
+
+            await mailService.SendEmailAsync(mailContent);
+
             return true;
         });
     }
@@ -331,7 +347,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 throw new NotFoundException("Không tìm thấy đơn hàng");
             }
             order.Status = OrderStatus.Returned;
-            
+
             orderRepo.Update(order);
             await _unitOfWork.CommitAsync();
             _unitOfWork.Context.ChangeTracker.Clear();
@@ -500,25 +516,25 @@ public class OrderService : BaseService<OrderService>, IOrderService
         return response;
     }
 
-    public async Task<ShipperDeliveredReportResponse> GetDeliveredReportAsync(Guid shipperId,DateTime? fromDate,DateTime? toDate,int pageNumber = 1,int pageSize = 20)
+    public async Task<ShipperDeliveredReportResponse> GetDeliveredReportAsync(Guid shipperId, DateTime? fromDate, DateTime? toDate, int pageNumber = 1, int pageSize = 20)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
 
-       
+
         var start = fromDate?.Date ?? DateTime.MinValue;
         var end = toDate?.Date ?? DateTime.MaxValue;
 
-        
+
         Expression<Func<Order, bool>> filter = o => o.DriverId == shipperId &&
                                                     o.DeliveryStatus == DeliveryStatus.Completed &&
                                                     o.DeliveriedDate != null &&
                                                     o.DeliveriedDate.Value.Date >= start &&
                                                     o.DeliveriedDate.Value.Date <= end;
 
-        
+
         var totalCount = await orderRepo.CountAsync(filter);
 
-       
+
         var pagedOrders = await orderRepo.GetPagingListAsync<GetOrderResponse>(
             predicate: filter,
             orderBy: q => q.OrderByDescending(o => o.DeliveriedDate),
@@ -530,7 +546,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             page: pageNumber,
             size: pageSize);
 
-       
+
         return new ShipperDeliveredReportResponse
         {
             TotalDeliveredOrders = totalCount,
@@ -541,7 +557,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
     public async Task<bool> SubmitOrderAsync(Guid orderId)
     {
-        var  orderRepo = _unitOfWork.GetRepository<Order>();
+        var orderRepo = _unitOfWork.GetRepository<Order>();
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var order = await orderRepo.GetByIdAsync(orderId);

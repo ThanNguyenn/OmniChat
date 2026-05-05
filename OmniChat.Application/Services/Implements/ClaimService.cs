@@ -77,7 +77,7 @@ namespace OmniChat.Application.Services.Implements
                      {
                          if (task.Status != SupportTaskStatus.Done && 
                          task.Status != SupportTaskStatus.Cancelled &&
-                         task.Status != SupportTaskStatus.closed)
+                         task.Status != SupportTaskStatus.Closed)
                          {
                              task.Status = SupportTaskStatus.PendingReassign ;
                          }
@@ -366,7 +366,7 @@ namespace OmniChat.Application.Services.Implements
             var activeTasks = conversation.SupportTasks
                .Where(t => t.Status != SupportTaskStatus.Done
                         && t.Status != SupportTaskStatus.Cancelled
-                        && t.Status != SupportTaskStatus.closed)
+                        && t.Status != SupportTaskStatus.Closed)
                .ToList();
 
             foreach (var task in activeTasks)
@@ -380,7 +380,7 @@ namespace OmniChat.Application.Services.Implements
                     Action = TaskActionType.Reassigned,
                     ActionById = oldStaffId.Value,
                     ActionToId = newStaffAssignId,
-                    Reason = $"Chuyển giao từ nhân viên {oldStaffId} sang {newStaffAssignId} theo yêu cầu thay đổi công việc."
+                    Reason = claim.Reason
                 });
             }
 

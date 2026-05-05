@@ -33,7 +33,7 @@ namespace OmniChat.Api.Controllers
             return StatusCode(StatusCodes.Status201Created, new ApiResponse<bool>
             {
                 StatusCode = StatusCodes.Status201Created,
-                Message = "Tạo ứng dụng liên kết thành công",
+                Message = "Tạo kênh chat liên kết thành công",
                 IsSuccess = true,
                 Data = true
             });
@@ -57,7 +57,7 @@ namespace OmniChat.Api.Controllers
             return Ok(new ApiResponse<PagingResponse<GetAllProviderResponse>>
             {
                 StatusCode = StatusCodes.Status200OK,
-                Message = "Lấy danh sách ứng dụng liên kết thành công",
+                Message = "Lấy danh sáchkênh chat liên kết thành công",
                 IsSuccess = true,
                 Data = result
             });

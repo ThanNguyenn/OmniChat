@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.Performance;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -25,6 +26,15 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task InitializePerformanceForStaffAsync(Guid staffId)
         {
+            var staffRepo = _unitOfWork.GetRepository<Staff>();
+
+            var staff = await staffRepo.GetByIdAsync(staffId);
+
+            if (staff == null)
+            {
+                throw new NotFoundException("Nhân viên không tìm thấy hoặc đã bị xóa.");
+            }
+
             var now = DateTime.UtcNow;
             var fromTime = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
             var toTime = fromTime.AddMonths(1).AddTicks(-1);
