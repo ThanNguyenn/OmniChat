@@ -163,16 +163,13 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
 
-        var query = postSaleRequestRepo.GetQueryable();
+        var entity = await postSaleRequestRepo
+            .SingleOrDefaultAsync(predicate: p => p.Id == id);
 
-        var response = await query
-            .Where(p => p.Id == id)
-            .ProjectTo<GetPostSaleRequestByIdResponse>(_mapper.ConfigurationProvider)
-            .SingleOrDefaultAsync();
+        if (entity == null)
+            throw new NotFoundException("Không tìm thấy yêu cầu");
 
-        if (response == null) throw new NotFoundException($"Không tìm thấy yêu cầu");
-
-        return response;
+        return _mapper.Map<GetPostSaleRequestByIdResponse>(entity);
     }
 
     public async Task<PagingResponse<GetPostSaleRequestsResponse>> GetPostSaleRequestsAsync(

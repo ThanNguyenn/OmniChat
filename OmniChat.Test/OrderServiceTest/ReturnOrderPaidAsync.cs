@@ -21,8 +21,9 @@ public class ReturnOrderPaidAsync
     protected readonly Mock<ICreditNoteService> _creditNoteMock = new();
     protected readonly Mock<IMailService> _mailServiceMock = new();
     protected readonly Mock<IInvoiceService> _invoiceServiceMock = new();
+    private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
 
-    public OrderService CreateService()
+    private OrderService CreateService()
     {
         return new OrderService(
             _uowMock.Object,
@@ -30,7 +31,8 @@ public class ReturnOrderPaidAsync
             _mapperMock.Object,
             _httpMock.Object,
             _creditNoteMock.Object,
-            _mailServiceMock.Object
+            _mailServiceMock.Object,
+            _auditServiceMock.Object
         );
     }
 

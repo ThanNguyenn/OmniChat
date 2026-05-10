@@ -33,16 +33,20 @@ public class OrderService : BaseService<OrderService>, IOrderService
     private readonly ICreditNoteService creditNoteService;
 
     private readonly IMailService mailService;
+
+    private readonly IProductBatchAuditService _auditService;
     public OrderService(IUnitOfWork<OmniChatDbContext> unitOfWork,
         ILogger<OrderService> logger,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         ICreditNoteService creditNoteService,
-        IMailService mailService)
+        IMailService mailService,
+        IProductBatchAuditService auditService)
         : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
         this.creditNoteService = creditNoteService;
         this.mailService = mailService;
+        _auditService = auditService;
     }
 
     public async Task<bool> CreateOrderAsync(CreateOrderRequest request)
@@ -76,8 +80,13 @@ public class OrderService : BaseService<OrderService>, IOrderService
                     throw new BusinessException("Không đủ hàng");
 
                 batch.Quantity -= item.Quantity;
-
                 batch.Product.Quantity -= item.Quantity;
+
+                await _auditService.ExportAsync(
+                    batch.Id,
+                    item.Quantity,
+                    _httpContextAccessor.HttpContext?.User.GetUserId()
+                );
 
                 order.OrderItems.Add(new OrderItem
                 {
@@ -290,18 +299,19 @@ public class OrderService : BaseService<OrderService>, IOrderService
             throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
         var batchDict = batches.ToDictionary(b => b.Id);
-
         foreach (var item in orderItems)
         {
             if (!batchDict.TryGetValue(item.ProductBatchId, out var batch))
                 throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
             batch.Quantity += item.Quantity;
-
-            if (batch.Product == null)
-                throw new NotFoundException("Không tìm thấy sản phẩm");
-
             batch.Product.Quantity += item.Quantity;
+
+            await _auditService.AddAsync(
+                batch.Id,
+                item.Quantity,
+                _httpContextAccessor.HttpContext?.User.GetUserId()
+            );
         }
 
         batchRepo.UpdateRange(batches);
@@ -618,7 +628,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
             batch.Quantity -= request.Quantity;
             batch.Product.Quantity -= request.Quantity;
-
+            await _auditService.ExportAsync(
+                batch.Id,
+                request.Quantity,
+                _httpContextAccessor.HttpContext?.User.GetUserId()
+            );
             order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
         });
 
@@ -654,6 +668,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
             batch.Quantity += orderItem.Quantity;
             batch.Product.Quantity += orderItem.Quantity;
 
+            await _auditService.AddAsync(
+                batch.Id,
+                orderItem.Quantity,
+                _httpContextAccessor.HttpContext?.User.GetUserId()
+            );
             order.OrderItems.Remove(orderItem);
 
             order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
@@ -704,11 +723,24 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
                 batch.Quantity -= delta;
                 batch.Product.Quantity -= delta;
+                await _auditService.ExportAsync(
+                   batch.Id,
+                   delta,
+                   _httpContextAccessor.HttpContext?.User.GetUserId()
+                );
             }
             else if (delta < 0)
             {
-                batch.Quantity += Math.Abs(delta);
-                batch.Product.Quantity += Math.Abs(delta);
+                var restore = Math.Abs(delta);
+
+                batch.Quantity += restore;
+                batch.Product.Quantity += restore;
+
+                await _auditService.AddAsync(
+                    batch.Id,
+                    restore,
+                    _httpContextAccessor.HttpContext?.User.GetUserId()
+                );
             }
 
             orderItem.Quantity = request.Quantity;

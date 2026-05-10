@@ -27,6 +27,7 @@ public class AddOrderItemAsyncTest
     private readonly Mock<IHttpContextAccessor> _httpMock = new();
     private readonly Mock<ICreditNoteService> _creditNoteMock = new();
     private readonly Mock<IMailService> _mailServiceMock = new();
+    private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
 
     private OrderService CreateService()
     {
@@ -36,7 +37,8 @@ public class AddOrderItemAsyncTest
             _mapperMock.Object,
             _httpMock.Object,
             _creditNoteMock.Object,
-            _mailServiceMock.Object
+            _mailServiceMock.Object,
+            _auditServiceMock.Object
         );
     }
 

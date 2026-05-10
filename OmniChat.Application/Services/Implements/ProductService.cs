@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Application.Utils;
 using OmniChat.Infrastructure.Dtos.Requests.Product;
 using OmniChat.Infrastructure.Dtos.Requests.ProductBatch;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
@@ -26,15 +27,18 @@ namespace OmniChat.Application.Services.Implements;
 public class ProductService : BaseService<ProductService>, IProductService
 {
     private readonly IR2StorageService _storageService;
+    private readonly IProductBatchAuditService _productBatchAuditService;
     public ProductService(
         IUnitOfWork<OmniChatDbContext> unitOfWork,
         ILogger<ProductService> logger,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
-        IR2StorageService storageService)
+        IR2StorageService storageService,
+        IProductBatchAuditService productBatchAuditService)
     : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
         _storageService = storageService;
+        _productBatchAuditService = productBatchAuditService;
     }
 
     public async Task<bool> CreateProductAsync(CreateProductRequest createProductRequest)
@@ -222,6 +226,7 @@ public class ProductService : BaseService<ProductService>, IProductService
 
                     var newBatch = new ProductBatch
                     {
+                        Id = Guid.NewGuid(),
                         ProductId = product.Id,
                         ManuFactureDate = DateTime.SpecifyKind(
                             manufactureDate.ToDateTime(TimeOnly.MinValue),
@@ -237,6 +242,12 @@ public class ProductService : BaseService<ProductService>, IProductService
                     await batchRepo.InsertAsync(newBatch);
 
                     product.Quantity += batchRequest.Quantity;
+
+                    await _productBatchAuditService.AddAsync(
+                        newBatch.Id,
+                        batchRequest.Quantity,
+                        actionById: _httpContextAccessor.HttpContext?.User.GetUserId()
+                    );
                 }
 
                 productRepo.Update(product);

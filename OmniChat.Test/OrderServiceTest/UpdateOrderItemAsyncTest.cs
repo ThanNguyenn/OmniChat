@@ -27,6 +27,7 @@ public class UpdateOrderItemAsyncTest
     private readonly Mock<IHttpContextAccessor> _httpMock = new();
     private readonly Mock<ICreditNoteService> _creditNoteMock = new();
     private readonly Mock<IMailService> _mailServiceMock = new();
+    private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
 
     private OrderService CreateService()
     {
@@ -36,7 +37,8 @@ public class UpdateOrderItemAsyncTest
             _mapperMock.Object,
             _httpMock.Object,
             _creditNoteMock.Object,
-            _mailServiceMock.Object
+            _mailServiceMock.Object,
+            _auditServiceMock.Object
         );
     }
 
@@ -58,6 +60,9 @@ public class UpdateOrderItemAsyncTest
     {
         _uowMock.Setup(x => x.ProcessInTransactionAsync(It.IsAny<Func<Task>>()))
             .Returns<Func<Task>>(f => f());
+        _uowMock
+        .Setup(x => x.ProcessInTransactionAsync(It.IsAny<Func<Task<bool>>>()))
+        .Returns<Func<Task<bool>>>(f => f());
     }
 
     private static IQueryable<T> AsyncQueryable<T>(List<T> data)
@@ -217,16 +222,55 @@ public class UpdateOrderItemAsyncTest
     }
 
     [Fact]
-    public async Task UpdateOrderItem_ShouldCallRemove_WhenQuantityZero()
+    public async Task UpdateOrderItem_ShouldRemoveItem_WhenQuantityZero()
     {
+        var orderRepo = SetupOrderRepo();
+        var batchRepo = SetupBatchRepo();
+        SetupTransaction();
+
+        var orderItemId = Guid.NewGuid();
+        var batchId = Guid.NewGuid();
+
+        var orderItem = new OrderItem
+        {
+            Id = orderItemId,
+            ProductBatchId = batchId,
+            Quantity = 5,
+            Price = 100
+        };
+        var batch = new ProductBatch
+        {
+            Id = batchId,
+            Quantity = 10,
+            Product = new Product { Quantity = 10 }
+        };
+        var order = new Order
+        {
+            Id = Guid.NewGuid(),
+            OrderItems = new List<OrderItem> { orderItem }
+        };
+
+        orderRepo.Setup(r => r.GetQueryable(
+                It.IsAny<Expression<Func<Order, bool>>>(),
+                It.IsAny<Func<IQueryable<Order>, IQueryable<Order>>>(),
+                It.IsAny<bool>()))
+            .Returns(AsyncQueryable(new List<Order> { order }));
+
+        batchRepo.Setup(r => r.GetQueryable(
+        It.IsAny<Expression<Func<ProductBatch, bool>>>(),
+        It.IsAny<Func<IQueryable<ProductBatch>, IQueryable<ProductBatch>>>(),
+        It.IsAny<bool>()))
+    .Returns(AsyncQueryable(new List<ProductBatch> { batch }));
+
         var service = CreateService();
 
-        var called = false;
+        var result = await service.UpdateOrderItemAsync(
+            order.Id,
+            orderItemId,
+            new UpdateOrderItemRequest { Quantity = 0 });
 
-        var spy = Mock.Get(service);
-
-        await Assert.ThrowsAsync<Exception>(() =>
-            service.UpdateOrderItemAsync(Guid.NewGuid(), Guid.NewGuid(),
-                new UpdateOrderItemRequest { Quantity = 0 }));
+        // behavior assertions
+        Assert.True(result);
+        Assert.DoesNotContain(orderItem, order.OrderItems);
     }
 }

@@ -26,6 +26,7 @@ public class UpdateProductAsyncTest
     protected readonly Mock<IMapper> _mapperMock = new();
     protected readonly Mock<ILogger<ProductService>> _loggerMock = new();
     protected readonly Mock<IR2StorageService> _storageMock = new();
+    protected readonly Mock<IProductBatchAuditService> _auditMock = new();
 
     protected ProductService CreateService()
     {
@@ -34,10 +35,10 @@ public class UpdateProductAsyncTest
             _loggerMock.Object,
             _mapperMock.Object,
             _httpMock.Object,
-            _storageMock.Object
+            _storageMock.Object,
+            _auditMock.Object
         );
     }
-
     protected void SetupTransaction()
     {
         _uowMock

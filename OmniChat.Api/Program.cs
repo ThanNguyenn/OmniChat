@@ -221,6 +221,7 @@ void RegisterApplicationServices()
     builder.Services.AddScoped<ISheetExportService, SheetExportService>();
     builder.Services.AddScoped<IRoleService, RoleService>();
     builder.Services.AddTransient<IMailService, MailService>();
+    builder.Services.AddScoped<IProductBatchAuditService, ProductBatchAuditService>();
 }
 
 void RegisterBackgroundServices()
@@ -394,6 +395,7 @@ void ConfigureSwagger()
 {
     builder.Services.AddSwaggerGen(options =>
     {
+        options.CustomSchemaIds(type => type.FullName);
         options.EnableAnnotations();
         options.SwaggerDoc("v1", new OpenApiInfo
         {

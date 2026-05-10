@@ -27,6 +27,7 @@ public class AddStockAsyncTest
     protected readonly Mock<IMapper> _mapperMock = new();
     protected readonly Mock<ILogger<ProductService>> _loggerMock = new();
     protected readonly Mock<IR2StorageService> _storageMock = new();
+    protected readonly Mock<IProductBatchAuditService> _auditMock = new();
 
     protected ProductService CreateService()
     {
@@ -35,7 +36,8 @@ public class AddStockAsyncTest
             _loggerMock.Object,
             _mapperMock.Object,
             _httpMock.Object,
-            _storageMock.Object
+            _storageMock.Object,
+            _auditMock.Object
         );
     }
 
@@ -110,6 +112,9 @@ public class AddStockAsyncTest
             r.Update(It.Is<Product>(p =>
                 p.Id == productId &&
                 p.Quantity == 15)),
+            Times.Once);
+        _auditMock.Verify(a =>
+            a.AddAsync(It.IsAny<Guid>(), 5, It.IsAny<Guid?>()),
             Times.Once);
     }
 

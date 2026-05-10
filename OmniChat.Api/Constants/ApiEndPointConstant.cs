@@ -220,7 +220,7 @@ public class ApiEndPointConstant
         public const string GetPendingByShipper = "shipper/{shipperId}/pending";
         public const string GetHistoryByShipper = "shipper/{shipperId}/history";
         public const string CountDelivered = "delivered/count";
-    }   
+    }
 
     public static class FacebookOAuthToken
     {
@@ -256,7 +256,7 @@ public class ApiEndPointConstant
     {
         public const string Base = ApiV1 + "/post-sale-requests";
         public const string Create = "create";
-        public const string Update ="{id}/update";
+        public const string Update = "{id}/update";
         public const string Delete = "{id}/delete";
         public const string GetAll = "get";
         public const string GetById = "{id}";
@@ -304,10 +304,10 @@ public class ApiEndPointConstant
     public static class ChatTemplate
     {
         public const string Base = ApiV1 + "/chat-templates";
-        public const string Create = Base;           
-        public const string Update = Base + "/{id}"; 
-        public const string Delete = Base + "/{id}"; 
-        public const string GetAll = Base;           
+        public const string Create = Base;
+        public const string Update = Base + "/{id}";
+        public const string Delete = Base + "/{id}";
+        public const string GetAll = Base;
         public const string GetById = Base + "/{id}";
 
     }
@@ -342,9 +342,22 @@ public class ApiEndPointConstant
         public const string GetUnRead = Base + "/unread/{staffId}";
     }
 
-    public static class Role 
-    { 
+    public static class Role
+    {
         public const string Base = ApiV1 + "/roles";
         public const string GetAll = Base + "/get";
-    } 
+    }
+
+    public static class BatchAudit
+    {
+        public const string Base = ApiV1 + "/batch-audit";
+        public const string GetAll = "get";
+        public const string GetByProductId = "product/{productId}";
+        public const string GetByBatchId = "batch/{productBatchId}";
+        public const string GetDetailByBatchId = "get-detail/batch/{batchId}";
+        public const string Update = "{id}/update";
+        public const string Delete = "{id}/delete";
+
+    }
+
 }
