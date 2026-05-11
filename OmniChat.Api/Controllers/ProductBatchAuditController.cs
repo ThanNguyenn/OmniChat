@@ -72,13 +72,13 @@ public class ProductBatchAuditController  : BaseController<ProductBatchAuditCont
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
-       Summary = "Xem chi tiết batch audit theo productBatch id",
-       Description = "Xem chi tiết batch audit theo productBatch id"
+       Summary = "Xem chi tiết batch audit theo id",
+       Description = "Xem chi tiết batch audit theo id"
     )]
-    public async Task<IActionResult> GetProductBatchAuditDetailByBatchId([FromRoute] Guid productBatchId)
+    public async Task<IActionResult> GetProductBatchAuditDetailByBatchId([FromRoute] Guid id)
     {
-        var result = await _productBatchAuditService.GetDetailByBatchIdAsync(productBatchId);
-        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem chi tiết batch audit theo id lô sản phẩm thành công", result);
+        var result = await _productBatchAuditService.GetDetailByBatchIdAsync(id);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem chi tiết batch audit theo id thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 

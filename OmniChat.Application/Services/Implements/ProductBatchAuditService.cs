@@ -83,11 +83,13 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
         };
     }
 
+
+
     public async Task<GetDetailByBatchIdResponse> GetDetailByBatchIdAsync(Guid productBatchId)
     {
         var repo = _unitOfWork.GetRepository<BatchAudit>();
 
-        var entity = await repo.GetQueryable(ba => ba.ProductBatchId == productBatchId)
+        var entity = await repo.GetQueryable(ba => ba.Id == productBatchId)
             .Include(ba => ba.ProductBatch)
                 .ThenInclude(pb => pb.Product)
                     .ThenInclude(f => f.Brand)

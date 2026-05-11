@@ -354,7 +354,7 @@ public class ApiEndPointConstant
         public const string GetAll = "get";
         public const string GetByProductId = "product/{productId}";
         public const string GetByBatchId = "batch/{productBatchId}";
-        public const string GetDetailByBatchId = "get-detail/batch/{productBatchId}";
+        public const string GetDetailByBatchId = "get/{id}";
         public const string Update = "{id}/update";
         public const string Delete = "{id}/delete";
 
