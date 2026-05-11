@@ -18,11 +18,11 @@ public class BatchAuditMapper : Profile
         CreateMap<BatchAudit, GetAllAuditResponse>()
          .ForMember(dest => dest.StaffName,
              opt => opt.MapFrom(src => src.ActionBy != null ? src.ActionBy.Name : null)).ForMember(dest => dest.ProductId,
-                opt => opt.MapFrom(src => src.ProductBatch.Id));
+                opt => opt.MapFrom(src => src.ProductBatch.ProductId));
 
         CreateMap<BatchAudit, GetDetailByBatchIdResponse>()
             .ForMember(dest => dest.ProductId,
-                opt => opt.MapFrom(src => src.ProductBatch.Id))
+                opt => opt.MapFrom(src => src.ProductBatch.ProductId))
             .ForMember(dest => dest.ProductName,
                 opt => opt.MapFrom(src => src.ProductBatch.Product.Name))
 
