@@ -1,8 +1,10 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Action = OmniChat.Infrastructure.Models.Action;
 
 namespace OmniChat.Infrastructure.Dtos.Responses.ProductBatchAudit;
 

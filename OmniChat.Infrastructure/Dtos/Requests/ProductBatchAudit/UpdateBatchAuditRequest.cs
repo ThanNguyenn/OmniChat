@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmniChat.Infrastructure.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +13,5 @@ public class UpdateBatchAuditRequest
 
         public int? NewValue { get; set; }
 
-        public Action? Action { get; set; }
+        public Models.Action? Action { get; set; }
 }
