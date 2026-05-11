@@ -240,7 +240,7 @@ public class ProductService : BaseService<ProductService>, IProductService
                     };
 
                     await batchRepo.InsertAsync(newBatch);
-
+                    _unitOfWork.CommitAsync();
                     product.Quantity += batchRequest.Quantity;
 
                     var accountId = _httpContextAccessor.HttpContext?.User.GetUserId();
