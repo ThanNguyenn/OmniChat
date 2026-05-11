@@ -30,7 +30,7 @@ public interface IGenericRepository<T> : IDisposable where T : class
     Task<int> CountAsync(Expression<Func<T, bool>> predicate = null);
 
     Task<T> GetByIdAsync(Guid id);
-
+    Task<T> GetByIdSafeAsync(Guid id);
     IQueryable<T> GetQueryable(
          Expression<Func<T, bool>> predicate = null,
          Func<IQueryable<T>, IQueryable<T>> include = null,

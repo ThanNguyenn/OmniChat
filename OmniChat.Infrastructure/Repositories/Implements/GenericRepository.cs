@@ -29,6 +29,12 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     #region Gett Async
 
+    public virtual async Task<T> GetByIdSafeAsync(Guid id)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id);
+    }
     public virtual async Task<T> SingleOrDefaultAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
     {
         IQueryable<T> query = _dbSet;

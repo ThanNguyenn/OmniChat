@@ -31,7 +31,20 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
 
     public async Task AddAsync(Guid productBatchId, int quantity, Guid? actionById = null)
     {
-        await CreateAudit(productBatchId, quantity, quantity, Action.Enter, actionById);
+        var repo = _unitOfWork.GetRepository<ProductBatch>();
+
+        var batch = await repo.GetByIdSafeAsync(productBatchId)
+            ?? throw new NotFoundException("Không tìm thây lô");
+
+        var oldValue = batch.Quantity;
+
+        batch.Quantity += quantity;
+
+        var newValue = batch.Quantity;
+
+        repo.Update(batch);
+
+        await CreateAudit(productBatchId, oldValue, newValue, Action.Enter, actionById);
     }
 
     public async Task<bool> DeleteBatchAuditAsync(Guid id)
@@ -47,9 +60,21 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
 
     public async Task ExportAsync(Guid productBatchId, int quantity, Guid? actionById = null)
     {
-        await CreateAudit(productBatchId, 0, quantity, Action.Export, actionById);
-    }
+        var repo = _unitOfWork.GetRepository<ProductBatch>();
 
+        var batch = await repo.GetByIdSafeAsync(productBatchId)
+            ?? throw new NotFoundException("Không tìm thây lô");
+
+        var oldValue = batch.Quantity;
+
+        batch.Quantity -= quantity;
+
+        var newValue = batch.Quantity;
+
+        repo.Update(batch);
+
+        await CreateAudit(productBatchId, oldValue, newValue, Action.Export, actionById);
+    }
     public async Task<PagingResponse<GetAllAuditResponse>> GetAllAuditAsync(Guid? productId, Guid? batchId, Action? action, int pageNumber = 1, int pageSize = 20, string sortBy = "createdate ", bool descending = true)
     {
         var repo = _unitOfWork.GetRepository<BatchAudit>();
