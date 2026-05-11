@@ -12,6 +12,7 @@ public class GetAllAuditResponse
 {
     public Guid Id { get; set; }
 
+    public Guid ProductId { get; set; }
     public Guid ProductBatchId { get; set; }
 
     public Guid? ActionById { get; set; }

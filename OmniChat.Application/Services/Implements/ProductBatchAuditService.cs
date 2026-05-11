@@ -59,8 +59,10 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
                         (!action.HasValue || ba.Action == action),
             orderBy: query => OrderBy(query, sortBy, descending),
             include: query => query
-                .Include(ba => ba.ActionBy),
-            selector: e => _mapper.Map<GetAllAuditResponse>(e)
+                .Include(ba => ba.ActionBy).Include(ba => ba.ProductBatch).ThenInclude(q=> q.Product),
+            selector: e => _mapper.Map<GetAllAuditResponse>(e),
+            size: pageSize,
+            page: pageNumber
             );
         return response;
     }
