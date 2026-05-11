@@ -204,6 +204,7 @@ public class ProductService : BaseService<ProductService>, IProductService
     {
         var productRepo = _unitOfWork.GetRepository<Product>();
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -226,7 +227,6 @@ public class ProductService : BaseService<ProductService>, IProductService
 
                     var newBatch = new ProductBatch
                     {
-                        Id = Guid.NewGuid(),
                         ProductId = product.Id,
                         ManuFactureDate = DateTime.SpecifyKind(
                             manufactureDate.ToDateTime(TimeOnly.MinValue),
@@ -243,10 +243,13 @@ public class ProductService : BaseService<ProductService>, IProductService
 
                     product.Quantity += batchRequest.Quantity;
 
+                    var accountId = _httpContextAccessor.HttpContext?.User.GetUserId();
+                    var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == accountId);
+
                     await _productBatchAuditService.AddAsync(
                         newBatch.Id,
                         batchRequest.Quantity,
-                        actionById: _httpContextAccessor.HttpContext?.User.GetUserId()
+                        actionById: staff.Id
                     );
                 }
 

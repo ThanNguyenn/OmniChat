@@ -68,7 +68,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 .GetQueryable(include: q => q.Include(b => b.Product))
                 .Where(b => batchIds.Contains(b.Id))
                 .ToListAsync();
-
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             foreach (var item in request.OrderItems)
             {
                 var batch = batches.FirstOrDefault(b => b.Id == item.ProductBatchId);
@@ -85,7 +85,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 await _auditService.ExportAsync(
                     batch.Id,
                     item.Quantity,
-                    _httpContextAccessor.HttpContext?.User.GetUserId()
+                    staff.Id
                 );
 
                 order.OrderItems.Add(new OrderItem
@@ -97,7 +97,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             }
             //log the creator of the order
 
-            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+           
             order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
             order.CreatorId = staff.Id;
             await orderRepo.InsertAsync(order);
@@ -288,6 +288,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
         IEnumerable<OrderItem> orderItems,
         IGenericRepository<ProductBatch> batchRepo)
     {
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
         var batchIds = orderItems.Select(i => i.ProductBatchId).Distinct().ToList();
 
         var batches = (await batchRepo.GetListAsync(
@@ -306,11 +307,12 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
             batch.Quantity += item.Quantity;
             batch.Product.Quantity += item.Quantity;
-
+            var accountId = _httpContextAccessor.HttpContext?.User.GetUserId();
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == accountId);
             await _auditService.AddAsync(
                 batch.Id,
                 item.Quantity,
-                _httpContextAccessor.HttpContext?.User.GetUserId()
+                staff.Id
             );
         }
 
@@ -589,7 +591,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
-
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var order = await orderRepo
@@ -628,10 +630,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
             batch.Quantity -= request.Quantity;
             batch.Product.Quantity -= request.Quantity;
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             await _auditService.ExportAsync(
                 batch.Id,
                 request.Quantity,
-                _httpContextAccessor.HttpContext?.User.GetUserId()
+                staff.Id
             );
             order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
         });
@@ -643,6 +646,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -667,11 +671,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
             // restore stock
             batch.Quantity += orderItem.Quantity;
             batch.Product.Quantity += orderItem.Quantity;
-
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             await _auditService.AddAsync(
                 batch.Id,
                 orderItem.Quantity,
-                _httpContextAccessor.HttpContext?.User.GetUserId()
+                staff.Id
             );
             order.OrderItems.Remove(orderItem);
 
@@ -688,12 +692,13 @@ public class OrderService : BaseService<OrderService>, IOrderService
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
-
+        var staffRepo = _unitOfWork.GetRepository<Staff>();
         if (request.Quantity == 0)
             return await RemoveOrderItemAsync(orderId, orderItemId);
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             var order = await orderRepo
                 .GetQueryable(include: o => o.Include(x => x.OrderItems))
                 .FirstOrDefaultAsync(o => o.Id == orderId);
@@ -726,7 +731,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 await _auditService.ExportAsync(
                    batch.Id,
                    delta,
-                   _httpContextAccessor.HttpContext?.User.GetUserId()
+                   staff.Id
                 );
             }
             else if (delta < 0)
@@ -739,7 +744,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 await _auditService.AddAsync(
                     batch.Id,
                     restore,
-                    _httpContextAccessor.HttpContext?.User.GetUserId()
+                    staff.Id
                 );
             }
 
