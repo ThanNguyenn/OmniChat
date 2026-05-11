@@ -29,21 +29,8 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
     {
     }
 
-    public async Task AddAsync(Guid productBatchId, int quantity, Guid? actionById = null)
+    public async Task AddAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null)
     {
-        var repo = _unitOfWork.GetRepository<ProductBatch>();
-
-        var batch = await repo.GetByIdSafeAsync(productBatchId)
-            ?? throw new NotFoundException("Không tìm thây lô");
-
-        var oldValue = batch.Quantity;
-
-        batch.Quantity += quantity;
-
-        var newValue = batch.Quantity;
-
-        repo.Update(batch);
-
         await CreateAudit(productBatchId, oldValue, newValue, Action.Enter, actionById);
     }
 
@@ -58,20 +45,8 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
         });
     }
 
-    public async Task ExportAsync(Guid productBatchId, int quantity, Guid? actionById = null)
+    public async Task ExportAsync(Guid productBatchId, int oldValue,int newValue, Guid? actionById = null)
     {
-        var repo = _unitOfWork.GetRepository<ProductBatch>();
-
-        var batch = await repo.GetByIdSafeAsync(productBatchId)
-            ?? throw new NotFoundException("Không tìm thây lô");
-
-        var oldValue = batch.Quantity;
-
-        batch.Quantity -= quantity;
-
-        var newValue = batch.Quantity;
-
-        repo.Update(batch);
 
         await CreateAudit(productBatchId, oldValue, newValue, Action.Export, actionById);
     }
@@ -120,9 +95,9 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
         return _mapper.Map<GetDetailByBatchIdResponse>(entity);
     }
 
-    public async Task RemoveAsync(Guid productBatchId, int quantity, Guid? actionById = null)
+    public async Task RemoveAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null)
     {
-        await CreateAudit(productBatchId, 0, quantity, Action.Remove, actionById);
+        await CreateAudit(productBatchId, oldValue, 0, Action.Remove, actionById);
     }
 
     public async Task<bool> UpdateBatchAuditAsync(Guid id, UpdateBatchAuditRequest updateBatchAuditRequest)

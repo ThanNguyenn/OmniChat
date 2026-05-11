@@ -79,12 +79,17 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 if (batch.Quantity < item.Quantity)
                     throw new BusinessException("Không đủ hàng");
 
+                var oldValue = batch.Quantity;
+
                 batch.Quantity -= item.Quantity;
                 batch.Product.Quantity -= item.Quantity;
 
+                var newValue = batch.Quantity;
+
                 await _auditService.ExportAsync(
                     batch.Id,
-                    item.Quantity,
+                    oldValue,
+                    newValue,
                     staff.Id
                 );
 
@@ -305,13 +310,22 @@ public class OrderService : BaseService<OrderService>, IOrderService
             if (!batchDict.TryGetValue(item.ProductBatchId, out var batch))
                 throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
+            var oldValue = batch.Quantity;
+
             batch.Quantity += item.Quantity;
             batch.Product.Quantity += item.Quantity;
+
+            var newValue = batch.Quantity;
+
             var accountId = _httpContextAccessor.HttpContext?.User.GetUserId();
-            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == accountId);
+
+            var staff = await staffRepo.SingleOrDefaultAsync(
+                predicate: s => s.AccountId == accountId);
+
             await _auditService.AddAsync(
                 batch.Id,
-                item.Quantity,
+                oldValue,
+                newValue,
                 staff.Id
             );
         }
@@ -628,12 +642,20 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 });
             }
 
+            var oldValue = batch.Quantity;
+
             batch.Quantity -= request.Quantity;
             batch.Product.Quantity -= request.Quantity;
-            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+
+            var newValue = batch.Quantity;
+
+            var staff = await staffRepo.SingleOrDefaultAsync(
+                predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+
             await _auditService.ExportAsync(
                 batch.Id,
-                request.Quantity,
+                oldValue,
+                newValue,
                 staff.Id
             );
             order.TotalAmount = order.OrderItems.Sum(i => i.Quantity * i.Price);
@@ -669,12 +691,20 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 throw new NotFoundException("Không tìm thấy lô sản phẩm");
 
             // restore stock
+            var oldValue = batch.Quantity;
+
             batch.Quantity += orderItem.Quantity;
             batch.Product.Quantity += orderItem.Quantity;
-            var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+
+            var newValue = batch.Quantity;
+
+            var staff = await staffRepo.SingleOrDefaultAsync(
+                predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+
             await _auditService.AddAsync(
                 batch.Id,
-                orderItem.Quantity,
+                oldValue,
+                newValue,
                 staff.Id
             );
             order.OrderItems.Remove(orderItem);
@@ -726,24 +756,35 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 if (batch.Quantity < delta)
                     throw new BusinessException("Không đủ hàng");
 
+                var oldValue = batch.Quantity;
+
                 batch.Quantity -= delta;
                 batch.Product.Quantity -= delta;
+
+                var newValue = batch.Quantity;
+
                 await _auditService.ExportAsync(
-                   batch.Id,
-                   delta,
-                   staff.Id
+                    batch.Id,
+                    oldValue,
+                    newValue,
+                    staff.Id
                 );
             }
             else if (delta < 0)
             {
                 var restore = Math.Abs(delta);
 
+                var oldValue = batch.Quantity;
+
                 batch.Quantity += restore;
                 batch.Product.Quantity += restore;
 
+                var newValue = batch.Quantity;
+
                 await _auditService.AddAsync(
                     batch.Id,
-                    restore,
+                    oldValue,
+                    newValue,
                     staff.Id
                 );
             }

@@ -14,11 +14,11 @@ namespace OmniChat.Application.Services.Interface;
 
 public interface IProductBatchAuditService
 {
-    Task AddAsync(Guid productBatchId, int quantity, Guid? actionById = null);
+    Task AddAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null);
 
-    Task ExportAsync(Guid productBatchId, int quantity, Guid? actionById = null);
+    Task ExportAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null);
 
-    Task RemoveAsync(Guid productBatchId, int quantity, Guid? actionById = null);
+    Task RemoveAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null);
 
     Task<bool> DeleteBatchAuditAsync(Guid id);
 

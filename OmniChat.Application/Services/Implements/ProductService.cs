@@ -241,15 +241,22 @@ public class ProductService : BaseService<ProductService>, IProductService
 
                     await batchRepo.InsertAsync(newBatch);
                     await _unitOfWork.CommitAsync();
+
                     product.Quantity += batchRequest.Quantity;
 
                     var accountId = _httpContextAccessor.HttpContext?.User.GetUserId();
-                    var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == accountId);
+
+                    var staff = await staffRepo.SingleOrDefaultAsync(
+                        predicate: s => s.AccountId == accountId);
+
+                    var oldValue = 0;
+                    var newValue = newBatch.Quantity;
 
                     await _productBatchAuditService.AddAsync(
                         newBatch.Id,
-                        batchRequest.Quantity,
-                        actionById: staff.Id
+                        oldValue,
+                        newValue,
+                        staff.Id
                     );
                 }
 
