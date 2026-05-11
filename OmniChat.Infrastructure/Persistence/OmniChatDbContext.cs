@@ -191,6 +191,10 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(c => c.Status)
                 .HasConversion<string>();
 
+            modelBuilder.Entity<BatchAudit>()
+                .Property(ba => ba.Action)
+                .HasConversion<string>();
+
             // default value IsActive = true
 
             modelBuilder.Entity<Account>()
