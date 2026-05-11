@@ -13,8 +13,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Claim = System.Security.Claims.Claim;
 
 namespace OmniChat.Test.OrderServiceTest;
 
@@ -27,7 +29,7 @@ public class CancelOrderAsyncTest
     protected readonly Mock<ICreditNoteService> _creditNoteMock = new();
     protected readonly Mock<IMailService> _mailServiceMock = new();
     private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
-
+    private string _userId = Guid.NewGuid().ToString();
     private OrderService CreateService()
     {
         return new OrderService(
@@ -59,7 +61,38 @@ public class CancelOrderAsyncTest
         _uowMock
             .Setup(x => x.ProcessInTransactionAsync(It.IsAny<Func<Task>>()))
             .Returns<Func<Task>>(f => f());
+
+        var identity = new ClaimsIdentity(new[]
+     {
+            new Claim("UserId", _userId)
+        }, "Test");
+
+        var httpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(identity)
+        };
+
+        _httpMock.Setup(x => x.HttpContext).Returns(httpContext);
     }
+
+    private Mock<IGenericRepository<Staff>> SetupStaffRepo()
+    {
+        var repo = new Mock<IGenericRepository<Staff>>();
+        _uowMock.Setup(x => x.GetRepository<Staff>()).Returns(repo.Object);
+
+        repo.Setup(r => r.SingleOrDefaultAsync(
+                It.IsAny<Expression<Func<Staff, bool>>>(),
+                It.IsAny<Func<IQueryable<Staff>, IOrderedQueryable<Staff>>>(),
+                It.IsAny<Func<IQueryable<Staff>, IIncludableQueryable<Staff, object>>>()))
+            .ReturnsAsync(new Staff
+            {
+                Id = Guid.NewGuid(),
+                AccountId = Guid.Parse(_userId)
+            });
+
+        return repo;
+    }
+
 
     protected Mock<IGenericRepository<Order>> SetupOrderRepo()
     {
@@ -98,7 +131,7 @@ public class CancelOrderAsyncTest
         var batchRepo = SetupRepository<ProductBatch>();
 
         SetupTransaction();
-
+        SetupStaffRepo();
         var orderId = Guid.NewGuid();
 
         orderRepo.Setup(r => r.SingleOrDefaultAsync(
@@ -124,7 +157,7 @@ public class CancelOrderAsyncTest
         var batchRepo = SetupRepository<ProductBatch>();
 
         SetupTransaction();
-
+        SetupStaffRepo();
         var orderId = Guid.NewGuid();
         var batchId = Guid.NewGuid();
 

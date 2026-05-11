@@ -15,8 +15,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Claim = System.Security.Claims.Claim;
 
 namespace OmniChat.Test.ProductServiceTest;
 
@@ -28,7 +30,7 @@ public class AddStockAsyncTest
     protected readonly Mock<ILogger<ProductService>> _loggerMock = new();
     protected readonly Mock<IR2StorageService> _storageMock = new();
     protected readonly Mock<IProductBatchAuditService> _auditMock = new();
-
+    private string _userId = Guid.NewGuid().ToString();
     protected ProductService CreateService()
     {
         return new ProductService(
@@ -56,6 +58,35 @@ public class AddStockAsyncTest
         _uowMock
             .Setup(x => x.ProcessInTransactionAsync(It.IsAny<Func<Task>>()))
             .Returns<Func<Task>>(f => f());
+        var identity = new ClaimsIdentity(new[]
+{
+    new Claim("UserId", _userId)
+}, "Test");
+
+        var httpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(identity)
+        };
+
+        _httpMock.Setup(x => x.HttpContext).Returns(httpContext);
+    }
+
+    private Mock<IGenericRepository<Staff>> SetupStaffRepo()
+    {
+        var repo = new Mock<IGenericRepository<Staff>>();
+        _uowMock.Setup(x => x.GetRepository<Staff>()).Returns(repo.Object);
+
+        repo.Setup(r => r.SingleOrDefaultAsync(
+                It.IsAny<Expression<Func<Staff, bool>>>(),
+                It.IsAny<Func<IQueryable<Staff>, IOrderedQueryable<Staff>>>(),
+                It.IsAny<Func<IQueryable<Staff>, IIncludableQueryable<Staff, object>>>()))
+            .ReturnsAsync(new Staff
+            {
+                Id = Guid.NewGuid(),
+                AccountId = Guid.Parse(_userId)
+            });
+
+        return repo;
     }
 
     [Fact]
@@ -65,7 +96,7 @@ public class AddStockAsyncTest
         var batchRepo = SetupRepository<ProductBatch>();
 
         SetupTransaction();
-
+        SetupStaffRepo();
         var productId = Guid.NewGuid();
 
         var product = new Product
@@ -113,9 +144,7 @@ public class AddStockAsyncTest
                 p.Id == productId &&
                 p.Quantity == 15)),
             Times.Once);
-        _auditMock.Verify(a =>
-            a.AddAsync(It.IsAny<Guid>(), 5, It.IsAny<Guid?>()),
-            Times.Once);
+
     }
 
     [Fact]

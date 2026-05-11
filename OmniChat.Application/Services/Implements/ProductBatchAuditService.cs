@@ -33,7 +33,37 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
     {
         await CreateAudit(productBatchId, oldValue, newValue, Action.Enter, actionById);
     }
+    public async Task ExportAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null)
+    {
 
+        await CreateAudit(productBatchId, oldValue, newValue, Action.Export, actionById);
+    }
+
+    public async Task RemoveAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null)
+    {
+        await CreateAudit(productBatchId, oldValue, 0, Action.Remove, actionById);
+    }
+
+    private async Task CreateAudit(
+       Guid batchId,
+       int oldValue,
+       int newValue,
+       Action action,
+       Guid? actionById)
+    {
+        var repo = _unitOfWork.GetRepository<BatchAudit>();
+
+        var audit = new BatchAudit
+        {
+            ProductBatchId = batchId,
+            OldValue = oldValue,
+            NewValue = newValue,
+            Action = action,
+            ActionById = actionById
+        };
+
+        await repo.InsertAsync(audit);
+    }
     public async Task<bool> DeleteBatchAuditAsync(Guid id)
     {
         var repo = _unitOfWork.GetRepository<BatchAudit>();
@@ -45,11 +75,7 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
         });
     }
 
-    public async Task ExportAsync(Guid productBatchId, int oldValue,int newValue, Guid? actionById = null)
-    {
 
-        await CreateAudit(productBatchId, oldValue, newValue, Action.Export, actionById);
-    }
     public async Task<PagingResponse<GetAllAuditResponse>> GetAllAuditAsync(Guid? productId, Guid? batchId, Action? action, int pageNumber = 1, int pageSize = 20, string sortBy = "createdate ", bool descending = true)
     {
         var repo = _unitOfWork.GetRepository<BatchAudit>();
@@ -99,10 +125,7 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
         return _mapper.Map<GetDetailByBatchIdResponse>(entity);
     }
 
-    public async Task RemoveAsync(Guid productBatchId, int oldValue, int newValue, Guid? actionById = null)
-    {
-        await CreateAudit(productBatchId, oldValue, 0, Action.Remove, actionById);
-    }
+    
 
     public async Task<bool> UpdateBatchAuditAsync(Guid id, UpdateBatchAuditRequest updateBatchAuditRequest)
     {
@@ -116,24 +139,5 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
         });
     }
 
-    private async Task CreateAudit(
-        Guid batchId,
-        int oldValue,
-        int newValue,
-        Action action,
-        Guid? actionById)
-    {
-        var repo = _unitOfWork.GetRepository<BatchAudit>();
-
-        var audit = new BatchAudit
-        {
-            ProductBatchId = batchId,
-            OldValue = oldValue,
-            NewValue = newValue,
-            Action = action,
-            ActionById = actionById
-        };
-
-        await repo.InsertAsync(audit);
-    }
+   
 }
