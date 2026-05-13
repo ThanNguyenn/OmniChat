@@ -18,7 +18,9 @@ public class BatchAuditMapper : Profile
         CreateMap<BatchAudit, GetAllAuditResponse>()
          .ForMember(dest => dest.StaffName,
              opt => opt.MapFrom(src => src.ActionBy != null ? src.ActionBy.Name : null)).ForMember(dest => dest.ProductId,
-                opt => opt.MapFrom(src => src.ProductBatch.ProductId));
+                opt => opt.MapFrom(src => src.ProductBatch.ProductId)).ForMember(dest => dest.BatchCode,
+                opt => opt.MapFrom(src => src.ProductBatch.Code)).ForMember(dest => dest.ProductName,
+                opt => opt.MapFrom(src => src.ProductBatch.Product.Name));
 
         CreateMap<BatchAudit, GetDetailByBatchIdResponse>()
             .ForMember(dest => dest.ProductId,
@@ -49,12 +51,11 @@ public class BatchAuditMapper : Profile
 
             .ForMember(dest => dest.BatchQuantity,
                 opt => opt.MapFrom(src => src.ProductBatch.Quantity))
-
+            .ForMember(dest => dest.ProductKind,
+                opt => opt.MapFrom(src => src.ProductBatch.Product.ProductKind))
             .ForMember(dest => dest.BatchExpiredDate,
                 opt => opt.MapFrom(src =>
-                    src.ProductBatch.ExpiryDate.HasValue
-                        ? (src.ProductBatch.ExpiryDate.Value - DateTime.UtcNow).Days
-                        : 0))
+                    src.ProductBatch.ExpiryDate))
 
             .ForMember(dest => dest.StaffName,
                 opt => opt.MapFrom(src =>

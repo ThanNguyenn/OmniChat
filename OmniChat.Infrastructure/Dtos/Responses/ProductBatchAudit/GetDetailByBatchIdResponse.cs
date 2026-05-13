@@ -17,6 +17,8 @@ public class GetDetailByBatchIdResponse
     public Guid ProductId { get; set; }
     public string ProductName { get; set; }
 
+    public ProductKind ProductKind { get; set; }
+
     public string BrandName { get; set; }
 
     public double VolumeML { get; set; }
@@ -33,7 +35,7 @@ public class GetDetailByBatchIdResponse
 
     public int BatchQuantity { get; set; }
 
-    public int BatchExpiredDate { get; set; }
+    public DateTime BatchExpiredDate { get; set; }
 
     public Guid? ActionById { get; set; }
 
