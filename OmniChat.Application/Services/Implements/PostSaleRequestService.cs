@@ -27,7 +27,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
-        var postSaleRequest = await postSaleRequestRepo.GetByIdAsync(id) ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
+        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.CustomerId == id, include: q => q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -36,6 +36,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
             postSaleRequest.ResolvedTime = DateTime.UtcNow;
             var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             postSaleRequest.ResolveById = staff.Id;
+            postSaleRequest.Order.Status = postSaleRequest.Type == PostSaleRequestType.Refund ? OrderStatus.RefundApproved : OrderStatus.ReturnApproved;
             postSaleRequestRepo.Update(postSaleRequest);
             switch (postSaleRequest.Type)
             {
@@ -59,7 +60,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
-        var postSaleRequest = await postSaleRequestRepo.GetByIdAsync(id) ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
+        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.CustomerId == id, include: q =>q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -68,6 +69,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
             postSaleRequest.ResolvedTime = DateTime.UtcNow;
             var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
             postSaleRequest.ResolveById = staff.Id;
+            postSaleRequest.Order.Status = postSaleRequest.Type == PostSaleRequestType.Refund ? OrderStatus.RefundRejected : OrderStatus.ReturnRejected;
             postSaleRequestRepo.Update(postSaleRequest);
             return true;
         });
