@@ -111,29 +111,34 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             _logger.LogInformation("Orders found: {count}", orders.Count);
             if (!orders.Any())
             {
+                _logger.LogInformation("No orders found for the specified time range. No invoices will be created.");
                 return;
             }
             var customerIds = orders.Select(o => o.CustomerId).Distinct().ToList();
 
-            var existingInvoices = await invoiceRepo.GetListAsync(predicate: i =>
-                customerIds.Contains(i.CustomerId) &&
-                i.StartedDate == from &&
-                i.EndedDate == to &&
-                !(i.IsDeleted ?? false)
-            );
+            //var existingInvoices = await invoiceRepo.GetListAsync(predicate: i =>
+            //    customerIds.Contains(i.CustomerId) &&
+            //    i.StartedDate == from &&
+            //    i.EndedDate == to &&
+            //    !(i.IsDeleted ?? false)
+            //);
 
-            var existingCustomerSet = existingInvoices
-                .Select(i => i.CustomerId)
-                .ToHashSet();
+            //var existingCustomerSet = existingInvoices
+            //    .Select(i => i.CustomerId)
+            //    .ToHashSet();
 
+            //foreach (var invoice in existingInvoices)
+            //{
+            //    _logger.LogInformation("Existing invoice found for CustomerId: {customerId}, InvoiceId: {invoiceId}", invoice.CustomerId, invoice.Id);
+            //}
             var grouped = orders.GroupBy(o => o.CustomerId);
-
+            _logger.LogInformation("Processing {groupCount} customer groups for invoice creation.", grouped.Count());
             foreach (var group in grouped)
             {
                 var customerId = group.Key;
 
-                if (existingCustomerSet.Contains(customerId))
-                    continue;
+                //if (existingCustomerSet.Contains(customerId))
+                //    continue;
 
                 var customerOrders = group.ToList();
                 var orderTotal = customerOrders.Sum(o =>
@@ -161,10 +166,15 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     InvoiceStatus = InvoiceStatus.Pending,
                     CreateAt = DateTime.UtcNow
                 });
+
+                _logger.LogInformation("Prepared invoice for CustomerId: {customerId}, Total: {total}, DeductedAmount: {deductedAmount}", customerId, orderTotal, deduction);
             }
 
             if (!invoicesToInsert.Any())
+            {
+                _logger.LogInformation("No new invoices to create after checking existing invoices.");
                 return;
+            }
 
             await invoiceRepo.InsertRangeAsync(invoicesToInsert);
 
@@ -183,7 +193,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
 
             orderRepo.UpdateRange(orders);
         });
-
+        _unitOfWork.Context.ChangeTracker.Clear();
         return invoicesToInsert
             .Select(i => i.CustomerId)
             .Distinct()
