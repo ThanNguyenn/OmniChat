@@ -27,7 +27,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
-        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.CustomerId == id, include: q => q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
+        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.Id == id, include: q => q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -60,7 +60,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
-        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.CustomerId == id, include: q =>q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
+        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.Id == id, include: q =>q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
