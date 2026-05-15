@@ -247,6 +247,10 @@ namespace OmniChat.Infrastructure.Persistence
 
             // default vaule isDelete = false
 
+            modelBuilder.Entity<SupportConversation>()
+                .Property(x => x.IsWarningSent)
+                .HasDefaultValueSql("false");
+
             modelBuilder.Entity<Keyword>()
             .Property(x => x.IsDeleted)
             .HasDefaultValueSql("false");

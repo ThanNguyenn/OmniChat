@@ -48,9 +48,9 @@ namespace OmniChat.Infrastructure.Models
 
     public enum PostSaleRequestType
     {
-       Cancel = 0,
+       //Cancel = 0,
        Return = 1,
-       Replacement = 2,
+       //Replacement = 2,
        Refund = 3,  
     }
 

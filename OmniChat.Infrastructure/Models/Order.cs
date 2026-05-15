@@ -59,6 +59,8 @@ namespace OmniChat.Infrastructure.Models
         Returned = 5,
         Completed = 6,
         ReturnedDefective = 7,
+        RefundRejected = 8,
+        RefundApproved = 9,
     }
 
     public enum DeliveryStatus

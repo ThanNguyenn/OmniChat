@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Mail;
 using OmniChat.Infrastructure.Dtos.Requests.SupportStaffMessage;
 using OmniChat.Infrastructure.Models;
 using System;
@@ -42,182 +43,195 @@ namespace OmniChat.Application.Services.BackgroundJobs
             }
         }
 
+        //private async Task ProcessReminder()
+        //{
+        //    List<SupportConversation> conversations;
+
+        //    // Scope riêng chỉ để load danh sách
+        //    using (var scope = _serviceProvider.CreateScope())
+        //    {
+        //        var conversationService = scope.ServiceProvider
+        //            .GetRequiredService<ISupportConversationService>();
+
+        //        conversations = await conversationService.GetConversationsForReminderAsync();
+        //    }
+        //    var now = DateTime.UtcNow;
+
+        //    foreach (var convo in conversations)
+        //    {
+
+
+        //        try  
+        //        {
+        //            if (convo.LastStaffMessageAt == null)
+        //            {
+        //                _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: LastStaffMessageAt is null", convo.Id);
+        //                continue;
+        //            }
+
+        //            if (!CustomerNotReplied(convo))
+        //            {
+        //                _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Customer already replied", convo.Id);
+        //                continue;
+        //            }
+
+        //            if (convo.Status == ConversationStatus.Complete)
+        //            {
+        //                _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Status is Complete", convo.Id);
+        //                continue;
+        //            }
+
+        //            var diff = now - convo.LastStaffMessageAt.Value;
+        //            bool needUpdate = false;
+        //            if (diff.TotalHours >= 24 && convo.ReminderSent == true)
+        //            {
+        //                _logger.LogInformation("Closing conversation ID: {Id}", convo.Id);
+        //                convo.Status = ConversationStatus.Complete;
+        //                convo.CloseAt = now;
+        //                needUpdate = true;
+
+        //                using var taskScope = _serviceProvider.CreateScope();
+        //                var performanceService = taskScope.ServiceProvider.GetRequiredService<IStaffPerformanceService>();
+        //                await performanceService.CompleteConversationAndTasksAsync(convo);
+        //            }
+
+        //            else if (diff.TotalHours >= 23 && convo.ReminderSent != true)
+        //            {
+        //                _logger.LogInformation("Attempting to send reminder for ID: {Id}", convo.Id);
+
+        //                using var sendScope = _serviceProvider.CreateScope();
+        //                var messageService = sendScope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
+
+        //                await SendReminder(convo, messageService);
+
+        //                convo.ReminderSent = true;
+        //                needUpdate = true;
+        //            }
+
+        //            if (needUpdate)
+        //            {
+        //                using var updateScope = _serviceProvider.CreateScope();
+        //                var conversationService = updateScope.ServiceProvider
+        //                    .GetRequiredService<ISupportConversationService>();
+
+        //                var freshConvo = await conversationService.GetSupportConversationByIdAsync(convo.Id);
+        //                freshConvo.ReminderSent = convo.ReminderSent;
+        //                freshConvo.Status = convo.Status;
+        //                freshConvo.CloseAt = convo.CloseAt;
+
+        //                await conversationService.UpdateConversationAsync(freshConvo);
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+
+        //            _logger.LogError(ex, "[REMINDER] Error processing ConvoId={Id}", convo.Id);
+        //        }
+        //    }
+        //}
+
         private async Task ProcessReminder()
         {
             List<SupportConversation> conversations;
-
-            // Scope riêng chỉ để load danh sách
             using (var scope = _serviceProvider.CreateScope())
             {
-                var conversationService = scope.ServiceProvider
-                    .GetRequiredService<ISupportConversationService>();
-
+                var conversationService = scope.ServiceProvider.GetRequiredService<ISupportConversationService>();
                 conversations = await conversationService.GetConversationsForReminderAsync();
             }
+
             var now = DateTime.UtcNow;
 
             foreach (var convo in conversations)
             {
-
-
-                //if (convo.LastStaffMessageAt == null)
-                //{
-                //    _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: LastStaffMessageAt is null", convo.Id);
-                //    continue;
-                //}
-
-                //if (!CustomerNotReplied(convo))
-                //{
-                //    _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Customer already replied", convo.Id);
-                //    continue;
-                //}
-
-                //if (convo.Status == ConversationStatus.Complete)
-                //{
-                //    _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Status is Complete", convo.Id);
-                //    continue;
-                //}
-
-                //var diff = now - convo.LastStaffMessageAt.Value;
-
-                //bool needUpdate = false;
-
-
-                //// close conversation if customer does not reply after 24 minutes of staff message
-                //if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
-                ////if (diff.TotalMinutes >= 10 && convo.ReminderSent && CustomerNotReplied(convo))
-                //{
-                //    _logger.LogInformation("Conversation close");
-                //    convo.Status = ConversationStatus.Complete;
-                //    convo.CloseAt = now;
-                //    needUpdate = true;
-                //    // complete task and complete conversation -> increate staff performance
-
-                //    using var taskScope = _serviceProvider.CreateScope();
-                //    var performanceService = taskScope.ServiceProvider
-                //        .GetRequiredService<IStaffPerformanceService>();
-
-                //    await performanceService.CompleteConversationAndTasksAsync(convo);
-                //}
-
-                //// send reminder if customer does not reply after 23 hours of staff message 
-                //else if (diff.TotalHours >= 23 && !convo.ReminderSent)
-                ////else if (diff.TotalMinutes >= 5 && !convo.ReminderSent)
-                //{
-                //    _logger.LogInformation("Conversation send remider");
-                //    using var sendScope = _serviceProvider.CreateScope();
-                //    var messageService = sendScope.ServiceProvider
-                //        .GetRequiredService<ISupportStaffMessageService>();
-
-                //    await SendReminder(convo, messageService);
-                //    convo.ReminderSent = true;
-                //    needUpdate = true;
-                //}
-
-                //if (needUpdate)
-                //{
-                //    using var updateScope = _serviceProvider.CreateScope();
-                //    var conversationService = updateScope.ServiceProvider
-                //        .GetRequiredService<ISupportConversationService>();
-
-                //    var freshConvo = await conversationService.GetSupportConversationByIdAsync(convo.Id);
-
-                //    freshConvo.ReminderSent = convo.ReminderSent;
-                //    freshConvo.Status = convo.Status;
-                //    freshConvo.CloseAt = convo.CloseAt;
-
-                //    await conversationService.UpdateConversationAsync(freshConvo);
-                //}
-                try  
+                try
                 {
-                    if (convo.LastStaffMessageAt == null)
-                    {
-                        _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: LastStaffMessageAt is null", convo.Id);
-                        continue;
-                    }
-
-                    if (!CustomerNotReplied(convo))
-                    {
-                        _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Customer already replied", convo.Id);
-                        continue;
-                    }
-
-                    if (convo.Status == ConversationStatus.Complete)
-                    {
-                        _logger.LogInformation("[REMINDER] Skip ConvoId={Id} | Reason: Status is Complete", convo.Id);
-                        continue;
-                    }
-
-                    var diff = now - convo.LastStaffMessageAt.Value;
                     bool needUpdate = false;
 
-                    //if (diff.TotalHours >= 24 && convo.ReminderSent && CustomerNotReplied(convo))
-                    //{
-                    //    _logger.LogInformation("Conversation close");
-                    //    convo.Status = ConversationStatus.Complete;
-                    //    convo.CloseAt = now;
-                    //    needUpdate = true;
-
-                    //    using var taskScope = _serviceProvider.CreateScope();
-                    //    var performanceService = taskScope.ServiceProvider
-                    //        .GetRequiredService<IStaffPerformanceService>();
-                    //    await performanceService.CompleteConversationAndTasksAsync(convo);
-                    //}
-                    //else if (diff.TotalHours >= 23 && !convo.ReminderSent)
-                    //{
-                    //    _logger.LogInformation("Conversation send reminder");
-                    //    using var sendScope = _serviceProvider.CreateScope();
-                    //    var messageService = sendScope.ServiceProvider
-                    //        .GetRequiredService<ISupportStaffMessageService>();
-
-                    //    await SendReminder(convo, messageService);
-                    //    convo.ReminderSent = true;
-                    //    needUpdate = true;
-                    //}
-
-                    if (diff.TotalHours >= 24 && convo.ReminderSent == true)
+                    if (StaffNotReplied(convo))
                     {
-                        _logger.LogInformation("Closing conversation ID: {Id}", convo.Id);
-                        convo.Status = ConversationStatus.Complete;
-                        convo.CloseAt = now;
-                        needUpdate = true;
+                        if (convo.LastCustomerMessageAt == null) continue;
+                        var staffDelay = now - convo.LastCustomerMessageAt.Value;
 
-                        using var taskScope = _serviceProvider.CreateScope();
-                        var performanceService = taskScope.ServiceProvider.GetRequiredService<IStaffPerformanceService>();
-                        await performanceService.CompleteConversationAndTasksAsync(convo);
+                        if (staffDelay.TotalHours >= 24 && convo.IsWarningSent != true)
+                        {
+                            _logger.LogWarning("[WARNING] Staff {StaffId} delayed > 24h for Convo {Id}", convo.ActiveStaffId, convo.Id);
+
+                            using var warningScope = _serviceProvider.CreateScope();
+
+                            var mailService = warningScope.ServiceProvider.GetRequiredService<IMailService>();
+                            if (convo.Staff != null && !string.IsNullOrEmpty(convo.Staff.Email))
+                            {
+                                await mailService.SendEmailAsync(new MailContent
+                                {
+                                    To = convo.Staff.Email,
+                                    Subject = $"[CẢNH BÁO] Phản hồi khách hàng chậm trễ - Hội thoại #{convo.Id}",
+                                    Body = $@"
+                                <h3>Thông báo nhắc nhở công việc</h3>
+                                <p>Chào <b>{convo.Staff.Name ?? "Bạn"}</b>,</p>
+                                <p>Hội thoại với khách hàng <b>{convo.CustomerName}</b> đang bị trì hoãn quá 24 giờ chưa có phản hồi từ bạn.</p>
+                                <p>Vui lòng kiểm tra ngay.</p>"
+                                });
+                                _logger.LogInformation("Sent warning email to staff: {Email}", convo.Staff.Email);
+                            }
+
+                            var messageService = warningScope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
+                            await SendApologyMessage(convo, messageService);
+
+                            convo.IsWarningSent = true;
+                            needUpdate = true;
+                        }
                     }
-                  
-                    else if (diff.TotalHours >= 23 && convo.ReminderSent != true)
+
+
+                    else if (CustomerNotReplied(convo))
                     {
-                        _logger.LogInformation("Attempting to send reminder for ID: {Id}", convo.Id);
+                        if (convo.LastStaffMessageAt == null) continue;
+                        var diff = now - convo.LastStaffMessageAt.Value;
 
-                        using var sendScope = _serviceProvider.CreateScope();
-                        var messageService = sendScope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
+                        if (diff.TotalHours >= 24 && convo.ReminderSent == true)
+                        {
+                            _logger.LogInformation("Closing conversation ID: {Id} due to customer inactivity", convo.Id);
+                            convo.Status = ConversationStatus.Complete;
+                            convo.CloseAt = now;
+                            needUpdate = true;
 
-                        await SendReminder(convo, messageService);
+                            using var taskScope = _serviceProvider.CreateScope();
+                            var performanceService = taskScope.ServiceProvider.GetRequiredService<IStaffPerformanceService>();
+                            await performanceService.CompleteConversationAndTasksAsync(convo);
+                        }
+ 
+                        else if (diff.TotalHours >= 23 && convo.ReminderSent != true)
+                        {
+                            _logger.LogInformation("Sending reminder to customer for ID: {Id}", convo.Id);
+                            using var sendScope = _serviceProvider.CreateScope();
+                            var messageService = sendScope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
 
-                        convo.ReminderSent = true;
-                        needUpdate = true;
+                            await SendReminder(convo, messageService);
+                            convo.ReminderSent = true;
+                            needUpdate = true;
+                        }
                     }
 
                     if (needUpdate)
                     {
                         using var updateScope = _serviceProvider.CreateScope();
-                        var conversationService = updateScope.ServiceProvider
-                            .GetRequiredService<ISupportConversationService>();
+                        var conversationService = updateScope.ServiceProvider.GetRequiredService<ISupportConversationService>();
 
                         var freshConvo = await conversationService.GetSupportConversationByIdAsync(convo.Id);
-                        freshConvo.ReminderSent = convo.ReminderSent;
-                        freshConvo.Status = convo.Status;
-                        freshConvo.CloseAt = convo.CloseAt;
+                        if (freshConvo != null)
+                        {
+                            freshConvo.IsWarningSent = convo.IsWarningSent;
+                            freshConvo.ReminderSent = convo.ReminderSent;
+                            freshConvo.Status = convo.Status;
+                            freshConvo.CloseAt = convo.CloseAt;
 
-                        await conversationService.UpdateConversationAsync(freshConvo);
+                            await conversationService.UpdateConversationAsync(freshConvo);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    
-                    _logger.LogError(ex, "[REMINDER] Error processing ConvoId={Id}", convo.Id);
+                    _logger.LogError(ex, "Error processing ConvoId={Id}", convo.Id);
                 }
             }
         }
@@ -230,6 +244,16 @@ namespace OmniChat.Application.Services.BackgroundJobs
                 return true;
 
             return convo.LastCustomerMessageAt <= convo.LastStaffMessageAt;
+        }
+
+        private bool StaffNotReplied(SupportConversation convo)
+        {
+         
+            if (convo.LastCustomerMessageAt == null) return false;
+
+            if (convo.LastStaffMessageAt == null) return true;
+
+            return convo.LastStaffMessageAt < convo.LastCustomerMessageAt;
         }
 
         private async Task SendReminder(SupportConversation convo, ISupportStaffMessageService messageService)
@@ -284,6 +308,32 @@ namespace OmniChat.Application.Services.BackgroundJobs
                     Content = content,
                     StaffId = convo.ActiveStaffId.Value
                 });
+            }
+        }
+
+        private async Task SendApologyMessage(SupportConversation convo, ISupportStaffMessageService messageService)
+        {
+            var content = "Xin lỗi bạn, hiện tại tư vấn viên đang bận nên phản hồi hơi chậm. Chúng mình sẽ quay lại hỗ trợ bạn ngay!";
+
+            var request = new CreateSupportStaffMessageRequest
+            {
+                SupportConversationId = convo.Id,
+                Content = content,
+                StaffId = convo.ActiveStaffId ?? Guid.Empty
+            };
+
+            if (convo.Providers?.ProviderName == "Zalo")
+            {
+                await messageService.SendZaloMessageAsync(request);
+            }
+            else if (convo.Providers?.ProviderName == "Facebook")
+            {
+                // Facebook có luật 24h, nếu tin nhắn khách quá 24h thì không gửi được tin nhắn thường
+                var hoursSinceLastCustomerMsg = (DateTime.UtcNow - convo.LastCustomerMessageAt.Value).TotalHours;
+                if (hoursSinceLastCustomerMsg < 24)
+                {
+                    await messageService.SendFacebookMesageAsync(request);
+                }
             }
         }
     }

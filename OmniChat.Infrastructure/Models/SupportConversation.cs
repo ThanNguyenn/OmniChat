@@ -40,6 +40,8 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? ReminderSent { get; set; } // no spam remider message 
 
+        public bool? IsWarningSent { get; set; } // no spam warning message
+
         public DateTime? LastStaffMessageAt { get; set; } // last staff message time, used for reminder message
 
         public DateTime? LastCustomerMessageAt { get; set; } // last customer message time, used for reminder message

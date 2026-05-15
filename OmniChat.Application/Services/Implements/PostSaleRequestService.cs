@@ -47,9 +47,9 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
                     await _orderService.ReturnOrderUnpaidAsync(postSaleRequest.OrderId, postSaleRequest.RefundAmount ?? 0);
                     break;
 
-                case PostSaleRequestType.Cancel:
-                    await _orderService.CancelOrderAsync(postSaleRequest.OrderId);
-                    break;
+                //case PostSaleRequestType.Cancel:
+                //    await _orderService.CancelOrderAsync(postSaleRequest.OrderId);
+                //    break;
             }
             return true;
         });

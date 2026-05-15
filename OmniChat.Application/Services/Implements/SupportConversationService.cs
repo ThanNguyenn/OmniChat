@@ -48,7 +48,11 @@ namespace OmniChat.Application.Services.Implements
             var exitSupportConversation = await repo.SingleOrDefaultAsync(predicate:sc => sc.Id == conversationId, 
                 include: sc => sc
                     .Include(c => c.Staff)
-                    .Include(c => c.Providers));
+                    .Include(c => c.Providers)
+                    .Include(c => c.CustomerMessages)
+                    .Include(c => c.SupportStaffMessages)
+                    )
+                ;
 
             if (exitSupportConversation == null)
                 throw new NotFoundException("Không tìm thấy cuộc trò chuyện");
@@ -115,6 +119,50 @@ namespace OmniChat.Application.Services.Implements
              repo.Update(conversation);
             await _unitOfWork.CommitAsync();
 
+            var lastCustomerMsg = conversation.CustomerMessages?.OrderByDescending(m => m.Timestamp).FirstOrDefault();
+            var lastStaffMsg = conversation.SupportStaffMessages?.OrderByDescending(m => m.Timestamp).FirstOrDefault();
+
+            long lastTimestamp  = conversation.UpdateDate?.Ticks ?? DateTime.UtcNow.Ticks;
+            string finalLastMessage = "Cuộc hội thoại đã kết thúc";
+            
+            if (lastCustomerMsg != null && lastStaffMsg != null)
+            {
+                if (lastCustomerMsg.Timestamp > lastStaffMsg.Timestamp)
+                {
+                    lastTimestamp = lastCustomerMsg.Timestamp;
+                    finalLastMessage = lastCustomerMsg.Content;
+                }
+                else
+                {
+                    lastTimestamp = lastStaffMsg.Timestamp;
+                    finalLastMessage = lastStaffMsg.Content;
+                }
+            }
+            else if (lastCustomerMsg != null)
+            {
+                lastTimestamp = lastCustomerMsg.Timestamp;
+                finalLastMessage = lastCustomerMsg.Content;
+            }
+            else if (lastStaffMsg != null)
+            {
+                lastTimestamp = lastStaffMsg.Timestamp;
+                finalLastMessage = lastStaffMsg.Content;
+            }
+
+            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
+            {
+                ConversationId = conversation.Id,
+                CustomerName = conversation.CustomerName,
+                avartarUrl = conversation.AvatarUrl,
+                providerName = conversation.Providers?.ProviderName ?? "N/A",
+                LastMessage = finalLastMessage,
+                UnreadMessageCount = 0,
+                UpdateDate = lastTimestamp
+            };
+
+            await _hubContext.Clients
+           .User(conversation.ActiveStaffId.ToString())
+           .SendAsync("SidebarUpdated", sidebarUpdate);
             return true;
         }
 

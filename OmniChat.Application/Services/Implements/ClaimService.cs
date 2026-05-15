@@ -151,12 +151,13 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<PagingResponse<ClaimDetailResponse>> GetPendingClaimAsync(int pageIndex = 1, int pageSize = 10)
         {
+            var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
             var repo = _unitOfWork.GetRepository<Claim>();
 
             var query = repo.GetQueryable()
                 .Include(c => c.Staff)      
                 .Include(c => c.ClaimType)
-                .Where(c => c.Status == ClaimStatus.Pending);
+                .Where(c => c.Status == ClaimStatus.Pending && c.ClaimType.Id != changeTaskTypeId);
 
             var totalItems = await query.CountAsync();
 
