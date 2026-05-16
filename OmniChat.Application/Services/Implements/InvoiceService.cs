@@ -184,10 +184,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 _logger.LogInformation("No new invoices to create after checking existing invoices.");
                 return;
             }
-            foreach (var cn in usedCreditNotes)
-            {
-                cn.CreditNoteStatus = CreditNoteStatus.Completed; 
-            }
+           
             await invoiceRepo.InsertRangeAsync(invoicesToInsert);
             foreach (var cn in usedCreditNotes)
             {
