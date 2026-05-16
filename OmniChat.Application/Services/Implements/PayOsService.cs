@@ -57,7 +57,7 @@ namespace OmniChat.Application.Services.Implements
 
             var total = invoice.Total;
             var paid = invoice.PaidAmount;
-            var remainingAmount = total  - paid;
+            var remainingAmount = total - paid;
 
             long payOsOrderCode = invoice.InvoiceCode;
 
