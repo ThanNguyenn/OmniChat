@@ -372,7 +372,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             {
                 throw new NotFoundException("Không tìm thấy đơn hàng");
             }
-            order.Status = OrderStatus.Returned;
+            //order.Status = OrderStatus.Returned;
 
             orderRepo.Update(order);
             await _unitOfWork.CommitAsync();
@@ -392,7 +392,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             {
                 throw new NotFoundException("Không tìm thấy đơn hàng");
             }
-            order.Status = OrderStatus.Returned;
+            //order.Status = OrderStatus.Returned;
             orderRepo.Update(order);
             await creditNoteService.CreateCreditNoteAdjustmentAsync(orderId, amount);
             return true;
