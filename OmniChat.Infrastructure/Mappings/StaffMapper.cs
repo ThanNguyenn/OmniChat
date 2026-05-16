@@ -36,8 +36,8 @@ public class StaffMapper : Profile
              .ForMember(dest => dest.IntentTypeName,
                  opt => opt.MapFrom(src => src.IntentType != null ? src.IntentType.TypeName : null))
              .ForMember(dest => dest.CustomerName,
-                 opt => opt.MapFrom(src => (src.SupportConversation != null && src.SupportConversation.Staff != null)
-                     ? src.SupportConversation.Staff.Name : "N/A"))
+                 opt => opt.MapFrom(src => (src.SupportConversation != null && src.SupportConversation.CustomerName != null)
+                     ? src.SupportConversation.CustomerName : "N/A"))
              .ForMember(dest => dest.CompletedAt,
                  opt => opt.MapFrom(src => src.CompleteDate))
              .ForMember(dest => dest.Status,

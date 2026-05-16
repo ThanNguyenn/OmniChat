@@ -48,7 +48,8 @@ namespace OmniChat.Application.Services.Implements
 
 
             var invoice = await InvoiceRepo.SingleOrDefaultAsync(
-                predicate: x => x.CustomerId == customerId,
+                predicate: x => x.CustomerId == customerId &&
+                (x.InvoiceStatus == InvoiceStatus.Pending || x.InvoiceStatus == InvoiceStatus.PartialPaid),
                 include: x => x.Include(x => x.Orders)
             );
 
