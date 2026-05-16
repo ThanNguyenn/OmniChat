@@ -56,9 +56,8 @@ namespace OmniChat.Application.Services.Implements
             if (invoice == null) throw new Exception("Invoice not found");
 
             var total = invoice.Total;
-            var deducted = invoice.DeductedAmount;
             var paid = invoice.PaidAmount;
-            var remainingAmount = total - deducted - paid;
+            var remainingAmount = total  - paid;
 
             long payOsOrderCode = invoice.InvoiceCode;
 
