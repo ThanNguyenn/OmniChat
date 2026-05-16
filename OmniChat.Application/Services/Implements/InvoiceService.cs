@@ -133,6 +133,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             //}
             var grouped = orders.GroupBy(o => o.CustomerId);
             _logger.LogInformation("Processing {groupCount} customer groups for invoice creation.", grouped.Count());
+            var usedCreditNotes = new List<CreditNote>();
             foreach (var group in grouped)
             {
                 var customerId = group.Key;
@@ -143,9 +144,17 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 var customerOrders = group.ToList();
                 var orderTotal = customerOrders.Sum(o =>
                 {
-                    var adjustment = o.CreditNotes?
-                        .Where(cn => cn.CreditNoteStatus == CreditNoteStatus.Completed)
-                        .Sum(cn => cn.Total) ?? 0;
+                    var adjustment = 0d;
+
+                    var pendingNotes = o.CreditNotes?
+                        .Where(cn => cn.CreditNoteStatus == CreditNoteStatus.Pending)
+                        .ToList() ?? new List<CreditNote>();
+
+                    foreach (var cn in pendingNotes)
+                    {
+                        adjustment += cn.Total;
+                        usedCreditNotes.Add(cn);
+                    }
 
                     return o.TotalAmount - adjustment;
                 });
@@ -175,9 +184,15 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 _logger.LogInformation("No new invoices to create after checking existing invoices.");
                 return;
             }
-
+            foreach (var cn in usedCreditNotes)
+            {
+                cn.CreditNoteStatus = CreditNoteStatus.Completed; 
+            }
             await invoiceRepo.InsertRangeAsync(invoicesToInsert);
-
+            foreach (var cn in usedCreditNotes)
+            {
+                cn.CreditNoteStatus = CreditNoteStatus.Completed;
+            }
             await _unitOfWork.CommitAsync();
 
             var invoiceByCustomer = invoicesToInsert
