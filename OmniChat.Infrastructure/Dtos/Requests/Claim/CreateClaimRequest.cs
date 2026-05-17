@@ -23,6 +23,6 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Claim
         [Required(ErrorMessage = "Vui lòng chọn loại khiếu nại")]
         public Guid ClaimTypeId { get; set; }
 
-        public Guid? SupportConversationId { get; set; }
+        public string? SupportConversationId { get; set; }
     }
 }

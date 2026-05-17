@@ -55,21 +55,47 @@ namespace OmniChat.Application.Services.Implements
                      throw new NotFoundException("Loại khiếu nại (Claim Type) không tồn tại.");
 
                  var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
+                 Guid? conversationId = null;
 
                  if (claimType.Id == changeTaskTypeId)
                  {
-                     if (!claimRequest.SupportConversationId.HasValue || claimRequest.SupportConversationId == Guid.Empty)
+                     //if (!claimRequest.SupportConversationId.HasValue || claimRequest.SupportConversationId == Guid.Empty)
+                     //{
+
+                     //    throw new BadRequestException("Yêu cầu thay đổi công việc (CHANGETASK) bắt buộc phải đính kèm cuộc hội thoại hỗ trợ.");
+                     //}
+                     //var conversation = await _conversationRepo.SingleOrDefaultAsync(
+                     //    predicate: x => x.Id == claimRequest.SupportConversationId.Value,
+                     //       include: c => c.Include(conv => conv.SupportTasks)
+                     //);
+
+                     //if (conversation == null)
+                     //    throw new NotFoundException("Không tìm thấy cuộc hội thoại được yêu cầu thay đổi.");
+
+                     if (string.IsNullOrWhiteSpace(claimRequest.SupportConversationId))
                      {
-                        
-                         throw new BadRequestException("Yêu cầu thay đổi công việc (CHANGETASK) bắt buộc phải đính kèm cuộc hội thoại hỗ trợ.");
+                         throw new BadRequestException(
+                             "Yêu cầu thay đổi công việc bắt buộc phải đính kèm cuộc hội thoại hỗ trợ."
+                         );
                      }
+
+                     if (!Guid.TryParse(claimRequest.SupportConversationId, out var parsedGuid))
+                     {
+                         throw new BadRequestException(
+                             "SupportConversationId không đúng định dạng GUID."
+                         );
+                     }
+
+                     conversationId = parsedGuid;
+
                      var conversation = await _conversationRepo.SingleOrDefaultAsync(
-                         predicate: x => x.Id == claimRequest.SupportConversationId.Value,
-                            include: c => c.Include(conv => conv.SupportTasks)
+                         predicate: x => x.Id == conversationId.Value,
+                         include: c => c.Include(conv => conv.SupportTasks)
                      );
 
                      if (conversation == null)
-                         throw new NotFoundException("Không tìm thấy cuộc hội thoại được yêu cầu thay đổi.");
+                         throw new NotFoundException("Không tìm thấy cuộc hội thoại.");
+
 
                      conversation.Status = ConversationStatus.PendingReassign;
 
@@ -87,6 +113,7 @@ namespace OmniChat.Application.Services.Implements
 
                  }
                  var entity = _mapper.Map<Claim>(claimRequest);
+                 entity.SupportConversationId = conversationId;
                  await _repo.InsertAsync(entity);         
                  return true;
              });
