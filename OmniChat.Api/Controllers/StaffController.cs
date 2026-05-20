@@ -77,7 +77,7 @@ public class StaffController : BaseController<StaffController>
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     [SwaggerOperation(
         Summary = "Lấy list thông tin staff theo phòng ban",
-        Description = "Dùng cho manager và admin lấy list thông tin staff theo phòng ban.")]
+        Description = "Dùng cho manager lấy list thông tin staff theo phòng ban.")]
     public async Task<IActionResult> GetAllStaffsAsync([FromQuery] IEnumerable<Guid> deparmentIds, string? search, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
         var result = await _staffService.GetStaffsAsync(
@@ -86,7 +86,33 @@ public class StaffController : BaseController<StaffController>
             pageNumber ?? 1,
             pageSize ?? 20,
             sortBy ?? "createdate",
-            descending ?? true
+            descending ?? true,
+            isAdmin: false
+        );
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách nhân viên thành công", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+
+    [HttpGet(ApiEndPointConstant.Staff.GetAdmin)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<GetStaffsResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy list thông tin staff admin",
+        Description = "Dùng cho admin lấy list thông tin staff theo phòng ban.")]
+    public async Task<IActionResult> GetAllStaffsAdminAsync([FromQuery] IEnumerable<Guid> deparmentIds, string? search, int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    {
+        var result = await _staffService.GetStaffsAsync(
+            search,
+            deparmentIds,
+            pageNumber ?? 1,
+            pageSize ?? 20,
+            sortBy ?? "createdate",
+            descending ?? true,
+            isAdmin: true
         );
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách nhân viên thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);

@@ -142,6 +142,7 @@ public class ApiEndPointConstant
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
         public const string GetAll = "get";
+        public const string GetAdmin = "get/admin";
         public const string AssignIntent = "{id}/assign-intent";
         public const string UnassignIntent = "{id}/unassign-intent";
         public const string StaffDashboard = "{id}/dashboard";

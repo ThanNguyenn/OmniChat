@@ -27,7 +27,7 @@ public interface IStaffService
 
     public  Task<PagingResponse<StaffSupportTaskResponse>> GetStaffTasksAsync(Guid staffId,StaffTaskFilterRequest request = null);
 
-    Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(string? search = null, IEnumerable<Guid>? deparmentIds = null, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
+    Task<PagingResponse<GetStaffsResponse>> GetStaffsAsync(string? search = null, IEnumerable<Guid>? deparmentIds = null, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false, bool isAdmin = true);
 
     Task<bool> AssignIntentToStaffAsync(Guid staffId, IEnumerable<AssignStaffToIntentTypeRequest> requests);
 

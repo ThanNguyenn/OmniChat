@@ -140,12 +140,13 @@ public class StaffService : BaseService<StaffService>, IStaffService
     int pageNumber = 1,
     int pageSize = 20,
     string sortBy = "id",
-    bool descending = true)
+    bool descending = true,
+    bool isAdmin= true)
     {
         var staffRepository = _unitOfWork.GetRepository<Staff>();
 
 
-        var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") == true;
+        //var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") == true;
 
         var response = await staffRepository.GetPagingListAsync<GetStaffsResponse>(
             predicate: s =>
