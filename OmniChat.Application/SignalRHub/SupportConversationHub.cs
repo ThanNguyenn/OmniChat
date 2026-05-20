@@ -48,12 +48,13 @@ namespace OmniChat.Application.SignalRHub
 
             await _customerMessageService.MarkAsReadByConversationIdAsync(conversationId);
 
+            var conversation = await _supportConversationService.GetSupportConversationByIdAsync(conversationId);
             var userId = Context.UserIdentifier;
 
             if (Guid.TryParse(userId, out var staffId))
             {
 
-                await _supportConversationService.PushSidebarToStaffAsync(staffId);
+                await _supportConversationService.PushSidebarToStaffAsync(staffId, conversation.Providers.ProviderName);
             }
 
         }

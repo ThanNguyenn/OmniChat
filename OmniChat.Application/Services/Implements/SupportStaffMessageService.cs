@@ -266,7 +266,7 @@ namespace OmniChat.Application.Services.Implements
                     //});
                     
 
-                    await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value);
+                    await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value,existConversation.Providers.ProviderName);
                 }
 
                 // Cập nhật khung chat
@@ -453,7 +453,7 @@ namespace OmniChat.Application.Services.Implements
                     // Update Sidebar
                     if (existConversation.ActiveStaffId.HasValue)
                     {
-                        await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value);
+                        await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value, existConversation.Providers.ProviderName);
                     }
 
                     // Update Conversation Detail

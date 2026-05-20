@@ -237,7 +237,7 @@ namespace OmniChat.Application.Services.Resolver
                         if (conversation.ActiveStaffId != null)
                         {
 
-                            await _supportConversationService.PushSidebarToStaffAsync(conversation.ActiveStaffId.Value);
+                            await _supportConversationService.PushSidebarToStaffAsync(conversation.ActiveStaffId.Value, "Facebook");
 
                             var supportConversationMessages = new SupportConversationMessagesResponse
                             {

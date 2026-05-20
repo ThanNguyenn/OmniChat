@@ -121,7 +121,7 @@ namespace OmniChat.Application.Services.Implements
 
             if (conversation.ActiveStaffId.HasValue)
             {
-                await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value);
+                await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value,conversation.Providers.ProviderName);
             }
             return true;
         }
@@ -173,6 +173,8 @@ namespace OmniChat.Application.Services.Implements
         // Staff Pending SupportConversation side bar
         public async Task<IEnumerable<StaffConversationSideBarResponse>> GetStaffConversationSideBarAsync(Guid staffId, string providerName)
         {
+            Console.WriteLine($"[GetStaffConversationSideBarAsync] Join funtion");
+
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
             var conversations = await repo.GetListAsync(
@@ -207,6 +209,21 @@ namespace OmniChat.Application.Services.Implements
                     UnreadMessageCount = c.CustomerMessages.Count(m => m.IsRead == false)
                 }
             );
+
+            Console.WriteLine($"[GetStaffConversationSideBarAsync] conversations : {conversations}");
+            if (conversations != null && conversations.Any())
+            {
+                var jsonLog = System.Text.Json.JsonSerializer.Serialize(conversations, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+                Console.WriteLine($"[GetStaffConversationSideBarAsync] Đã tìm thấy {conversations.Count()} conversations:\n{jsonLog}");
+            }
+            else
+            {
+                Console.WriteLine("[GetStaffConversationSideBarAsync] Không có conversation nào thỏa mãn điều kiện.");
+            }
+            // ------------------------------------
 
             return conversations;
         }
@@ -402,7 +419,7 @@ namespace OmniChat.Application.Services.Implements
             .OrderBy(m => m.Timestamp)
             .ToList();
 
-            await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value);
+            await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value,conversation.Providers.ProviderName);
 
             await _notificationService.UpdateNotificationIsReadAsync(conversationId);
 
