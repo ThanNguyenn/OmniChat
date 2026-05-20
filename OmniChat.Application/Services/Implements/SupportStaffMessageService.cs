@@ -264,18 +264,9 @@ namespace OmniChat.Application.Services.Implements
                     //    CustomerName = existConversation.CustomerName,
                     //    LastMessage = expandedContent
                     //});
-                    var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-                    {
-                        ConversationId = existConversation.Id,
-                        CustomerName = existConversation.CustomerName,
-                        avartarUrl = existConversation.AvatarUrl,
-                        providerName = provider.ProviderName,
-                        LastMessage = expandedContent,
-                        UpdateDate = newStaffSupportMes.Timestamp
-                    };
+                    
 
-                    await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
-                        .SendAsync("SidebarUpdated", sidebarUpdate);
+                    await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value);
                 }
 
                 // Cập nhật khung chat
@@ -462,16 +453,7 @@ namespace OmniChat.Application.Services.Implements
                     // Update Sidebar
                     if (existConversation.ActiveStaffId.HasValue)
                     {
-                        var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-                        {
-                            ConversationId = existConversation.Id,
-                            CustomerName = existConversation.CustomerName,
-                            avartarUrl = existConversation.AvatarUrl,
-                            providerName = provider.ProviderName,
-                            LastMessage = expandedContent,
-                            UpdateDate = newStaffSupportMes.Timestamp
-                        };
-                        await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString()).SendAsync("SidebarUpdated", sidebarUpdate);
+                        await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value);
                     }
 
                     // Update Conversation Detail

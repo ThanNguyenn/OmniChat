@@ -23,7 +23,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
         private readonly Mock<IUnitOfWork<OmniChatDbContext>> _unitOfWorkMock;
         private readonly Mock<ICustomerProfileService> _customerProfileServiceMock;
         private readonly Mock<INotificationService> _notificationServiceMock;
-        private readonly Mock<IHubContext<SupportConversationHub>> _hubContextMock;
+        private readonly Mock<IHubContext<SidebarHub>> _hubContextMock;
         private readonly Mock<IGenericRepository<SupportConversation>> _repoMock;
         private readonly SupportConversationService _service;
 
@@ -32,7 +32,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
             _unitOfWorkMock = new Mock<IUnitOfWork<OmniChatDbContext>>();
             _customerProfileServiceMock = new Mock<ICustomerProfileService>();
             _notificationServiceMock = new Mock<INotificationService>();
-            _hubContextMock = new Mock<IHubContext<SupportConversationHub>>();
+            _hubContextMock = new Mock<IHubContext<SidebarHub>>();
             _repoMock = new Mock<IGenericRepository<SupportConversation>>();
 
             var mockClients = new Mock<IHubClients>();

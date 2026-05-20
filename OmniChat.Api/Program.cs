@@ -260,6 +260,7 @@ void RegisterResolver()
 void ConfigureSignalREndpoints()
 {
     app.MapHub<SupportConversationHub>("/api/v1/supportConversationHub");
+    app.MapHub<SidebarHub>("/api/v1/SidebarHub");
 }
 
 void ConfigureDatabase()
@@ -295,9 +296,24 @@ void ConfigureAuthentication()
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero,
-                ValidIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>(),
-                ValidAudience = builder.Configuration.GetSection("Jwt:Audience").Get<string>(),
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                //ValidIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>(),
+                //ValidAudience = builder.Configuration.GetSection("Jwt:Audience").Get<string>(),
+                //IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+
+                ValidIssuers = new[]
+                {
+                    builder.Configuration.GetSection("Jwt:Issuer").Get<string>(),
+                    "https://localhost:7161",
+                    "https://omnichat.click"
+                },
+                            ValidAudiences = new[]
+                {
+                    builder.Configuration.GetSection("Jwt:Audience").Get<string>(),
+                    "https://localhost:7161",
+                    "https://omnichat.click"
+                },
+                            IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
             };
 
             options.Events = new JwtBearerEvents
@@ -313,11 +329,15 @@ void ConfigureAuthentication()
                     Console.WriteLine($"[OnMessageReceived] Token from query: {signalRToken}");
 
 
-                    if (!string.IsNullOrEmpty(signalRToken) && path.StartsWithSegments("/api/v1/supportConversationHub"))
+                    if (!string.IsNullOrEmpty(signalRToken))
                     {
-                        context.Token = signalRToken;
-                        Console.WriteLine("[OnMessageReceived] Token set for SignalR");
-                        return Task.CompletedTask;
+                        if (path.StartsWithSegments("/api/v1/supportConversationHub") ||
+                            path.StartsWithSegments("/api/v1/SidebarHub")) 
+                        {
+                            context.Token = signalRToken;
+                            Console.WriteLine($"[OnMessageReceived] Token set for: {path}");
+                            return Task.CompletedTask;
+                        }
                     }
 
                     var accessToken = context.Request.Headers["Authorization"].FirstOrDefault();
