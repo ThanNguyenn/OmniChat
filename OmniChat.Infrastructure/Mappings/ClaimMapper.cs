@@ -13,16 +13,23 @@ namespace OmniChat.Infrastructure.Mappings
     public class ClaimMapper : Profile
     {
         // Create
-        public ClaimMapper() {
+        public ClaimMapper()
+        {
 
             // Create
             CreateMap<CreateClaimRequest, Claim>()
-                .ForMember(dest => dest.Status,
-                           opt => opt.MapFrom(src => ClaimStatus.Pending))
-                .ForMember(dest => dest.SubmitDate,
-                           opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-                
+              .ForMember(dest => dest.Status,
+                 opt => opt.MapFrom(src => ClaimStatus.Pending))
+
+                        .ForMember(dest => dest.SubmitDate,
+                 opt => opt.MapFrom(src => DateTime.UtcNow))
+
+             .ForMember(dest => dest.SupportConversationId,
+                 opt => opt.Ignore())
+
+              .ForAllMembers(opts =>
+                      opts.Condition((src, dest, srcMember) => srcMember != null));
+
             // Update
             CreateMap<UpdateClaimRequest, Claim>()
            .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -33,7 +40,7 @@ namespace OmniChat.Infrastructure.Mappings
             // Entity → Response
             CreateMap<Claim, ClaimDetailResponse>()
             .ForMember(dest => dest.StaffName,
-               opt => opt.MapFrom(src => src.Staff.Name)) 
+               opt => opt.MapFrom(src => src.Staff.Name))
             .ForMember(dest => dest.ClaimTypeName,
                opt => opt.MapFrom(src => src.ClaimType.TypeName))
             .ForMember(dest => dest.ConversationId, opt => opt.MapFrom(src => src.SupportConversationId));

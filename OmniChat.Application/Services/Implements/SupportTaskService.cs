@@ -52,7 +52,7 @@ namespace OmniChat.Application.Services.Implements
             {
                 SupportTaskStatus.Done,
                 SupportTaskStatus.InProgress,
-                SupportTaskStatus.PendingReassign
+                SupportTaskStatus.Reassign
               };
 
             var supportTasks = await repo.GetListAsync(
