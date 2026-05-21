@@ -369,7 +369,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
         {
             var order = await orderRepo.SingleOrDefaultAsync(
                 predicate: o => o.Id ==  orderId, 
-                include: o => o.Include(o => o.CustomerProfile));
+                include: o => o.Include(o => o.CustomerProfile).ThenInclude(c => c.Wallet));
             if (order == null)
             {
                 throw new NotFoundException("Không tìm thấy đơn hàng");
@@ -386,7 +386,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
             {
                 To = order.CustomerProfile.Email,
                 Subject = $"Đơn hàng {order.Code} đã được hoàn trả",
-                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được hoàn trả thành công, số tiền được hoàn trả là {order.CustomerProfile.Wallet.Amount}"
+                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được hoàn trả thành công, số tiền được hoàn trả là {amount}"
             };
             await mailService.SendEmailAsync(mailContent);
             return true;
