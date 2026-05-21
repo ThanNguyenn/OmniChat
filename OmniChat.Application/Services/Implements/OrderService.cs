@@ -180,7 +180,10 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 .Include(o => o.CustomerProfile)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductBatch)
-                        .ThenInclude(pb => pb.Product),
+                        .ThenInclude(pb => pb.Product)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.PostSaleItem)
+                        .ThenInclude(ps => ps.PostSaleRequest),
 
             selector: e => _mapper.Map<GetOrderResponse>(e),
 
@@ -233,7 +236,9 @@ public class OrderService : BaseService<OrderService>, IOrderService
     public async Task<GetOrderResponse> GetOrderByIdAsync(Guid orderId)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
-        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include(q => q.CustomerProfile).Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
+        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include(q => q.CustomerProfile).Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product).Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.PostSaleItem)
+                        .ThenInclude(ps => ps.PostSaleRequest)).FirstOrDefaultAsync();
         if (response == null)
         {
             throw new NotFoundException("Không tìm thấy đơn hàng");
@@ -244,7 +249,9 @@ public class OrderService : BaseService<OrderService>, IOrderService
     public async Task<GetPostSaleOrderResponse> GetPostSaleOrderByIdAsync(Guid orderId)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
-        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product)).FirstOrDefaultAsync();
+        var response = await orderRepo.GetQueryable(predicate: o => o.Id == orderId, include: q => q.Include(q => q.OrderItems).ThenInclude(q => q.ProductBatch).ThenInclude(q => q.Product).Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.PostSaleItem)
+                        .ThenInclude(ps => ps.PostSaleRequest)).FirstOrDefaultAsync();
         if (response == null)
         {
             throw new NotFoundException("Không tìm thấy đơn hàng");
