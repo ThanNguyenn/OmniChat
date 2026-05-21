@@ -34,6 +34,8 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
+        _unitOfWork.Context.ChangeTracker.Clear();
+
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var wallet = await walletRepo.SingleOrDefaultAsync(
@@ -46,9 +48,12 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             var invoices = await invoiceRepo.GetListAsync(
                 predicate: i =>
                     i.CustomerId == customerId &&
-                    i.InvoiceStatus != InvoiceStatus.Completed &&
+                    i.InvoiceStatus != InvoiceStatus.Completed && 
+                    i.InvoiceStatus != InvoiceStatus.Refunded && 
+                    i.InvoiceStatus != InvoiceStatus.PendingRefund &&
                     !(i.IsDeleted ?? false),
-                include: i => i.Include(x => x.Allocations),
+                include: i => i.Include(x => x.Allocations)
+                               .Include(x => x.CustomerProfile),
                 orderBy: q => q.OrderBy(i => i.StartedDate)
             );
 
@@ -93,10 +98,11 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 {
                     invoice.InvoiceStatus = InvoiceStatus.Pending;
                 }
-            }
 
+                invoiceRepo.Update(invoice);
+            }
             walletRepo.Update(wallet);
-            invoiceRepo.UpdateRange(invoices);
+            //invoiceRepo.UpdateRange(invoices);
         });
     }
 
