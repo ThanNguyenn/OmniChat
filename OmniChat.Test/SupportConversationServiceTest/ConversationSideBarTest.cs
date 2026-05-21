@@ -30,7 +30,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
             _repoMock = new Mock<IGenericRepository<SupportConversation>>();
 
             var customerProfileMock = new Mock<ICustomerProfileService>();
-            var hubContextMock = new Mock<IHubContext<SupportConversationHub>>();
+            var hubContextMock = new Mock<IHubContext<SidebarHub>>();
             var notificationMock = new Mock<INotificationService>();
             var supportTaskMock = new Mock<ISupportTaskService>();
 

@@ -115,7 +115,13 @@ namespace OmniChat.Test.ClaimServiceTest
             // Arrange
             var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
             var convId = Guid.NewGuid();
-            var request = new CreateClaimRequest { ClaimTypeId = changeTaskTypeId, SupportConversationId = convId };
+
+            // SupportConversationId là string, truyền convId.ToString()
+            var request = new CreateClaimRequest
+            {
+                ClaimTypeId = changeTaskTypeId,
+                SupportConversationId = convId.ToString()
+            };
 
             var conversation = new SupportConversation
             {
@@ -129,25 +135,24 @@ namespace OmniChat.Test.ClaimServiceTest
             _mockClaimTypeRepo.Setup(r => r.GetByIdAsync(changeTaskTypeId))
                 .ReturnsAsync(new ClaimType { Id = changeTaskTypeId });
 
-       
             _mockConvRepo.Setup(r => r.SingleOrDefaultAsync(
                 It.IsAny<Expression<Func<SupportConversation, bool>>>(),
-                It.IsAny<Func<IQueryable<SupportConversation>, IOrderedQueryable<SupportConversation>>>(), 
+                It.IsAny<Func<IQueryable<SupportConversation>, IOrderedQueryable<SupportConversation>>>(),
                 It.IsAny<Func<IQueryable<SupportConversation>, IIncludableQueryable<SupportConversation, object>>>()
             ))
             .ReturnsAsync(conversation);
 
             _mockMapper.Setup(m => m.Map<Claim>(request)).Returns(new Claim());
 
-            
+            // Act
             var result = await _service.CreateClaimAsync(request);
+
+            // Assert
             Assert.True(result);
             Assert.Equal(ConversationStatus.PendingReassign, conversation.Status);
             Assert.Equal(SupportTaskStatus.PendingReassign, conversation.SupportTasks.First().Status);
-
             _mockConvRepo.Verify(r => r.Update(conversation), Times.Once);
             _mockTaskRepo.Verify(r => r.UpdateRange(It.IsAny<IEnumerable<SupportTask>>()), Times.Once);
         }
-
     }
 }

@@ -237,22 +237,7 @@ namespace OmniChat.Application.Services.Resolver
                         if (conversation.ActiveStaffId != null)
                         {
 
-                            var unreadCount = await CountUnreadMessagesByConversationIdAsync(conversation.Id);
-
-                            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-                            {
-                                ConversationId = conversation.Id,
-                                CustomerName = conversation.CustomerName,
-                                avartarUrl = conversation.AvatarUrl,
-                                providerName = provider.ProviderName,
-                                LastMessage = newMessage.Content,
-                                UnreadMessageCount = unreadCount,
-                                UpdateDate = newMessage.Timestamp
-                            };
-
-                            await _hubContext.Clients
-                                .User(conversation.ActiveStaffId.ToString())
-                                .SendAsync("SidebarUpdated", sidebarUpdate);
+                            await _supportConversationService.PushSidebarToStaffAsync(conversation.ActiveStaffId.Value, "Facebook");
 
                             var supportConversationMessages = new SupportConversationMessagesResponse
                             {
@@ -300,11 +285,5 @@ namespace OmniChat.Application.Services.Resolver
             }
         }
 
-        private async Task<int> CountUnreadMessagesByConversationIdAsync(Guid conversationId)
-        {
-            var repo = _unitOfWork.GetRepository<CustomerMessage>();
-
-            return await repo.CountAsync(predicate: m => m.ConversationId == conversationId && m.IsRead == false);
-        }
     }
 }

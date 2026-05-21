@@ -35,7 +35,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
                 _unitOfWorkMock.Object,
                 null, null, null,
                 _customerProfileServiceMock.Object,
-                new Mock<IHubContext<SupportConversationHub>>().Object,
+                new Mock<IHubContext<SidebarHub>>().Object,
                 new Mock<ISupportTaskService>().Object,
                 new Mock<INotificationService>().Object
             );

@@ -48,28 +48,13 @@ namespace OmniChat.Application.SignalRHub
 
             await _customerMessageService.MarkAsReadByConversationIdAsync(conversationId);
 
-          var existConversation =  await _supportConversationService.GetSupportConversationByIdAsync(conversationId);
-
-            var lastMessage = existConversation.CustomerMessages
-                .OrderByDescending(m => m.Timestamp)
-                .FirstOrDefault();
-
+            var conversation = await _supportConversationService.GetSupportConversationByIdAsync(conversationId);
             var userId = Context.UserIdentifier;
 
-            if (!string.IsNullOrEmpty(userId))
+            if (Guid.TryParse(userId, out var staffId))
             {
-                var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-                {
-                    ConversationId = conversationId,
-                    CustomerName = existConversation.CustomerName,
-                    avartarUrl = existConversation.AvatarUrl,
-                    providerName = existConversation.Providers.ProviderName,
-                    LastMessage = lastMessage.Content,
-                    UnreadMessageCount = 0,
-                    UpdateDate = lastMessage.Timestamp
-                };
 
-                await Clients.User(userId).SendAsync("SidebarUpdated", sidebarUpdate);
+                await _supportConversationService.PushSidebarToStaffAsync(staffId, conversation.Providers.ProviderName);
             }
 
         }

@@ -254,6 +254,8 @@ namespace OmniChat.Application.Services.Implements
             try
             {
                 var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
+
+                await _supportConversationService.ReadAllCustomerMessageAsync(existConversation.CustomerMessages.ToList());
                 // Cập nhật Sidebar
                 if (existConversation.ActiveStaffId.HasValue)
                 {
@@ -264,18 +266,9 @@ namespace OmniChat.Application.Services.Implements
                     //    CustomerName = existConversation.CustomerName,
                     //    LastMessage = expandedContent
                     //});
-                    var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-                    {
-                        ConversationId = existConversation.Id,
-                        CustomerName = existConversation.CustomerName,
-                        avartarUrl = existConversation.AvatarUrl,
-                        providerName = provider.ProviderName,
-                        LastMessage = expandedContent,
-                        UpdateDate = newStaffSupportMes.Timestamp
-                    };
+                    
 
-                    await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString())
-                        .SendAsync("SidebarUpdated", sidebarUpdate);
+                    await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value,existConversation.Providers.ProviderName);
                 }
 
                 // Cập nhật khung chat
@@ -459,19 +452,12 @@ namespace OmniChat.Application.Services.Implements
                 {
                     var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
 
+                    // read all customer message in this conversation for current staff
+                    await _supportConversationService.ReadAllCustomerMessageAsync(existConversation.CustomerMessages.ToList());
                     // Update Sidebar
                     if (existConversation.ActiveStaffId.HasValue)
                     {
-                        var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-                        {
-                            ConversationId = existConversation.Id,
-                            CustomerName = existConversation.CustomerName,
-                            avartarUrl = existConversation.AvatarUrl,
-                            providerName = provider.ProviderName,
-                            LastMessage = expandedContent,
-                            UpdateDate = newStaffSupportMes.Timestamp
-                        };
-                        await _hubContext.Clients.User(existConversation.ActiveStaffId.ToString()).SendAsync("SidebarUpdated", sidebarUpdate);
+                        await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value, existConversation.Providers.ProviderName);
                     }
 
                     // Update Conversation Detail

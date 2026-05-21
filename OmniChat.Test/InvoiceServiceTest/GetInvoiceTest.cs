@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
 using Moq;
 using OmniChat.Application.Services.Implements;
+using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Responses.Invoice;
 using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
@@ -19,6 +20,7 @@ public class GetInvoiceTest
     protected readonly Mock<IHttpContextAccessor> _httpMock = new();
     protected readonly Mock<IMapper> _mapperMock = new();
     protected readonly Mock<ILogger<InvoiceService>> _loggerMock = new();
+    protected readonly Mock<IMailService> _mailServiceMock = new();
 
     public InvoiceService CreateService()
     {
@@ -26,7 +28,8 @@ public class GetInvoiceTest
             _uowMock.Object,
             _loggerMock.Object,
             _mapperMock.Object,
-            _httpMock.Object
+            _httpMock.Object,
+            _mailServiceMock.Object
         );
     }
 

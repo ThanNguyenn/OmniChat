@@ -71,12 +71,12 @@ namespace OmniChat.Application.Services.Implements
             var paymentData = new PaymentData(
               orderCode: payOsOrderCode,
                 amount: (int)remainingAmount,
-                 description: $"Payment for{invoice.CreateAt:dd-MM}",
+                 description: $"Payment for {invoice.CreateAt:dd-MM}",
                      cancelUrl: "https://omnichat.click/api/v1/invoices/confirm-payment",
                          returnUrl: "https://omnichat.click/api/v1/invoices/confirm-payment",
                             items: items
              );
-
+            _logger.LogInformation($"[PayOsService]: {paymentData}");
 
             var paymentLink = await _payOS.createPaymentLink(paymentData);
 
@@ -88,8 +88,8 @@ namespace OmniChat.Application.Services.Implements
             var mailContent = new MailContent
             {
                 To = customer.Email,
-                Subject = "Payment Link",
-                Body = $"Please click the following link to complete your payment: {paymentLink.checkoutUrl}"
+                Subject = "Đường dẫn thanh toán",
+                Body = $"Vui lòng nhấp vào liên kết sau để hoàn tất thanh toán của bạn: {paymentLink.checkoutUrl}"
             };
 
             await _mailService.SendEmailAsync(mailContent);
@@ -183,8 +183,8 @@ namespace OmniChat.Application.Services.Implements
                             await _mailService.SendEmailAsync(new MailContent
                             {
                                 To = customerEmail,
-                                Subject = "Order Completed",
-                                Body = $"Your order {order.Name} has been completed. Thank you!"
+                                Subject = "Hoàn thành Đơn hàng",
+                                Body = $"Đơn hàng của bạn {order.Name} đã được hoàn thành. Cảm ơn bạn!"
                             });
                         }
                     }
@@ -200,8 +200,8 @@ namespace OmniChat.Application.Services.Implements
                     {
                         await _mailService.SendEmailAsync(new MailContent
                         { To = customerEmail,
-                          Subject = "Order Failed",
-                          Body = $"Your invoice has Payment failed. Please try again later."
+                          Subject = "Đơn hàng thất bại",
+                          Body = $"Hóa đơn của bạn đã thất bại trong việc thanh toán. Vui lòng thử lại sau."
                         });
                     }
                     return true;

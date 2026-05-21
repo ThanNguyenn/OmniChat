@@ -39,5 +39,9 @@ namespace OmniChat.Application.Services.Interface
         public  Task<SupportConversation> AsignForSupportConversationByIdAsync(SupportConversation conversation, Guid staffAsignId);
 
         public Task<List<CompleteSupportConversationHistoryResponse>> GetCustomerCompleteSupportConversationHistoryAsync(Guid customerId);
+
+        public  Task PushSidebarToStaffAsync(Guid staffId, string providerName = "");
+
+        public  Task ReadAllCustomerMessageAsync(List<CustomerMessage> customerMessages);
     }
 }

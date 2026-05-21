@@ -30,22 +30,22 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly INotificationService _notificationService;
 
-        private readonly IHubContext<SupportConversationHub> _hubContext;
+        private readonly IHubContext<SidebarHub> _sidebarHubContext;
 
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SupportConversationHub> hubContext, ISupportTaskService supportTaskService,INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SidebarHub> sidebarHubContext, ISupportTaskService supportTaskService, INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
             _supportTaskService = supportTaskService;
-            _hubContext = hubContext;
             _supportTaskService = supportTaskService;
             _notificationService = notificationService;
+            _sidebarHubContext = sidebarHubContext;
         }
 
         public async Task<SupportConversation> GetSupportConversationByIdAsync(Guid conversationId)
         {
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
-            var exitSupportConversation = await repo.SingleOrDefaultAsync(predicate:sc => sc.Id == conversationId, 
+            var exitSupportConversation = await repo.SingleOrDefaultAsync(predicate: sc => sc.Id == conversationId,
                 include: sc => sc
                     .Include(c => c.Staff)
                     .Include(c => c.Providers)
@@ -97,7 +97,7 @@ namespace OmniChat.Application.Services.Implements
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
             var conversation = await GetSupportConversationByIdAsync(conversationId);
-            
+
             if (conversation.Status == ConversationStatus.Complete)
             {
                 throw new BadRequestException("Cuộc trò chuyện này đã được hoàn thành trước đó");
@@ -116,53 +116,13 @@ namespace OmniChat.Application.Services.Implements
             conversation.Status = ConversationStatus.Complete;
             conversation.CloseAt = DateTime.UtcNow;
             conversation.UpdateDate = DateTime.UtcNow;
-             repo.Update(conversation);
+            repo.Update(conversation);
             await _unitOfWork.CommitAsync();
 
-            var lastCustomerMsg = conversation.CustomerMessages?.OrderByDescending(m => m.Timestamp).FirstOrDefault();
-            var lastStaffMsg = conversation.SupportStaffMessages?.OrderByDescending(m => m.Timestamp).FirstOrDefault();
-
-            long lastTimestamp  = conversation.UpdateDate?.Ticks ?? DateTime.UtcNow.Ticks;
-            string finalLastMessage = "Cuộc hội thoại đã kết thúc";
-            
-            if (lastCustomerMsg != null && lastStaffMsg != null)
+            if (conversation.ActiveStaffId.HasValue)
             {
-                if (lastCustomerMsg.Timestamp > lastStaffMsg.Timestamp)
-                {
-                    lastTimestamp = lastCustomerMsg.Timestamp;
-                    finalLastMessage = lastCustomerMsg.Content;
-                }
-                else
-                {
-                    lastTimestamp = lastStaffMsg.Timestamp;
-                    finalLastMessage = lastStaffMsg.Content;
-                }
+                await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value,conversation.Providers.ProviderName);
             }
-            else if (lastCustomerMsg != null)
-            {
-                lastTimestamp = lastCustomerMsg.Timestamp;
-                finalLastMessage = lastCustomerMsg.Content;
-            }
-            else if (lastStaffMsg != null)
-            {
-                lastTimestamp = lastStaffMsg.Timestamp;
-                finalLastMessage = lastStaffMsg.Content;
-            }
-
-            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-            {
-                ConversationId = conversation.Id,
-                CustomerName = conversation.CustomerName,
-                avartarUrl = conversation.AvatarUrl,
-                providerName = conversation.Providers?.ProviderName ?? "N/A",
-                LastMessage = finalLastMessage,
-                UnreadMessageCount = 0,
-                UpdateDate = lastTimestamp
-            };
-
-            await _hubContext.Clients
-           .User(conversation.ActiveStaffId.ToString())
-           .SendAsync("SidebarUpdated", sidebarUpdate);
             return true;
         }
 
@@ -213,12 +173,14 @@ namespace OmniChat.Application.Services.Implements
         // Staff Pending SupportConversation side bar
         public async Task<IEnumerable<StaffConversationSideBarResponse>> GetStaffConversationSideBarAsync(Guid staffId, string providerName)
         {
+            Console.WriteLine($"[GetStaffConversationSideBarAsync] Join funtion");
+
             var repo = _unitOfWork.GetRepository<SupportConversation>();
 
             var conversations = await repo.GetListAsync(
                 predicate: c =>
                     c.ActiveStaffId == staffId &&
-                    (c.Status == ConversationStatus.Pending || c.Status == ConversationStatus.Warning) &&
+                    (c.Status == ConversationStatus.Pending) &&
                     (string.IsNullOrEmpty(providerName) || c.Providers.ProviderName.ToLower() == providerName.ToLower()),
 
                 orderBy: q => q.OrderByDescending(c => c.UpdateDate),
@@ -230,7 +192,7 @@ namespace OmniChat.Application.Services.Implements
                     AvartarUrl = c.AvatarUrl,
                     ProviderName = c.Providers.ProviderName,
 
-                   
+
                     LastMessage = c.CustomerMessages
                         .Select(m => new { m.Content, m.Timestamp })
                         .Concat(c.SupportStaffMessages.Select(m => new { m.Content, m.Timestamp }))
@@ -238,7 +200,7 @@ namespace OmniChat.Application.Services.Implements
                         .Select(m => m.Content)
                         .FirstOrDefault() ?? string.Empty,
 
-                    
+
                     UpdateDate = c.CustomerMessages.Select(m => m.Timestamp)
                         .Concat(c.SupportStaffMessages.Select(m => m.Timestamp))
                         .OrderByDescending(t => t)
@@ -247,6 +209,21 @@ namespace OmniChat.Application.Services.Implements
                     UnreadMessageCount = c.CustomerMessages.Count(m => m.IsRead == false)
                 }
             );
+
+            Console.WriteLine($"[GetStaffConversationSideBarAsync] conversations : {conversations}");
+            if (conversations != null && conversations.Any())
+            {
+                var jsonLog = System.Text.Json.JsonSerializer.Serialize(conversations, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+                Console.WriteLine($"[GetStaffConversationSideBarAsync] Đã tìm thấy {conversations.Count()} conversations:\n{jsonLog}");
+            }
+            else
+            {
+                Console.WriteLine("[GetStaffConversationSideBarAsync] Không có conversation nào thỏa mãn điều kiện.");
+            }
+            // ------------------------------------
 
             return conversations;
         }
@@ -417,12 +394,12 @@ namespace OmniChat.Application.Services.Implements
             if (conversation == null)
                 throw new NotFoundException("Không tìm thấy cuộc trò chuyện");
 
-          
+
             await ReadAllCustomerMessageAsync(conversation.CustomerMessages.ToList());
 
             var customerProfile = await _customerProfileService.GetCustomerProfileByIdAsync(conversation.ActiveCustomerId);
 
-          
+
             var messages = conversation.CustomerMessages.Select(cm => new SupportConversationMessagesResponse
             {
                 SenderType = "Customer",
@@ -441,23 +418,8 @@ namespace OmniChat.Application.Services.Implements
             )
             .OrderBy(m => m.Timestamp)
             .ToList();
-        
-            var lastMsg = messages.LastOrDefault();
 
-            var sidebarUpdate = new StaffConversationSideBarUpdateResponse
-            {
-                ConversationId = conversation.Id,
-                CustomerName = conversation.CustomerName,
-                avartarUrl = conversation.AvatarUrl,
-                providerName = conversation.Providers?.ProviderName ?? "N/A", 
-                LastMessage = lastMsg?.Content ?? "...",
-                UnreadMessageCount = 0,
-                UpdateDate = lastMsg.Timestamp
-            };
-
-            await _hubContext.Clients
-                .User(conversation.ActiveStaffId.ToString())
-                .SendAsync("SidebarUpdated", sidebarUpdate);
+            await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value,conversation.Providers.ProviderName);
 
             await _notificationService.UpdateNotificationIsReadAsync(conversationId);
 
@@ -565,7 +527,7 @@ namespace OmniChat.Application.Services.Implements
                 .ToListAsync();
         }
 
-        private async Task ReadAllCustomerMessageAsync(List<CustomerMessage> customerMessages)
+        public async Task ReadAllCustomerMessageAsync(List<CustomerMessage> customerMessages)
         {
             var repo = _unitOfWork.GetRepository<CustomerMessage>();
 
@@ -580,6 +542,20 @@ namespace OmniChat.Application.Services.Implements
             repo.UpdateRange(customerMessages);
 
             await _unitOfWork.CommitAsync();
+        }
+
+        public async Task PushSidebarToStaffAsync(Guid staffId, string providerName = "")
+        {
+            try
+            {
+                var conversations = await GetStaffConversationSideBarAsync(staffId, providerName);
+
+                await _sidebarHubContext.Clients.User(staffId.ToString()).SendAsync("SidebarUpdated", conversations);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error pushing sidebar update to staff {StaffId} for provider {ProviderName}", staffId, providerName);
+            }
         }
     }
 }
