@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using OmniChat.Application.Services.Implements;
+using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -16,6 +17,7 @@ public class GetTotalUnpaidAsyncTest
     protected readonly Mock<IHttpContextAccessor> _httpMock = new();
     protected readonly Mock<IMapper> _mapperMock = new();
     protected readonly Mock<ILogger<InvoiceService>> _loggerMock = new();
+    protected readonly Mock<IMailService> _mailServiceMock = new();
 
     public InvoiceService CreateService()
     {
@@ -23,7 +25,8 @@ public class GetTotalUnpaidAsyncTest
             _uowMock.Object,
             _loggerMock.Object,
             _mapperMock.Object,
-            _httpMock.Object
+            _httpMock.Object,
+            _mailServiceMock.Object
         );
     }
 

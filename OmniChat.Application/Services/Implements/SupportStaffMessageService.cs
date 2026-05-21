@@ -254,6 +254,8 @@ namespace OmniChat.Application.Services.Implements
             try
             {
                 var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
+
+                await _supportConversationService.ReadAllCustomerMessageAsync(existConversation.CustomerMessages.ToList());
                 // Cập nhật Sidebar
                 if (existConversation.ActiveStaffId.HasValue)
                 {
@@ -450,6 +452,8 @@ namespace OmniChat.Application.Services.Implements
                 {
                     var provider = await _providerService.GetProviderByIdAsync(existConversation.ProvidersId);
 
+                    // read all customer message in this conversation for current staff
+                    await _supportConversationService.ReadAllCustomerMessageAsync(existConversation.CustomerMessages.ToList());
                     // Update Sidebar
                     if (existConversation.ActiveStaffId.HasValue)
                     {

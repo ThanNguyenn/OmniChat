@@ -367,7 +367,9 @@ public class OrderService : BaseService<OrderService>, IOrderService
         var orderRepo = _unitOfWork.GetRepository<Order>();
         return _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var order = await orderRepo.GetByIdAsync(orderId);
+            var order = await orderRepo.SingleOrDefaultAsync(
+                predicate: o => o.Id ==  orderId, 
+                include: o => o.Include(o => o.CustomerProfile));
             if (order == null)
             {
                 throw new NotFoundException("Không tìm thấy đơn hàng");
@@ -378,6 +380,15 @@ public class OrderService : BaseService<OrderService>, IOrderService
             await _unitOfWork.CommitAsync();
             _unitOfWork.Context.ChangeTracker.Clear();
             await creditNoteService.CreateCreditNoteRefundAsync(orderId, amount);
+
+
+            var mailContent = new MailContent
+            {
+                To = order.CustomerProfile.Email,
+                Subject = $"Đơn hàng {order.Code} đã được hoàn trả",
+                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được hoàn trả thành công, số tiền được hoàn trả là {order.CustomerProfile.Wallet.Amount}"
+            };
+            await mailService.SendEmailAsync(mailContent);
             return true;
         });
     }
@@ -387,7 +398,10 @@ public class OrderService : BaseService<OrderService>, IOrderService
         var orderRepo = _unitOfWork.GetRepository<Order>();
         return _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var order = await orderRepo.GetByIdAsync(orderId);
+            var order = await orderRepo.SingleOrDefaultAsync(
+                predicate: o => o.Id == orderId,
+                include: o => o.Include(o => o.CustomerProfile));
+
             if (order == null)
             {
                 throw new NotFoundException("Không tìm thấy đơn hàng");
@@ -395,6 +409,15 @@ public class OrderService : BaseService<OrderService>, IOrderService
             //order.Status = OrderStatus.Returned;
             orderRepo.Update(order);
             await creditNoteService.CreateCreditNoteAdjustmentAsync(orderId, amount);
+
+            var mailContent = new MailContent
+            {
+                To = order.CustomerProfile.Email,
+                Subject = $"Đơn hàng {order.Code} đã được trả hàng ",
+                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được trả hàng thành công"
+
+            };
+            await mailService.SendEmailAsync(mailContent);
             return true;
         });
     }

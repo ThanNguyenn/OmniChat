@@ -527,7 +527,7 @@ namespace OmniChat.Application.Services.Implements
                 .ToListAsync();
         }
 
-        private async Task ReadAllCustomerMessageAsync(List<CustomerMessage> customerMessages)
+        public async Task ReadAllCustomerMessageAsync(List<CustomerMessage> customerMessages)
         {
             var repo = _unitOfWork.GetRepository<CustomerMessage>();
 

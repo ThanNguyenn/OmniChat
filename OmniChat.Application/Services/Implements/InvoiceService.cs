@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Mail;
 using OmniChat.Infrastructure.Dtos.Responses.Invoice;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
 using OmniChat.Infrastructure.Exceptions;
@@ -20,8 +21,11 @@ namespace OmniChat.Application.Services.Implements;
 
 public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
 {
-    public InvoiceService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<InvoiceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+    private readonly IMailService _mailService;
+
+    public InvoiceService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<InvoiceService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMailService mailService) : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
+        _mailService = mailService;
     }
 
     public async Task AllocateMoneyToInvoices(Guid customerId)
@@ -56,6 +60,13 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 if (remaining <= 0)
                 {
                     invoice.InvoiceStatus = InvoiceStatus.Completed;
+                    var mailContent = new MailContent
+                    {
+                        To = invoice.CustomerProfile.Email,
+                        Subject = "Thông báo thanh toán hóa đơn",
+                        Body = $"Hóa đơn của bạn :{invoice.InvoiceCode} đã được thành toán bằng ví"
+                    };
+                    await _mailService.SendEmailAsync(mailContent);
                     continue;
                 }
 
@@ -158,7 +169,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
 
                     return o.TotalAmount - adjustment;
                 });
-                var wallet = await walletRepo.SingleOrDefaultAsync( predicate:
+                var wallet = await walletRepo.SingleOrDefaultAsync(predicate:
                 w => w.CustomerId == customerId);
 
                 var walletBalance = wallet?.Amount ?? 0;
@@ -184,7 +195,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 _logger.LogInformation("No new invoices to create after checking existing invoices.");
                 return;
             }
-           
+
             await invoiceRepo.InsertRangeAsync(invoicesToInsert);
             foreach (var cn in usedCreditNotes)
             {
@@ -355,11 +366,11 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
         {
             ("startdate", false) => query.OrderBy(s => s.StartedDate),
             ("startdate", true) => query.OrderByDescending(s => s.StartedDate),
-             ("endeddate", false) => query.OrderBy(s => s.EndedDate),
+            ("endeddate", false) => query.OrderBy(s => s.EndedDate),
             ("endeddate", true) => query.OrderByDescending(s => s.EndedDate),
-             ("total", false) => query.OrderBy(s => s.Total),
+            ("total", false) => query.OrderBy(s => s.Total),
             ("total", true) => query.OrderByDescending(s => s.Total),
-             ("status", false) => query.OrderBy(s => s.InvoiceStatus),
+            ("status", false) => query.OrderBy(s => s.InvoiceStatus),
             ("status", true) => query.OrderByDescending(s => s.InvoiceStatus),
             ("id", false) => query.OrderBy(s => s.Id),
             ("id", true) => query.OrderByDescending(s => s.Id),
@@ -370,7 +381,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
     public async Task<GetInvoiceResponse> GetInvoiceAsync(Guid invoiceId)
     {
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
-        var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: a => a.Id == invoiceId, include: i => i.Include(x => x.CustomerProfile))?? throw new NotFoundException("Không tìm thấy phiếu thanh toán") ;
+        var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: a => a.Id == invoiceId, include: i => i.Include(x => x.CustomerProfile)) ?? throw new NotFoundException("Không tìm thấy phiếu thanh toán");
         return _mapper.Map<GetInvoiceResponse>(invoice);
     }
 
