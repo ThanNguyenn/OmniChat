@@ -60,7 +60,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                         if (!lastValue.HasValue) continue;
 
                         var lastTime = new DateTime((long)lastValue);
-                        if (DateTime.UtcNow - lastTime < TimeSpan.FromSeconds(60)) continue;
+                        if (DateTime.UtcNow - lastTime < TimeSpan.FromSeconds(15)) continue;
 
                       
                         var isLocked = await db.StringSetAsync(lockKey, "1", TimeSpan.FromSeconds(30), When.NotExists);

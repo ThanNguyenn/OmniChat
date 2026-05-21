@@ -38,7 +38,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
                 _mapperMock.Object, 
                 null, 
                 new Mock<ICustomerProfileService>().Object,
-                new Mock<IHubContext<SupportConversationHub>>().Object,
+                new Mock<IHubContext<SidebarHub>>().Object,
                 new Mock<ISupportTaskService>().Object,
                 new Mock<INotificationService>().Object
             );
