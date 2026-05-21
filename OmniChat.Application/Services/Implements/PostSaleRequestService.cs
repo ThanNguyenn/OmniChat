@@ -38,6 +38,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
             postSaleRequest.ResolveById = staff.Id;
             postSaleRequest.Order.Status = postSaleRequest.Type == PostSaleRequestType.Refund ? OrderStatus.RefundApproved : OrderStatus.ReturnApproved;
             postSaleRequestRepo.Update(postSaleRequest);
+            await _unitOfWork.CommitAsync();
             _unitOfWork.Context.ChangeTracker.Clear();
             switch (postSaleRequest.Type)
             {
