@@ -53,6 +53,15 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
 
         return await CreateDraftOrderFromConversationAsync(customerId, messages);
     }
+
+    public async Task<bool> CreateDraftOrderFromConversationNewAsync(Guid customerId, IEnumerable<string> messages)
+    {
+        if (!HasOrderConfirmation(messages.ToList()))
+            throw new BusinessException("Khách hàng chưa xác nhận đơn hàng, vui lòng xác nhận với khách hàng trước khi tạo đơn");
+
+        return await CreateDraftOrderFromConversationAsync(customerId, messages.ToList());
+    }
+
     public async Task<List<DraftOrderItem>> PreviewDraftOrderAsync(Guid customerId, List<string> messages)
     {
         var context = new DraftOrderContext { CustomerId = customerId };

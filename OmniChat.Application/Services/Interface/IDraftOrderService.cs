@@ -13,4 +13,5 @@ public interface IDraftOrderService
     Task<bool> CreateDraftOrderAsync(Guid customerId, string message);
     Task<List<DraftOrderItem>> PreviewDraftOrderAsync(Guid customerId, List<string> messages);
     Task<bool> CreateDraftOrderFromConversationAsync(Guid conversationId);
+    Task<bool> CreateDraftOrderFromConversationNewAsync(Guid customerId, IEnumerable<string> messages);
 }
