@@ -22,6 +22,6 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual ProductBatch ProductBatch { get; set; }
 
-        public virtual PostSaleItem? PostSaleItem { get; set; }
+        public virtual ICollection<PostSaleItem> PostSaleItem { get; set; } = new List<PostSaleItem>();
     }
 }

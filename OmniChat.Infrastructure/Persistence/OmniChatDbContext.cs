@@ -1139,16 +1139,16 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasIndex(oi => oi.OrderId); // index scan orderitem by order faster
 
 
-            // ==== OrderItem - PostSaleItem ( one to one ) ====
+            // ==== OrderItem - PostSaleItem ( one to many ) ====
             modelBuilder.Entity<PostSaleItem>()
                .Property(oi => oi.Id)
                .ValueGeneratedOnAdd()
                .HasDefaultValueSql("gen_random_uuid()");
 
             modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.PostSaleItem)
+                .HasMany(oi => oi.PostSaleItem)
                 .WithOne(psi => psi.OrderItem)
-                .HasForeignKey<PostSaleItem>(psi => psi.OrderItemId)
+                .HasForeignKey(psi => psi.OrderItemId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ==== PostSaleRequest - PostSaleItem  ( one to Many ) ====
