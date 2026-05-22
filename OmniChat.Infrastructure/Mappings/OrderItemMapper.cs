@@ -16,29 +16,31 @@ public class OrderItemMapper : Profile
     {
         CreateMap<AddOrderItemRequest, OrderItem>();
 
-     //   CreateMap<OrderItem, GetOrderItemResponse>()
-     //.ForMember(dest => dest.ProductName,
-     //    opt => opt.MapFrom(src => src.ProductBatch.Product.Name))
+        CreateMap<OrderItem, GetOrderItemResponse>()
+            .ForMember(dest => dest.ProductName,
+                opt => opt.MapFrom(src => src.ProductBatch.Product.Name))
 
-     //.ForMember(dest => dest.Quantity,
-     //    opt => opt.MapFrom(src =>
-     //        src.Quantity -
-     //        (src.PostSaleItem != null &&
-     //         (src.PostSaleItem.PostSaleRequest.Type == PostSaleRequestType.Return && src.PostSaleItem.PostSaleRequest.Status == PostSaleRequestStatus.Approved )
-     //            ? src.PostSaleItem.Quantity
-     //            : 0)
-     //    ))
+            .ForMember(dest => dest.Quantity,
+                opt => opt.MapFrom(src =>
+                    src.Quantity -
+                    src.PostSaleItem
+                        .Where(x =>
+                            x.PostSaleRequest.Type == PostSaleRequestType.Return &&
+                            x.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
+                        .Sum(x => x.Quantity)
+                ))
 
-     //.ForMember(dest => dest.ItemsPrice,
-     //    opt => opt.MapFrom(src =>
-     //        src.ProductBatch.Product.Price *
-     //        (
-     //            src.Quantity -
-     //            (src.PostSaleItem != null &&
-     //             src.PostSaleItem.PostSaleRequest.Type == PostSaleRequestType.Return
-     //                ? src.PostSaleItem.Quantity
-     //                : 0)
-     //        )
-     //    ));
+            .ForMember(dest => dest.ItemsPrice,
+                opt => opt.MapFrom(src =>
+                    src.ProductBatch.Product.Price *
+                    (
+                        src.Quantity -
+                        src.PostSaleItem
+                            .Where(x =>
+                                x.PostSaleRequest.Type == PostSaleRequestType.Return &&
+                                x.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
+                            .Sum(x => x.Quantity)
+                    )
+                ));
     }
 }

@@ -148,7 +148,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
 
             selector: e => _mapper.Map<GetAllOrdersResponse>(e),
 
-            include: q => q.Include(o => o.CustomerProfile),
+            include: q => q.Include(o => o.CustomerProfile).Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.PostSaleItem)
+                        .ThenInclude(ps => ps.PostSaleRequest).Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductBatch)
+                        .ThenInclude(pb => pb.Product),
 
             page: pageNumber,
             size: pageSize
