@@ -53,6 +53,17 @@ public class OrderMapper : Profile
                         .Sum(ps => ps.Quantity)
                 )
             )
+        )).ForMember(dest => dest.OrderItems,
+        opt => opt.MapFrom(src =>
+            src.OrderItems.Where(oi =>
+                oi.Quantity -
+                oi.PostSaleItem
+                    .Where(ps =>
+                        ps.PostSaleRequest.Type == PostSaleRequestType.Return &&
+                        ps.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
+                    .Sum(ps => ps.Quantity)
+                > 0
+            )
         ));
         CreateMap<Order, GetPostSaleOrderResponse>().ForMember(dest => dest.TotalAmount,
         opt => opt.MapFrom(src =>
@@ -66,6 +77,17 @@ public class OrderMapper : Profile
                             ps.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
                         .Sum(ps => ps.Quantity)
                 )
+            )
+        )).ForMember(dest => dest.OrderItems,
+        opt => opt.MapFrom(src =>
+            src.OrderItems.Where(oi =>
+                oi.Quantity -
+                oi.PostSaleItem
+                    .Where(ps =>
+                        ps.PostSaleRequest.Type == PostSaleRequestType.Return &&
+                        ps.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
+                    .Sum(ps => ps.Quantity)
+                > 0
             )
         ));
 

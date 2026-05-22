@@ -82,6 +82,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
         var orderItemRepo = _unitOfWork.GetRepository<OrderItem>();
+        var orderRepo = _unitOfWork.GetRepository<Order>();
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -90,6 +91,16 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
 
             if (staff == null)
                 throw new NotFoundException("Không tìm thấy nhân viên");
+
+            var order = await orderRepo.SingleOrDefaultAsync(predicate: o => o.Id == request.OrderId, include: q => q.Include(o => o.PostSaleRequests));
+            if (order == null)
+                throw new NotFoundException("Không tìm thấy đơn hàng");
+            if (order.PostSaleRequests.Any(p =>
+                    p.Type == PostSaleRequestType.Refund &&
+                    p.Status == PostSaleRequestStatus.Approved))
+            {
+                throw new BusinessException("Đơn hàng đã được hoàn tiền");
+            }
 
             var postSaleRequest = new PostSaleRequest
             {
