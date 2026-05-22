@@ -81,6 +81,9 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
             });
             wallet.Amount += amount;
             existingOrder.Invoice.InvoiceStatus = InvoiceStatus.Refunded;
+
+            orderRepo.Update(existingOrder);
+            await _unitOfWork.CommitAsync();
         });
 
         await _invoiceService.AllocateMoneyToInvoices(existingOrder.CustomerId);
