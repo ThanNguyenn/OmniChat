@@ -52,11 +52,15 @@ public class OrderService : BaseService<OrderService>, IOrderService
     public async Task<bool> CreateOrderAsync(CreateOrderRequest request)
     {
         var orderRepo = _unitOfWork.GetRepository<Order>();
+        var customerRepo = _unitOfWork.GetRepository<CustomerProfile>();
         var productBatchRepo = _unitOfWork.GetRepository<ProductBatch>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
+            var customer = await customerRepo.GetQueryable(predicate: c => c.Id == request.CustomerId, include: q => q.Include(c => c.Wallet),  asNoTracking: true).FirstOrDefaultAsync();
+            if (customer.Wallet == null)
+                throw new NotFoundException("Vui lòng xác nhận thông tin khách hàng trước khi tiếp tục");
             var order = _mapper.Map<Order>(request);
 
             var batchIds = request.OrderItems
@@ -69,6 +73,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
                 .Where(b => batchIds.Contains(b.Id))
                 .ToListAsync();
             var staff = await staffRepo.SingleOrDefaultAsync(predicate: s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
+
             foreach (var item in request.OrderItems)
             {
                 var batch = batches.FirstOrDefault(b => b.Id == item.ProductBatchId);
