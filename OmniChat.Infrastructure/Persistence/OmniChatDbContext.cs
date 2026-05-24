@@ -1224,14 +1224,14 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasIndex(e => e.Code).IsUnique();
 
 
-            modelBuilder.HasSequence<int>("BatchCodeSeq")
-                 .StartsAt(1)
-                 .IncrementsBy(1);
+            //modelBuilder.HasSequence<int>("BatchCodeSeq")
+            //     .StartsAt(1)
+            //     .IncrementsBy(1);
 
-            modelBuilder.Entity<ProductBatch>()
-                .Property(p => p.Code)
-                .HasDefaultValueSql("'LOT' || LPAD(nextval('\"BatchCodeSeq\"')::text, 6, '0')")
-                .ValueGeneratedOnAdd();
+            //modelBuilder.Entity<ProductBatch>()
+            //    .Property(p => p.Code)
+            //    .HasDefaultValueSql("'LOT' || LPAD(nextval('\"BatchCodeSeq\"')::text, 6, '0')")
+            //    .ValueGeneratedOnAdd();
 
             // ==== Productbatch - BathAudit ( one to Many ) ====
             modelBuilder.Entity<BatchAudit>()
