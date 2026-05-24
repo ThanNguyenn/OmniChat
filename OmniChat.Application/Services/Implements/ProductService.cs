@@ -206,6 +206,8 @@ public class ProductService : BaseService<ProductService>, IProductService
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
 
+        var suffixTracker = new Dictionary<string, int>();
+
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var productIds = requests.Select(x => x.ProductId).Distinct().ToList();
@@ -225,6 +227,48 @@ public class ProductService : BaseService<ProductService>, IProductService
                     var (manufactureDate, expiryDate) =
                         NormalizeDates(batchRequest, product.LifeSpan);
 
+                    var manufactureDateTime = DateTime.SpecifyKind(manufactureDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
+                    var expiryDateTime = DateTime.SpecifyKind(expiryDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
+
+                    string dateStr = expiryDateTime.ToString("yyyyMMdd");
+
+                    if (!suffixTracker.TryGetValue(dateStr, out int nextSuffix))
+                    {
+                        var latestBatch = await batchRepo.SingleOrDefaultAsync(
+                        predicate: b => b.Code.StartsWith($"LOT{dateStr}"),
+                        orderBy: q => q.OrderByDescending(b => b.Code)
+                        );
+
+                        if (latestBatch != null)
+                        {
+                            Console.WriteLine($"[DEBUG LOG] Tìm thấy lô lớn nhất trong DB: {latestBatch.Code}");
+                            var suffixStr = latestBatch.Code.Replace($"LOT{dateStr}", "");
+                            Console.WriteLine($"[DEBUG LOG] Chuỗi sau khi Replace tiền tố: '{suffixStr}'");
+                            if (string.IsNullOrEmpty(suffixStr))
+                            {
+                                nextSuffix = 1;
+                            }
+
+                            else if (int.TryParse(suffixStr, out int lastSuffix))
+                            {
+                                nextSuffix = lastSuffix + 1;
+                            }
+                            else
+                            {
+                                nextSuffix = 0;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG LOG] Không tìm thấy lô nào trước đó cho ngày {dateStr}. Bắt đầu từ 0.");
+                            nextSuffix = 0;
+                        }
+                    }
+
+                    string generatedCode = BatchHelper.GenerateBatchCode(expiryDateTime, nextSuffix);
+                    Console.WriteLine($"[DEBUG LOG] Mã CODE vừa được sinh ra từ Helper: {generatedCode} (Suffix: {nextSuffix})");
+                    suffixTracker[dateStr] = nextSuffix + 1;
+
                     var newBatch = new ProductBatch
                     {
                         ProductId = product.Id,
@@ -236,10 +280,17 @@ public class ProductService : BaseService<ProductService>, IProductService
                             expiryDate.ToDateTime(TimeOnly.MinValue),
                             DateTimeKind.Utc),
 
-                        Quantity = batchRequest.Quantity
-                    };
+                        Quantity = batchRequest.Quantity,
 
+                        Code = generatedCode,
+                    };
+                    Console.WriteLine($"[DEBUG LOG] Chuỗi CODE nằm trong Entity trước khi Insert: {newBatch.Code}");
+
+                    Console.WriteLine($"[DEBUG LOG 1 - TRƯỚC INSERT] newBatch Object -> Code: {newBatch.Code}, Quantity: {newBatch.Quantity}, Id: {newBatch.Id}");
+                    
                     await batchRepo.InsertAsync(newBatch);
+
+                    Console.WriteLine($"[DEBUG LOG 2 - SAU INSERT] newBatch Object -> Code: {newBatch.Code}, Quantity: {newBatch.Quantity}, Id: {newBatch.Id}");
                     await _unitOfWork.CommitAsync();
 
                     product.Quantity += batchRequest.Quantity;
