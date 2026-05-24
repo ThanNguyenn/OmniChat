@@ -60,7 +60,7 @@ public class OrderService : BaseService<OrderService>, IOrderService
         {
             var customer = await customerRepo.GetQueryable(predicate: c => c.Id == request.CustomerId, include: q => q.Include(c => c.Wallet),  asNoTracking: true).FirstOrDefaultAsync();
             if (customer.Wallet == null)
-                throw new NotFoundException("Vui lòng xác nhận thông tin khách hàng trước khi tiếp tục");
+                throw new BusinessException("Vui lòng xác nhận thông tin khách hàng trước khi tiếp tục");
             var order = _mapper.Map<Order>(request);
 
             var batchIds = request.OrderItems
