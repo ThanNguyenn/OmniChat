@@ -16,8 +16,5 @@ namespace OmniChat.Infrastructure.Dtos.Requests.Claim
         [Required(ErrorMessage = "Lý do là bắt buộc")]
         [MaxLength(200, ErrorMessage = "Lý do không được vượt quá 200 ký tự")]
         public string Reason { get; set; }
-
-        [Required(ErrorMessage = "Loại yêu cầu không được để trống")]
-        public Guid ClaimTypeId { get; set; }
     }
 }
