@@ -451,6 +451,12 @@ public class ProductService : BaseService<ProductService>, IProductService
                 batch.IsExpired = true;
                 batch.IsActive = false;
                 batchRepo.Update(batch);
+                await _productBatchAuditService.AddAsync(
+                    batch.Id,
+                    batch.Quantity,
+                    0,
+                    Guid.Empty
+                );
             }
         });
     }
