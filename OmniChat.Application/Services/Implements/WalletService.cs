@@ -123,7 +123,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
         var wallet = await walletRepo.SingleOrDefaultAsync(
             predicate: w => w.CustomerId == customerId,
-            include: w => w.Include(x => x.Transactions)
+            include: w => w.Include(x => x.Transactions.OrderByDescending(t => t.CreateDate))
         );
 
         var invoices = await invoiceRepo.GetListAsync(predicate: i =>
