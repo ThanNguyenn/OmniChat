@@ -236,6 +236,7 @@ void RegisterBackgroundServices()
     builder.Services.AddHostedService<ConversationWarningWorker>();
     builder.Services.AddHostedService<NotificationCleanupWorker>();
     builder.Services.AddHostedService<CleanupWarningWorker>();
+    builder.Services.AddHostedService<BatchExpiryBackgroundWorker>();
 }
 
 void  EmailConfiguration()
