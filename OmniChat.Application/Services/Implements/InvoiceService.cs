@@ -38,25 +38,32 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var wallet = await walletRepo.SingleOrDefaultAsync(
-                predicate: w => w.CustomerId == customerId
-            );
-
+            var wallet = await walletRepo
+                .GetQueryable(
+                    predicate: w => w.CustomerId == customerId,
+                    asNoTracking: false
+                )
+                .FirstOrDefaultAsync();
             if (wallet == null || wallet.Amount <= 0)
                 return;
 
-            var invoices = await invoiceRepo.GetListAsync(
-                predicate: i =>
-                    i.CustomerId == customerId &&
-                    i.InvoiceStatus != InvoiceStatus.Completed && 
-                    i.InvoiceStatus != InvoiceStatus.Refunded && 
-                    i.InvoiceStatus != InvoiceStatus.PendingRefund &&
-                    !(i.IsDeleted ?? false),
-                include: i => i.Include(x => x.Allocations)
-                               .Include(x => x.CustomerProfile)
-                                    .Include(x => x.Orders),
-                orderBy: q => q.OrderBy(i => i.StartedDate)
-            );
+            var invoices = await invoiceRepo
+                .GetQueryable(
+                    predicate: i =>
+                        i.CustomerId == customerId &&
+                        i.InvoiceStatus != InvoiceStatus.Completed &&
+                        i.InvoiceStatus != InvoiceStatus.Refunded &&
+                        i.InvoiceStatus != InvoiceStatus.PendingRefund &&
+                        !(i.IsDeleted ?? false),
+
+                    include: q => q
+                        .Include(x => x.Allocations)
+                        .Include(x => x.CustomerProfile)
+                        .Include(x => x.Orders),
+                    asNoTracking: false
+                )
+                .OrderBy(i => i.StartedDate)
+                .ToListAsync();
 
             foreach (var invoice in invoices)
             {
@@ -66,6 +73,18 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 if (remaining <= 0)
                 {
                     invoice.InvoiceStatus = InvoiceStatus.Completed;
+                    invoice.CompletedDate = DateTime.UtcNow;
+
+            
+                    foreach (var order in invoice.Orders)
+                    {
+                        _logger.LogInformation("Updating order {orderId} status to Completed", order.Id);
+                        order.Status = OrderStatus.Completed;
+                    }
+
+                    invoiceRepo.Update(invoice);
+                    _unitOfWork.Commit();
+                    _unitOfWork.Context.ChangeTracker.Clear();
                     var mailContent = new MailContent
                     {
                         To = invoice.CustomerProfile.Email,
@@ -94,8 +113,10 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 {
                     invoice.InvoiceStatus = InvoiceStatus.Completed;
                     invoice.CompletedDate = DateTime.UtcNow;
-                    foreach (var order in invoice.Orders)
+                    
+                    foreach (var order in invoice.Orders.ToList())
                     {
+                        _logger.LogInformation("Updating order {orderId} status to Completed", order.Id);
                         order.Status = OrderStatus.Completed;
                     }
                 }
@@ -105,10 +126,13 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 }
 
                 invoiceRepo.Update(invoice);
+                _unitOfWork.Commit();
+                _unitOfWork.Context.ChangeTracker.Clear();
             }
             walletRepo.Update(wallet);
             //invoiceRepo.UpdateRange(invoices);
         });
+        _unitOfWork.Context.ChangeTracker.Clear();
     }
 
     public async Task<List<Guid>> CreateInvoice(DateTime from, DateTime to)
@@ -223,9 +247,8 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 {
                     order.InvoiceId = invoiceId;
                 }
+                orderRepo.Update(order);
             }
-
-            orderRepo.UpdateRange(orders);
         });
         _unitOfWork.Context.ChangeTracker.Clear();
         return invoicesToInsert
