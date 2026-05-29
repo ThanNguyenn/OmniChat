@@ -53,7 +53,8 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     i.InvoiceStatus != InvoiceStatus.PendingRefund &&
                     !(i.IsDeleted ?? false),
                 include: i => i.Include(x => x.Allocations)
-                               .Include(x => x.CustomerProfile),
+                               .Include(x => x.CustomerProfile)
+                                    .Include(x => x.Orders),
                 orderBy: q => q.OrderBy(i => i.StartedDate)
             );
 
@@ -93,6 +94,10 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 {
                     invoice.InvoiceStatus = InvoiceStatus.Completed;
                     invoice.CompletedDate = DateTime.UtcNow;
+                    foreach (var order in invoice.Orders)
+                    {
+                        order.Status = OrderStatus.Completed;
+                    }
                 }
                 else
                 {
