@@ -74,12 +74,12 @@ namespace OmniChat.Application.Services.Implements
 
                     TotalPayment =
     (x.Wallet.Transactions
-        .Where(t => t.TransactionType != TransactionType.Refund)
-        .Sum(t => t.TransactionType == TransactionType.Deposit ? t.Amount : 0)
+        .Where(t => t.TransactionType == TransactionType.Deposit)
+        .Sum(t => t.Amount)
     -
     x.Wallet.Transactions
-        .Where(t => t.TransactionType != TransactionType.Refund)
-        .Sum(t => t.TransactionType == TransactionType.Credit ? t.Amount : 0))
+        .Where(t => t.TransactionType == TransactionType.Refund)
+        .Sum(t => t.Amount))
                 },
                 predicate: string.IsNullOrWhiteSpace(searchTerm)
                     ? null
