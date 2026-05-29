@@ -71,19 +71,26 @@ namespace OmniChat.Application.Services.Implements
                     InstagramSenderId = x.InstagramSenderId,
                     CustomerDate = x.CreateDate,
                     TotalOrder = x.Orders.Count,
-                   
-                    TotalPayment = x.Invoices.Sum(p => p.Total - (p.DeductedAmount))
+
+                    TotalPayment =
+    (x.Wallet.Transactions
+        .Where(t => t.TransactionType != TransactionType.Refund)
+        .Sum(t => t.TransactionType == TransactionType.Deposit ? t.Amount : 0)
+    -
+    x.Wallet.Transactions
+        .Where(t => t.TransactionType != TransactionType.Refund)
+        .Sum(t => t.TransactionType == TransactionType.Credit ? t.Amount : 0))
                 },
                 predicate: string.IsNullOrWhiteSpace(searchTerm)
                     ? null
                     : x => x.CustomerName.ToUpper().Contains(searchTerm),
                 orderBy: q => q.OrderByDescending(x => x.CustomerName),
-                include: cp => cp.Include(o => o.Orders).Include(p => p.Invoices),
+                include: cp => cp.Include(o => o.Orders).Include(p => p.Invoices).Include(s => s.Wallet).ThenInclude(cc => cc.Transactions),
                 page: pageNumber,
                 size: pageSize
             );
 
-
+            _unitOfWork.Context.ChangeTracker.Clear();
             foreach (var item in pagingData.Items)
             {
                 item.getWalletResponse = await _walletService.CalculateWallet(item.Id);
