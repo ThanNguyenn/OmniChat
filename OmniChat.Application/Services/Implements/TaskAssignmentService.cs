@@ -48,6 +48,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
         if (!assigned)
         {
+            _unitOfWork.Context.ChangeTracker.Clear();
             await ProcessWaitingQueueAsync();
         }
 
