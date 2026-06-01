@@ -640,7 +640,7 @@ namespace OmniChat.Application.Services.Implements
 
             var facebookId = Guid.Parse("67c4f1fd-9612-4a22-a30d-809b1598455b");
 
-            var existConver = await conversationRepo.GetByIdAsync(conversationId);
+            var existConver = await conversationRepo.SingleOrDefaultAsync(predicate: c => c.Id == conversationId);
 
             if (existConver.ProvidersId == zaloId)
             {
