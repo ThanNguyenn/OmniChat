@@ -64,7 +64,7 @@ public class ZaloOAuthService : BaseService<ZaloOAuthService>, IZaloOAuthService
     }
 
     private bool NeedsRefresh(ZaloOathToken token) =>
-        token.AccessTokenExpiredDate <= DateTime.UtcNow.AddMinutes(5);
+        token.AccessTokenExpiredDate <= DateTime.UtcNow.AddHours(2);
 
     private async Task<(string accessToken, string refreshToken, int expiresIn)> RefreshTokenFromZaloAsync(
         string refreshToken, string appId, string secretKey)

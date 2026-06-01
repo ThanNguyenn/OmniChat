@@ -40,7 +40,7 @@ public sealed class ZaloTokenRefreshWorker : BackgroundService
                 _logger.LogError(ex, "Failed to refresh Zalo access token");
             }
 
-            await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
         }
     }
 }
