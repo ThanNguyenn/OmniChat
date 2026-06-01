@@ -55,14 +55,14 @@ namespace OmniChat.Application.Services.BackgroundJobs
                         var lastKey = $"last:{keyStr}";
                         var lockKey = $"lock:{keyStr}";
 
-                  
+
                         var lastValue = await db.StringGetAsync(lastKey);
                         if (!lastValue.HasValue) continue;
 
                         var lastTime = new DateTime((long)lastValue);
                         if (DateTime.UtcNow - lastTime < TimeSpan.FromSeconds(5)) continue;
 
-                      
+
                         var isLocked = await db.StringSetAsync(lockKey, "1", TimeSpan.FromSeconds(30), When.NotExists);
                         if (!isLocked) continue;
 
@@ -81,21 +81,21 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             var conversationService = scope.ServiceProvider.GetRequiredService<ISupportConversationService>();
                             var taskService = scope.ServiceProvider.GetRequiredService<ITaskAssignmentService>();
 
-                          
+
                             var conversation = await conversationService.GetSupportConversationHavePendingByCustomerIdAsync(customerId, providerId);
                             if (conversation == null || conversation.IsDistributed) { await CleanupRedis(db, keyStr, lastKey); continue; }
 
-                       
+
                             var text = string.Join(" ", messages.Select(x => x.ToString()));
                             _logger.LogInformation("[AGGREGATION] Calling AI for Customer: {Id}", customerId);
 
-                           var haveActiveStaff = await taskService.ProcessTask(new PredictRequest { Message = text }, conversation.Id);
+                            var haveActiveStaff = await taskService.ProcessTask(new PredictRequest { Message = text }, conversation.Id);
 
                             var updatedConv = await conversationService.GetSupportConversationByIdAsync(conversation.Id);
 
 
-
-                            if (updatedConv?.ActiveStaffId != null)
+                            //  has free staff and has task
+                            if (updatedConv?.ActiveStaffId != null && updatedConv.SupportTasks.Any())
                             {
                                 _logger.LogInformation("[AGGREGATION] Staff assigned: {Staff}", updatedConv.ActiveStaffId);
 
@@ -132,7 +132,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                     ImageUrl = updatedConv.AvatarUrl,
                                     Message = lastMessageContent,
                                     ProviderName = updatedConv.Providers.ProviderName,
-                                    TimeStamp = finalTimestamp, 
+                                    TimeStamp = finalTimestamp,
                                 };
 
                                 await _hubContext.Clients
@@ -141,22 +141,25 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
 
                             }
-                            else
+                            // no task 
+                            else if (!updatedConv.SupportTasks.Any())
                             {
-                                _logger.LogInformation("[AGGREGATION] No staff found for conversation: {Id}. Sending system guide.", conversation.Id);
-                                string guideMessage = "Vui lòng nhập các tin nhắn liên quan như : Đặt Hàng , tư vấn sản phẩm, kiểm tra trạng thái đơn hàng, kiểm tra công nợ !";
-                                var messageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
-                                await messageService.SendSystemMessageToExternalAsync(updatedConv.Id, guideMessage);
+                                
+                                    _logger.LogInformation("[AGGREGATION] No staff found for conversation: {Id}. Sending system guide.", conversation.Id);
+                                    string guideMessage = "Vui lòng nhập các tin nhắn liên quan như : Đặt Hàng , tư vấn sản phẩm, kiểm tra trạng thái đơn hàng, kiểm tra công nợ !";
+                                    var messageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
+                                    await messageService.SendSystemMessageToExternalAsync(updatedConv.Id, guideMessage);
+                                
                             }
 
-                           
+
                             await CleanupRedis(db, keyStr, lastKey);
                             _logger.LogInformation("[AGGREGATION] Done & Cleaned: {Key}", keyStr);
                         }
                         catch (Exception ex)
                         {
                             _logger.LogError(ex, "[AGGREGATION] Error processing key={Key}", keyStr);
-                           
+
                             await CleanupRedis(db, keyStr, lastKey);
                         }
                         finally

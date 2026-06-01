@@ -54,6 +54,7 @@ namespace OmniChat.Application.Services.Implements
                     .Include(c => c.Providers)
                     .Include(c => c.CustomerMessages)
                     .Include(c => c.SupportStaffMessages)
+                    .Include(c => c.SupportTasks)
                     )
                 ;
 
