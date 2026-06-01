@@ -29,6 +29,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
     public async Task<bool> ProcessTask(PredictRequest predictRequest, Guid conversationId)
     {
+        _logger.LogInformation("Starting task processing for conversation {ConversationId}", conversationId);
         var (predict, hasIntent) = await AnalyzeAsync(predictRequest);
 
         // Return false if no intent was detected or the result is null
@@ -45,7 +46,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
         }
         _unitOfWork.Context.ChangeTracker.Clear();
         var assigned = await AssignStaffToConversationAsync(conversationId);
-
+        _logger.LogInformation("Task assignment for conversation {ConversationId} was {Result}", conversationId, assigned ? "successful" : "unsuccessful");
         if (!assigned)
         {
             _unitOfWork.Context.ChangeTracker.Clear();
@@ -57,8 +58,10 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
     public async Task ProcessWaitingQueueAsync()
     {
-        if (!await _assignmentLock.WaitAsync(0))
-            return;
+        _logger.LogInformation("Attempting to process waiting queue for task assignment.");
+        if (!await _assignmentLock.WaitAsync(0)) {  
+            _logger.LogInformation("Another instance is already processing the waiting queue. Skipping this run.");
+            return; }
 
         try
         {
@@ -77,6 +80,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
             {
                 bool assigned = await AssignStaffToConversationAsync(conversation.Id);
 
+                _logger.LogInformation("Attempted to assign staff for conversation {ConversationId}. Result: {Result}", conversation.Id, assigned ? "Success" : "Failure");
                 if (!assigned)
                 {
                     _logger.LogWarning(
@@ -96,6 +100,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
     private async Task<bool> CreateTaskAsync(PredictResponse predictResponse, Guid conversationId)
     {
+        _logger.LogInformation("Creating tasks for conversation {ConversationId} based on prediction results.", conversationId);
         if (predictResponse?.Details == null)
             return false;
 
@@ -148,6 +153,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
     private async Task<bool> AssignStaffToConversationAsync(Guid conversationId)
     {
+        _logger.LogInformation("Attempting to assign staff to conversation {ConversationId}", conversationId);
         var taskRepo = _unitOfWork.GetRepository<SupportTask>();
         var staffIntentRepo = _unitOfWork.GetRepository<StaffIntentType>();
         var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
@@ -202,7 +208,9 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
             .Where(x => x.Load < maxPending)
             .ToList();
 
-        if (!availableStaff.Any()) return false;
+        if (!availableStaff.Any()) { 
+            _logger.LogWarning("All candidate staff members have reached the maximum pending conversation limit for conversation {ConversationId}", conversationId);
+            return false; }
 
         var minLoad = availableStaff.Min(x => x.Load);
         var random = new Random();
@@ -220,7 +228,6 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
             {
                 task.CurrentAssignedStaffId = selectedStaff.Id;
                 task.Status = SupportTaskStatus.InProgress;
-                task.IntentType = null;
                 task.SupportConversation = null;
                 taskRepo.Update(task);
             }
@@ -229,14 +236,14 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
                 predicate: c => c.Id == conversationId && c.ActiveStaffId == null
             );
 
-            if (conversation == null) return;
+            if (conversation == null) { 
+                _logger.LogWarning("Conversation {ConversationId} was assigned a task but is no longer available for assignment.", conversationId);
+                return; }
 
             if (conversation != null)
             {
                 conversation.ActiveStaffId = selectedStaff.Id;
                 conversation.IsDistributed = true;
-                conversation.Staff = null;
-                conversation.SupportTasks = null;
                 conversationRepo.Update(conversation);
             }
         });
