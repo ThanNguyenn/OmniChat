@@ -43,7 +43,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
             _logger.LogWarning("No tasks created for conversation {ConversationId} after intent analysis", conversationId);
             return true; // Return true because prediction technically succeeded, even if task creation failed
         }
-
+        _unitOfWork.Context.ChangeTracker.Clear();
         var assigned = await AssignStaffToConversationAsync(conversationId);
 
         if (!assigned)
@@ -137,7 +137,11 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
                 .ToList();
 
             if (tasks.Any())
-                await taskRepo.InsertRangeAsync(tasks);
+                //    await taskRepo.InsertRangeAsync(tasks);
+                foreach (var task in tasks)
+                {
+                    await taskRepo.InsertAsync(task);
+                }
         }); 
         return true;
     }
