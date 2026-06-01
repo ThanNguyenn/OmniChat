@@ -217,10 +217,8 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
                 task.Status = SupportTaskStatus.InProgress;
                 task.IntentType = null;
                 task.SupportConversation = null;
-
+                taskRepo.Update(task);
             }
-
-            taskRepo.UpdateRange(tasks);
 
             var conversation = await conversationRepo.SingleOrDefaultAsync(
                 predicate: c => c.Id == conversationId && c.ActiveStaffId == null
