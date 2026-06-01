@@ -28,16 +28,19 @@ namespace OmniChat.Application.Services.Implements
 
         private readonly ICustomerProfileService _customerProfileService;
 
+        private readonly ITaskAssignmentService _taskAssignmentService;
+
         private readonly INotificationService _notificationService;
 
         private readonly IHubContext<SidebarHub> _sidebarHubContext;
 
-        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SidebarHub> sidebarHubContext, ISupportTaskService supportTaskService, INotificationService notificationService) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public SupportConversationService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportConversationService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, ICustomerProfileService customerProfileService, IHubContext<SidebarHub> sidebarHubContext, ISupportTaskService supportTaskService, INotificationService notificationService, ITaskAssignmentService taskAssignmentService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _customerProfileService = customerProfileService;
             _supportTaskService = supportTaskService;
             _supportTaskService = supportTaskService;
             _notificationService = notificationService;
+            _taskAssignmentService = taskAssignmentService;
             _sidebarHubContext = sidebarHubContext;
         }
 
@@ -119,10 +122,13 @@ namespace OmniChat.Application.Services.Implements
             repo.Update(conversation);
             await _unitOfWork.CommitAsync();
 
+            await _taskAssignmentService.ProcessWaitingQueueAsync();
+
             if (conversation.ActiveStaffId.HasValue)
             {
                 await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value,conversation.Providers.ProviderName);
             }
+
             return true;
         }
 
