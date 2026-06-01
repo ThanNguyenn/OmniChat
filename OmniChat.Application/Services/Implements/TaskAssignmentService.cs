@@ -70,6 +70,7 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
                     c.SupportTasks.Any(),
                 orderBy: q => q.OrderBy(c => c.CreatedDate)
             );
+            _logger.LogInformation("Processing waiting queue. Found {Count} conversations.", conversations.Count);
 
             foreach (var conversation in conversations)
             {
