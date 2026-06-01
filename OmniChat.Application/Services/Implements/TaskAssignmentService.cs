@@ -57,35 +57,24 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
     public async Task ProcessWaitingQueueAsync()
     {
-        if (!await _assignmentLock.WaitAsync(0))
-            return;
+        if (!await _assignmentLock.WaitAsync(0)) return;
 
         try
         {
             var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
 
-            var conversations = await conversationRepo.GetListAsync(
-                predicate: c =>
-                    c.Status == ConversationStatus.Pending &&
-                    !c.IsDistributed &&
-                    c.SupportTasks.Any(),
-                orderBy: q => q.OrderBy(c => c.CreatedDate)
-            );
-            _logger.LogInformation("Processing waiting queue. Found {Count} conversations.", conversations.Count);
-
-            foreach (var conversation in conversations)
+            while (true)
             {
-                bool assigned = await AssignStaffToConversationAsync(conversation.Id);
+                var nextConversation = await conversationRepo.SingleOrDefaultAsync(
+                    predicate: c => !c.IsDistributed && c.Status == ConversationStatus.Pending,
+                    orderBy: q => q.OrderBy(c => c.CreatedDate)
+                );
 
-                if (!assigned)
-                {
-                    _logger.LogWarning(
-                        "No staff available for {ConversationId}",
-                        conversation.Id
-                    );
+                if (nextConversation == null) break;
 
-                    continue;
-                }
+                bool assigned = await AssignStaffToConversationAsync(nextConversation.Id);
+
+                if (!assigned) break;
             }
         }
         finally
