@@ -15,7 +15,7 @@ public class DraftOrderRequest : IValidatableObject
     public Guid CustomerId { get; set; }
     [JsonIgnore]
     //[Required (ErrorMessage = "Messages là bắt buộc")]
-    public IEnumerable<string> Messages { get; set; }
+    public IEnumerable<string>? Messages { get; set; }
     public IEnumerable<ValidationResult> Validate(ValidationContext context)
     {
         if (ConversationId == Guid.Empty)
