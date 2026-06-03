@@ -555,6 +555,7 @@ namespace OmniChat.Application.Services.Implements
         {
             try
             {
+                _logger.LogDebug("[FACEBOOK] Push signalR");
                 var conversations = await GetStaffConversationSideBarAsync(staffId, providerName);
 
                 await _sidebarHubContext.Clients.User(staffId.ToString()).SendAsync("SidebarUpdated", conversations);

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OmniChat.Application.Services.Implements;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.Intent;
@@ -107,6 +108,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                 {
                                     var messageService = internalScope.ServiceProvider.GetRequiredService<ICustomerMessageService>();
                                     var notificationService = internalScope.ServiceProvider.GetRequiredService<INotificationService>();
+                                   
 
                                     var lastDbMessage = await messageService.GetLastMessageByConversationIdAsync(updatedConv.Id);
                                     if (lastDbMessage != null)
@@ -140,6 +142,8 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                 .SendAsync("ReceiveNotification", notificationResponse);
 
 
+                                _logger.LogError("[AGGREGATION] Before singnalR ");
+                                await conversationService.PushSidebarToStaffAsync(updatedConv.ActiveStaffId.Value, updatedConv.Providers.ProviderName);
                             }
                             // no task 
                             else if (!updatedConv.SupportTasks.Any())
