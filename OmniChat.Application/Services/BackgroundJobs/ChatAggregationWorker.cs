@@ -144,6 +144,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                                 _logger.LogError("[AGGREGATION] Before singnalR ");
                                 await conversationService.PushSidebarToStaffAsync(updatedConv.ActiveStaffId.Value, updatedConv.Providers.ProviderName);
+                                await conversationService.CountProviderPendingAsync(updatedConv.ActiveStaffId.Value);
                             }
                             // no task 
                             else if (!updatedConv.SupportTasks.Any())

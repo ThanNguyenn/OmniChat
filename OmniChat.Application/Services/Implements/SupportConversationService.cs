@@ -127,7 +127,8 @@ namespace OmniChat.Application.Services.Implements
 
             if (conversation.ActiveStaffId.HasValue)
             {
-                await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value,conversation.Providers.ProviderName);
+                await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value, conversation.Providers.ProviderName);
+                await CountProviderPendingAsync(conversation.ActiveStaffId.Value);
             }
 
             return true;
@@ -426,7 +427,8 @@ namespace OmniChat.Application.Services.Implements
             .OrderBy(m => m.Timestamp)
             .ToList();
 
-            await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value,conversation.Providers.ProviderName);
+            await PushSidebarToStaffAsync(conversation.ActiveStaffId.Value, conversation.Providers.ProviderName);
+            await CountProviderPendingAsync(conversation.ActiveStaffId.Value);
 
             await _notificationService.UpdateNotificationIsReadAsync(conversationId);
 
@@ -555,7 +557,6 @@ namespace OmniChat.Application.Services.Implements
         {
             try
             {
-                _logger.LogDebug("[FACEBOOK] Push signalR");
                 var conversations = await GetStaffConversationSideBarAsync(staffId, providerName);
 
                 await _sidebarHubContext.Clients.User(staffId.ToString()).SendAsync("SidebarUpdated", conversations);
@@ -563,6 +564,45 @@ namespace OmniChat.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error pushing sidebar update to staff {StaffId} for provider {ProviderName}", staffId, providerName);
+            }
+        }
+
+        public async Task<List<CountPendingConverRepsonse>> CountProviderPendingAsync(Guid staffId)
+        {
+            try
+            {
+                var conversations = await _unitOfWork.GetRepository<SupportConversation>()
+                    .GetQueryable()
+                    .Where(c => c.ActiveStaffId == staffId && c.Status == ConversationStatus.Pending)
+                    .Include(c => c.Providers)
+                    .ToListAsync();
+
+                var facebookCounts = conversations.Count(c => c.Providers?.ProviderName?.Equals("facebook", StringComparison.OrdinalIgnoreCase) == true);
+
+                var zaloCounts = conversations.Count(c => c.Providers?.ProviderName?.Equals("zalo", StringComparison.OrdinalIgnoreCase) == true);
+
+                var result = new List<CountPendingConverRepsonse>
+                {
+                    new CountPendingConverRepsonse
+                    {
+                        ProviderName = "Facebook",
+                        Total = facebookCounts 
+                    },
+                    new CountPendingConverRepsonse
+                    {
+                        ProviderName = "Zalo",
+                        Total = zaloCounts
+                    }
+                };
+
+                await _sidebarHubContext.Clients.User(staffId.ToString()).SendAsync("UpdatePendingCount", result);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error counting pending conversations for providers");
+                throw;
             }
         }
     }

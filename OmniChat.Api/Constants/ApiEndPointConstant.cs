@@ -104,6 +104,7 @@ public class ApiEndPointConstant
         public const string CustomerCompleteConversationHistory = SupportConversations + "/customer/{customerId}/complete-history";
         public const string CompleteConversation = SupportConversation + "/{id}/complete";
         public const string GetStaffConversationsForSelect = SupportConversations + "/staff/{staffId}/options";
+        public const string CountPendingConProvider = SupportConversations + "/staff/{staffId}/count-pending";
     }
 
     public static class Auth

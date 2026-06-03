@@ -152,5 +152,24 @@ namespace OmniChat.Api.Controllers
                 Data = result
             });
         }
+
+        [HttpGet(ApiEndPointConstant.SupportConversationEndPoint.CountPendingConProvider)]
+        [ProducesResponseType(typeof(ApiResponse<List<CountPendingConverRepsonse>>), StatusCodes.Status200OK)]
+        [SwaggerOperation(
+        Summary = "Lấy số lượng pending conversation trong từng provider",
+        Description = "Đếm số lượng conversation đang pending trong từng provider "
+          )]
+
+        public async Task<IActionResult> GetPendingCount([FromRoute] Guid staffId)
+        {
+                        var result = await _supportConversationService.CountProviderPendingAsync(staffId);
+            return Ok(new ApiResponse<List<CountPendingConverRepsonse>>
+            {
+                StatusCode = StatusCodes.Status200OK,
+                Message = "Lấy số lượng cuộc trò chuyện đang chờ thành công",
+                IsSuccess = true,
+                Data = result
+            });
+        }
     }
 }

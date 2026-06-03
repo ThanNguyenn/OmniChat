@@ -244,6 +244,7 @@ namespace OmniChat.Application.Services.Resolver
                 {                  
                 
                     await _supportConversationService.PushSidebarToStaffAsync(conversation.ActiveStaffId.Value, "Zalo");
+                    await _supportConversationService.CountProviderPendingAsync(conversation.ActiveStaffId.Value);
 
                     var supportConversationMessages = new SupportConversationMessagesResponse
                     {
