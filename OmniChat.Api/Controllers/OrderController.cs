@@ -52,7 +52,7 @@ public class OrderController : BaseController<OrderController>
     Description = "Tạo mới draft order")]
     public async Task<IActionResult> CreateDraftOrder([FromBody] DraftOrderRequest createOrderRequest)
     {
-        var result = await _draftOrderService.CreateDraftOrderFromConversationNewAsync(createOrderRequest.CustomerId, createOrderRequest.Messages);
+        var result = await _draftOrderService.CreateDraftOrderFromConversationAsync(createOrderRequest.ConversationId);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status201Created, "Tạo đơn hàng thành công", result);
         return StatusCode(StatusCodes.Status201Created, response);
     }
