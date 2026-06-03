@@ -150,7 +150,14 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             {
                                 
                                     _logger.LogInformation("[AGGREGATION] No staff found for conversation: {Id}. Sending system guide.", conversation.Id);
-                                    string guideMessage = "Vui lòng nhập các tin nhắn liên quan như : Đặt Hàng , tư vấn sản phẩm, kiểm tra trạng thái đơn hàng, kiểm tra công nợ !";
+                                    string guideMessage = @"Tin nhắn không hợp lệ,vui lòng nhập các tin nhắn liên quan như : Đặt Hàng , tư vấn sản phẩm, kiểm tra trạng thái đơn hàng, kiểm tra công nợ.
+Bạn có thể  nhập các tin nhắn như sau : 
+1.Đặt Hàng : Tôi muốn đặt hàng.
+2.tư vấn sản phẩm : Tôi muốn tư vấn thông tin sản phẩm.
+3.kiểm tra trạng thái đơn hàng : Trang thái đơn hàng của tôi.
+4.kiểm tra trạng thái thanh toán : Kiểm tra trạng thái thanh toán của tôi.
+5.Yêu cầu hoàn trả đơn : Tôi muốn hoàn trả đơn hàng, Tôi muốn hoàn tiền đơn hàng.
+(Đây là tin nhắn tự động). Hãy làm theo hướng dẫn nhé !";
                                     var messageService = scope.ServiceProvider.GetRequiredService<ISupportStaffMessageService>();
                                     await messageService.SendSystemMessageToExternalAsync(updatedConv.Id, guideMessage);
                                 
