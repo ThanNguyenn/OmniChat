@@ -238,6 +238,7 @@ namespace OmniChat.Application.Services.Resolver
                         {
 
                             await _supportConversationService.PushSidebarToStaffAsync(conversation.ActiveStaffId.Value, "Facebook");
+                            await _supportConversationService.CountProviderPendingAsync(conversation.ActiveStaffId.Value);
 
                             var supportConversationMessages = new SupportConversationMessagesResponse
                             {
