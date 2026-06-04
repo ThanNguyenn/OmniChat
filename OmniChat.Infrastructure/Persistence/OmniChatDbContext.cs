@@ -245,6 +245,11 @@ namespace OmniChat.Infrastructure.Persistence
                 .Property(x => x.IsActive)
                 .HasDefaultValueSql("true");
 
+            // default value IsBlocked = false
+            modelBuilder.Entity<CustomerProfile>()
+                .Property(x => x.IsBlocked)
+                .HasDefaultValueSql("false");
+
             // default vaule isDelete = false
 
             modelBuilder.Entity<SupportConversation>()

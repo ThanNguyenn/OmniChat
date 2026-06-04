@@ -28,6 +28,8 @@ namespace OmniChat.Infrastructure.Models
 
         public bool? IsNewCustomer { get; set; }
 
+        public bool? IsBlocked { get; set; } 
+
         public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
         public bool IsFormSent { get; set; } = false; // Indicates whether the form has been sent to the customer
