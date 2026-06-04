@@ -152,26 +152,27 @@ namespace OmniChat.Application.Services.BackgroundJobs
         }
 
         private bool CustomerNotReplied(SupportConversation convo)
-        {
-            //if (convo.LastStaffMessageAt == null) return false;
+        { 
+            // staff rep 
+            if (convo.LastStaffMessageAt == null) return false;
 
-            //if (convo.LastCustomerMessageAt == null)
-            //    return true;
+            // customer chưa rep 
+            if (convo.LastCustomerMessageAt == null) return true;
 
-            //return convo.LastCustomerMessageAt <= convo.LastStaffMessageAt;
-            return convo.LastStaffMessageAt != null
-        && convo.LastCustomerMessageAt <= convo.LastStaffMessageAt;
+            // tin cuoi la cua staff
+            return convo.LastCustomerMessageAt < convo.LastStaffMessageAt;
         }
 
         private bool StaffNotReplied(SupportConversation convo)
         {
 
-            //if (convo.LastCustomerMessageAt == null) return false;
+            //  customer rep
+            if (convo.LastCustomerMessageAt == null) return false;
 
-            //if (convo.LastStaffMessageAt == null) return true;
-
-            //return convo.LastStaffMessageAt < convo.LastCustomerMessageAt;
-            return convo.LastStaffMessageAt == null || convo.LastStaffMessageAt < convo.LastCustomerMessageAt;
+            // Staff chưa rep lan nao
+            if (convo.LastStaffMessageAt == null) return true;
+            // tin cuoi la cua customer
+            return convo.LastStaffMessageAt < convo.LastCustomerMessageAt;
         }
 
         private async Task SendReminder(SupportConversation convo, ISupportStaffMessageService messageService)
