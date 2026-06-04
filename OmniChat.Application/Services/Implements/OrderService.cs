@@ -60,12 +60,14 @@ public class OrderService : BaseService<OrderService>, IOrderService
         var staffRepo = _unitOfWork.GetRepository<Staff>();
 
         var hasDebt = await _walletService.HasDebt(request.CustomerId);
-        if (hasDebt) {throw new BusinessException("Khách hàng đang có nợ chưa thanh toán, vui lòng kiểm tra lại"); }
+
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var customer = await customerRepo.GetQueryable(predicate: c => c.Id == request.CustomerId, include: q => q.Include(c => c.Wallet),  asNoTracking: true).FirstOrDefaultAsync();
             if (customer.Wallet == null)
                 throw new BusinessException("Vui lòng xác nhận thông tin khách hàng trước khi tiếp tục");
+
+            if (hasDebt) { throw new BusinessException("Khách hàng đang có nợ chưa thanh toán, vui lòng kiểm tra lại"); }
             var order = _mapper.Map<Order>(request);
 
             var batchIds = request.OrderItems
