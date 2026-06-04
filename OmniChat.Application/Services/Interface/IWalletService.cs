@@ -18,5 +18,5 @@ public interface IWalletService
     Task<bool> WithdrawFromWallet(Guid customerId, int amount);
     Task<bool> AddCreditToWallet(Guid customerId, int amount);
     Task<GetWalletResponse> CalculateWallet(Guid customerId);
-    Task<bool> HasDebt(Guid customerId)
+    Task<bool> HasDebt(Guid customerId);
 }

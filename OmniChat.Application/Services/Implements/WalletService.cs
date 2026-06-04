@@ -145,4 +145,24 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
         return result;
     }
+
+    public async Task<bool> HasDebt(Guid customerId)
+    {
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
+
+        var invoices = await invoiceRepo.GetListAsync(predicate: i =>
+            i.CustomerId == customerId &&
+            !(i.IsDeleted ?? false) &&
+            (i.InvoiceStatus == InvoiceStatus.Pending ||
+             i.InvoiceStatus == InvoiceStatus.PartialPaid)
+        );
+
+        var totalDebt = invoices.Sum(i =>
+        {
+            var remaining = i.Total - i.PaidAmount;
+            return remaining > 0 ? remaining : 0;
+        });
+
+        return totalDebt > 0;
+    }
 }
