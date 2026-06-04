@@ -35,18 +35,21 @@ public class OrderService : BaseService<OrderService>, IOrderService
     private readonly IMailService mailService;
 
     private readonly IProductBatchAuditService _auditService;
+    private readonly IWalletService _walletService;
     public OrderService(IUnitOfWork<OmniChatDbContext> unitOfWork,
         ILogger<OrderService> logger,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
         ICreditNoteService creditNoteService,
         IMailService mailService,
-        IProductBatchAuditService auditService)
+        IProductBatchAuditService auditService,
+        IWalletService walletService)
         : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
         this.creditNoteService = creditNoteService;
         this.mailService = mailService;
         _auditService = auditService;
+        _walletService = walletService;
     }
 
     public async Task<bool> CreateOrderAsync(CreateOrderRequest request)
@@ -56,6 +59,8 @@ public class OrderService : BaseService<OrderService>, IOrderService
         var productBatchRepo = _unitOfWork.GetRepository<ProductBatch>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
 
+        var hasDebt = await _walletService.HasDebt(request.CustomerId);
+        if (hasDebt) {throw new BusinessException("Khách hàng đang có nợ chưa thanh toán, vui lòng kiểm tra lại"); }
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var customer = await customerRepo.GetQueryable(predicate: c => c.Id == request.CustomerId, include: q => q.Include(c => c.Wallet),  asNoTracking: true).FirstOrDefaultAsync();

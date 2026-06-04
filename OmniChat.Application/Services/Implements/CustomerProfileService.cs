@@ -26,7 +26,7 @@ namespace OmniChat.Application.Services.Implements
         private readonly IHubContext<SupportConversationHub> _hubContext;
         private readonly IWalletService _walletService;
 
-        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IHubContext<SupportConversationHub> hubContext, IWalletService walletService ) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public CustomerProfileService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<CustomerProfileService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IHubContext<SupportConversationHub> hubContext, IWalletService walletService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _hubContext = hubContext;
             _walletService = walletService;
@@ -100,16 +100,16 @@ namespace OmniChat.Application.Services.Implements
 
         public async Task<CustomerProfile> GetCustomerProfileBySenderAsync(string senderId)
         {
-            
-                var repo = _unitOfWork.GetRepository<CustomerProfile>();
 
-                return await repo.SingleOrDefaultAsync(predicate: cp =>
-                cp.FacebookSenderId == senderId 
-                || cp.ZaloSenderId == senderId ||
-                cp.InstagramSenderId == senderId,
-                include: cp => cp.Include(o => o.Orders)
-                .Include(p => p.Invoices)
-                );
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+
+            return await repo.SingleOrDefaultAsync(predicate: cp =>
+            cp.FacebookSenderId == senderId
+            || cp.ZaloSenderId == senderId ||
+            cp.InstagramSenderId == senderId,
+            include: cp => cp.Include(o => o.Orders)
+            .Include(p => p.Invoices)
+            );
         }
 
         public async Task<CustomerProfile> GetCustomerProfileByIdAsync(Guid customerProfileId)
@@ -122,9 +122,9 @@ namespace OmniChat.Application.Services.Implements
                 .Include(p => p.Invoices)
                 );
 
-            if(existCustomerProfile == null)
+            if (existCustomerProfile == null)
                 throw new NotFoundException("Không tìm thấy hồ sơ khách hàng với ID: {customerProfileId}");
-            
+
             return existCustomerProfile;
         }
 
@@ -151,14 +151,14 @@ namespace OmniChat.Application.Services.Implements
             if (result != null)
             {
                 result.getWalletResponse = await _walletService.CalculateWallet(existCustomProfile.Id);
-            }   
+            }
 
             return result;
         }
 
         public async Task<GetCustomerProfileResponse> GetCustomerProfileByCustomerIdAsync(Guid CustomerId)
         {
-            if(CustomerId == Guid.Empty)
+            if (CustomerId == Guid.Empty)
                 throw new BadRequestException("Mã khách hàng (CustomerId) không được để trống.");
 
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
@@ -182,7 +182,7 @@ namespace OmniChat.Application.Services.Implements
             return result;
         }
 
-        public async Task<GetCustomerProfileResponse> UpdateCustomerProfileByIdAsync(Guid customerId,UpdateCustomerProfileRequest newInfor)
+        public async Task<GetCustomerProfileResponse> UpdateCustomerProfileByIdAsync(Guid customerId, UpdateCustomerProfileRequest newInfor)
         {
             if (customerId == Guid.Empty)
                 throw new BadRequestException("Mã khách hàng (CustomerId) không hợp lệ.");
@@ -196,7 +196,7 @@ namespace OmniChat.Application.Services.Implements
                 if (customer == null)
                     throw new NotFoundException("Không tìm thấy khách hàng để cập nhật.");
 
-            
+
                 customer.CustomerName = newInfor.CustomerName ?? customer.CustomerName;
                 customer.Address = newInfor.Address ?? customer.Address;
                 customer.AvatarUrl = newInfor.AvatarUrl ?? customer.AvatarUrl;
@@ -204,12 +204,12 @@ namespace OmniChat.Application.Services.Implements
                 customer.PhoneNumber = newInfor.PhoneNumber ?? customer.PhoneNumber;
                 customer.IsNewCustomer = false;
 
-                 repo.Update(customer);
+                repo.Update(customer);
 
                 var response = _mapper.Map<GetCustomerProfileResponse>(customer);
 
 
-                
+
                 await _hubContext.Clients.All.SendAsync(
                     "CustomerProfileUpdated",
                     response
@@ -254,11 +254,11 @@ namespace OmniChat.Application.Services.Implements
                 TotalOrder = customer.Orders?.Count ?? 0,
                 TotalPay = customer.Invoices?.Sum(p => (double)(p.Total - (p.DeductedAmount))) ?? 0,
 
-               
+
                 ProviderName = provider?.ProviderName,
                 TimeStartSupport = supportConversation.CreatedDate,
 
-                
+
                 getWalletResponse = await _walletService.CalculateWallet(customer.Id)
             };
 
@@ -280,9 +280,41 @@ namespace OmniChat.Application.Services.Implements
 
             customerProfile.IsFormSent = true;
 
-                repo.Update(customerProfile);
+            repo.Update(customerProfile);
 
-                await _unitOfWork.CommitAsync();
+            await _unitOfWork.CommitAsync();
+        }
+
+        public async Task<bool> BlockCustomer(Guid customerId)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+            var customer = await repo.SingleOrDefaultAsync(predicate: x => x.Id == customerId);
+            if (customer == null) throw
+                new NotFoundException("Khách hàng không tồn tại");
+
+            customer.IsBlocked = true;
+            repo.Update(customer);
+            return true;
+        }
+
+        public async Task<bool> UnblockCustomer(Guid customerId)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+            var customer = await repo.SingleOrDefaultAsync(predicate: x => x.Id == customerId);
+            if (customer == null) throw
+                new NotFoundException("Khách hàng không tồn tại");
+            customer.IsBlocked = false;
+            repo.Update(customer);
+            return true;
+        }
+
+        public async Task<bool> IsCustomerBlock(Guid customerId)
+        {
+            var repo = _unitOfWork.GetRepository<CustomerProfile>();
+            var customer = await repo.SingleOrDefaultAsync(predicate: x => x.Id == customerId);
+            if (customer == null) throw
+                new NotFoundException("Khách hàng không tồn tại");
+            return customer.IsBlocked ?? false;
         }
     }
 }

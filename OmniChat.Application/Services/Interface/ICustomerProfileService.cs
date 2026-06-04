@@ -30,5 +30,10 @@ namespace OmniChat.Application.Services.Interface
         public  Task UpdateIsformSentCustomerProfileAsync(Guid customerProfileId);
 
         public  Task<CustomerDetailResponse> GetCustomerDetailByConversationIdAsync(Guid conversationId);
+
+        Task<bool> BlockCustomer(Guid customerId);
+        Task<bool> UnblockCustomer(Guid customerId);
+
+        Task<bool> IsCustomerBlock(Guid customerId); 
     }
 }
