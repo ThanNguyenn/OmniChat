@@ -78,7 +78,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                                 await mailService.SendEmailAsync(new MailContent
                                 {
                                     To = convo.Staff.Email,
-                                    Subject = $"[CẢNH BÁO] Phản hồi khách hàng chậm trễ - Hội thoại #{convo.Id}",
+                                    Subject = $"[CẢNH BÁO] Phản hồi khách hàng chậm trễ - Hội thoại #{convo.CustomerName}",
                                     Body = $@"
                                 <h3>Thông báo nhắc nhở công việc</h3>
                                 <p>Chào <b>{convo.Staff.Name ?? "Bạn"}</b>,</p>

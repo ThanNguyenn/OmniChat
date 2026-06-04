@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Application.SignalRHub;
 using OmniChat.Infrastructure.Dtos.Requests.Claim;
+using OmniChat.Infrastructure.Dtos.Requests.Mail;
 using OmniChat.Infrastructure.Dtos.Requests.TaskAction;
 using OmniChat.Infrastructure.Dtos.Responses.Claim;
 using OmniChat.Infrastructure.Dtos.Responses.Notification;
@@ -26,17 +27,23 @@ namespace OmniChat.Application.Services.Implements
     public class ClaimService : BaseService<ClaimService>, IClaimService
     {
         private readonly ITaskActionService _taskActionService;
+        private readonly ISupportConversationService _supportConversationService;
+        private readonly IMailService _mailService;
         private readonly IHubContext<SupportConversationHub> _hubContext;
 
         public ClaimService(IUnitOfWork<OmniChatDbContext> unitOfWork,
-            ILogger<ClaimService> logger, 
-            IMapper mapper, 
+            ILogger<ClaimService> logger,
+            IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             ITaskActionService taskActionService,
+            IMailService mailService,
+            ISupportConversationService supportConversationService,
             IHubContext<SupportConversationHub> hubContext
             ) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _taskActionService = taskActionService;
+            _supportConversationService = supportConversationService;
+            _mailService = mailService;
             _hubContext = hubContext;
         }
 
@@ -49,7 +56,7 @@ namespace OmniChat.Application.Services.Implements
                  var _repo = _unitOfWork.GetRepository<Claim>();
                  var _claimTypeRepo = _unitOfWork.GetRepository<ClaimType>();
 
-               
+
                  var claimType = await _claimTypeRepo.GetByIdAsync(claimRequest.ClaimTypeId);
                  if (claimType == null)
                      throw new NotFoundException("Loại khiếu nại (Claim Type) không tồn tại.");
@@ -101,20 +108,20 @@ namespace OmniChat.Application.Services.Implements
 
                      foreach (var task in conversation.SupportTasks)
                      {
-                         if (task.Status != SupportTaskStatus.Done && 
+                         if (task.Status != SupportTaskStatus.Done &&
                          task.Status != SupportTaskStatus.Cancelled &&
                          task.Status != SupportTaskStatus.Closed)
                          {
-                             task.Status = SupportTaskStatus.PendingReassign ;
+                             task.Status = SupportTaskStatus.PendingReassign;
                          }
                      }
                      _taskRepo.UpdateRange(conversation.SupportTasks);
-                      _conversationRepo.Update(conversation);
+                     _conversationRepo.Update(conversation);
 
                  }
                  var entity = _mapper.Map<Claim>(claimRequest);
                  entity.SupportConversationId = conversationId;
-                 await _repo.InsertAsync(entity);         
+                 await _repo.InsertAsync(entity);
                  return true;
              });
         }
@@ -125,7 +132,7 @@ namespace OmniChat.Application.Services.Implements
             var changeTaskTypeId = Guid.Parse("abf8b2a1-0699-4c27-b241-11df7a75c12c");
             var repo = _unitOfWork.GetRepository<Claim>();
 
-          
+
             var query = repo.GetQueryable()
                 .AsNoTracking()
                 .Include(c => c.Staff)
@@ -182,14 +189,14 @@ namespace OmniChat.Application.Services.Implements
             var repo = _unitOfWork.GetRepository<Claim>();
 
             var query = repo.GetQueryable()
-                .Include(c => c.Staff)      
+                .Include(c => c.Staff)
                 .Include(c => c.ClaimType)
                 .Where(c => c.Status == ClaimStatus.Pending && c.ClaimType.Id != changeTaskTypeId);
 
             var totalItems = await query.CountAsync();
 
             var items = await query
-                .OrderByDescending(c => c.SubmitDate) 
+                .OrderByDescending(c => c.SubmitDate)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -224,7 +231,7 @@ namespace OmniChat.Application.Services.Implements
             var totalItems = await query.CountAsync();
 
             var items = await query
-                .OrderByDescending(c => c.SubmitDate) 
+                .OrderByDescending(c => c.SubmitDate)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -269,8 +276,8 @@ namespace OmniChat.Application.Services.Implements
 
             var claim = await _repo.SingleOrDefaultAsync(predicate: c => c.Id == claimId,
                 include: c => c.Include(c => c.Staff)
-                               .Include(c => c.ClaimType) 
-                
+                               .Include(c => c.ClaimType)
+
                 );
 
             if (claim == null)
@@ -346,7 +353,7 @@ namespace OmniChat.Application.Services.Implements
             };
         }
 
-        public async Task ReAssignStaffAsync(Guid claimId,Guid newStaffAssignId, Guid conversationReAssignId)
+        public async Task ReAssignStaffAsync(Guid claimId, Guid newStaffAssignId, Guid conversationReAssignId)
         {
             var converRepo = _unitOfWork.GetRepository<SupportConversation>();
 
@@ -375,18 +382,18 @@ namespace OmniChat.Application.Services.Implements
             if (newStaff == null) throw new NotFoundException($"Nhân viên mới nhận bàn giao không tồn tại trong hệ thống.");
 
 
-           
+
             var newStaffCurrentWorkload = await converRepo.CountAsync(
             predicate: c => c.ActiveStaffId == newStaffAssignId &&
                     (c.Status == ConversationStatus.Pending &&
                                    c.Id != conversation.Id));
 
-            var statusAfterApprove = newStaffCurrentWorkload >= 5
-                   ? ConversationStatus.Warning
-                   : ConversationStatus.Pending;
+            //var statusAfterApprove = newStaffCurrentWorkload >= 5
+            //       ? ConversationStatus.Warning
+            //       : ConversationStatus.Pending;
 
             conversation.ActiveStaffId = newStaffAssignId;
-            conversation.Status = statusAfterApprove;
+            conversation.Status = ConversationStatus.Pending;
             conversation.UpdateDate = DateTime.UtcNow;
             conversation.LastStaffMessageAt = DateTime.UtcNow;
             converRepo.Update(conversation);
@@ -441,19 +448,22 @@ namespace OmniChat.Application.Services.Implements
 
             await _unitOfWork.CommitAsync();
 
-            var notificationResponse = new ClaimNotificationResponse
-            {
-                ConversationName = conversation.CustomerName,
-                Description = claim.Description ?? "Yêu cầu thay đổi công việc được phê duyệt.",
-                Status = claim.Status,
-                NewStatus = conversation.Status.ToString(),
-                Message = "Bạn có một cuộc hội thoại mới được bàn giao."
-            };
+            //var notificationResponse = new ClaimNotificationResponse
+            //{
+            //    ConversationName = conversation.CustomerName,
+            //    Description = claim.Description ?? "Yêu cầu thay đổi công việc được phê duyệt.",
+            //    Status = claim.Status,
+            //    NewStatus = conversation.Status.ToString(),
+            //    Message = "Bạn có một cuộc hội thoại mới được bàn giao."
+            //};
 
-           
-            await _hubContext.Clients
-                .User(newStaffAssignId.ToString())
-                .SendAsync("ReassignApproved", notificationResponse); 
+
+            //await _hubContext.Clients
+            //    .User(newStaffAssignId.ToString())
+            //    .SendAsync("ReassignApproved", notificationResponse);
+
+            bool approve = true;
+            await AfterReassignPreviewAsync(conversationReAssignId,approve);
 
             _logger.LogInformation(
                 "[REASSIGN] Conversation {ConvId} reassigned from Staff {OldStaff} to Staff {NewStaff}. Tasks updated: {Count}",
@@ -469,7 +479,7 @@ namespace OmniChat.Application.Services.Implements
                 var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
                 var taskRepo = _unitOfWork.GetRepository<SupportTask>();
 
-         
+
                 var claim = await claimRepo.GetByIdAsync(claimId);
                 if (claim == null) throw new NotFoundException("Không tìm thấy yêu cầu chuyển giao công việc.");
 
@@ -492,7 +502,7 @@ namespace OmniChat.Application.Services.Implements
                                    c.Status == ConversationStatus.Pending &&
                                    c.Id != conversation.Id);
 
-             
+
                 var statusAfterReject = currentPendingCount >= 5
                     ? ConversationStatus.Warning
                     : ConversationStatus.Pending;
@@ -523,18 +533,71 @@ namespace OmniChat.Application.Services.Implements
                 conversationRepo.Update(conversation);
                 await _unitOfWork.CommitAsync();
 
-                var notificationResponse = new ClaimNotificationResponse
-                {
-                    ConversationName = conversation.CustomerName,
-                    Description = claim.Description ?? "Yêu cầu thay đổi công việc không được phê duyệt.",
-                    Status = claim.Status,
-                    NewStatus = statusAfterReject.ToString(),
-                    Message = "Yêu cầu chuyển công việc đã bị từ chối. Vui lòng tiếp tục hỗ trợ khách hàng."
-                };
-                await _hubContext.Clients
-                .User(staffId.ToString())
-                .SendAsync("ReassignRejected", notificationResponse);
+                //var notificationResponse = new ClaimNotificationResponse
+                //{
+                //    ConversationName = conversation.CustomerName,
+                //    Description = claim.Description ?? "Yêu cầu thay đổi công việc không được phê duyệt.",
+                //    Status = claim.Status,
+                //    NewStatus = statusAfterReject.ToString(),
+                //    Message = "Yêu cầu chuyển công việc đã bị từ chối. Vui lòng tiếp tục hỗ trợ khách hàng."
+                //};
+                //await _hubContext.Clients
+                //.User(staffId.ToString())
+                //.SendAsync("ReassignRejected", notificationResponse);
+            
+                bool approve = false;
+                await AfterReassignPreviewAsync(conversation.Id, approve);
             });
+        }
+
+        private async Task AfterReassignPreviewAsync(Guid conversationId, bool approve)
+        {
+            Console.WriteLine($"Conversation Id: {conversationId}");
+            var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
+
+            var existConversation = await conversationRepo.SingleOrDefaultAsync(
+                 predicate: c => c.Id == conversationId,
+                 include: c => c.Include(x => x.Staff).Include(x => x.Providers));
+            
+            Console.WriteLine($"Exit Conversation to count pending: {existConversation.Id}, Active staff Id :{existConversation.ActiveStaffId}");
+
+            await _supportConversationService.CountProviderPendingAsync(existConversation.ActiveStaffId.Value);
+
+            Console.WriteLine($"Exit Conversation side bar, staffId : {existConversation.ActiveStaffId}, Provider Name:{existConversation.Providers.ProviderName}");
+
+            await _supportConversationService.PushSidebarToStaffAsync(existConversation.ActiveStaffId.Value, existConversation.Providers.ProviderName);
+
+            var mailContent = new MailContent();
+
+            // approve = true → gửi mail thông báo đã bàn giao thành công
+            if (approve == true)
+            {
+                mailContent = new MailContent
+                {
+                    To = existConversation.Staff.Email,
+                    Subject = $"Thông báo về yêu cầu chuyển giao công việc - Cuộc hội thoại: {existConversation.CustomerName}",
+                    Body = $"Xin chào {existConversation.Staff.Name},\n\n" +
+                     $"Yêu cầu chuyển giao công việc liên quan đến cuộc hội thoại của khách hàng {existConversation.CustomerName} đã được phê duyệt. " +
+                     $"Cuộc hội thoại này đã được chuyển giao cho nhân viên mới. Vui lòng đăng nhập vào hệ thống để xem chi tiết và tiếp tục hỗ trợ khách hàng.\n\n" +
+                     $"Cảm ơn bạn đã nỗ lực hỗ trợ khách hàng."
+                };
+            }
+            // approve = false → gửi mail thông báo đã từ chối yêu cầu chuyển giao
+            else
+            {
+                mailContent = new MailContent
+                {
+                    To = existConversation.Staff.Email,
+                    Subject = $"Thông báo về yêu cầu chuyển giao công việc - Cuộc hội thoại: {existConversation.CustomerName}",
+                    Body = $"Xin chào {existConversation.Staff.Name},\n\n" +
+                     $"Yêu cầu chuyển giao công việc liên quan đến cuộc hội thoại của khách hàng {existConversation.CustomerName} đã bị từ chối. " +
+                     $"Vui lòng tiếp tục hỗ trợ khách hàng và hoàn thành các nhiệm vụ liên quan đến cuộc hội thoại này.\n\n" +
+                     $"Cảm ơn bạn đã nỗ lực hỗ trợ khách hàng."
+                };
+            }
+           
+
+            await _mailService.SendEmailAsync(mailContent);
         }
     }
 }
