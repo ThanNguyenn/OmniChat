@@ -248,11 +248,11 @@ namespace OmniChat.Application.Services.BackgroundJobs
             else if (convo.Providers?.ProviderName == "Facebook")
             {
                 if (convo.LastCustomerMessageAt == null) return;
-                var hoursSinceLastCustomerMsg = (DateTime.UtcNow - convo.LastCustomerMessageAt.Value).TotalHours;
-                if (hoursSinceLastCustomerMsg < 24)
-                {
+                //var hoursSinceLastCustomerMsg = (DateTime.UtcNow - convo.LastCustomerMessageAt.Value).TotalHours;
+                //if (hoursSinceLastCustomerMsg < 24)
+                //{
                     await messageService.SendFacebookMesageAsync(request);
-                }
+                //}
             }
         }
     }
