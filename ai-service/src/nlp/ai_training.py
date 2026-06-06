@@ -33,7 +33,7 @@ id2label = {i: label for label, i in label2id.items()}
 # 2. LOAD DATA
 # =========================
 
-file_path = r"C:\Users\THAN\Downloads\ClassifyIntent2.json"
+file_path = r"C:\Users\THAN\Downloads\ClassifyIntent_AiTrainData.json"
 
 with open(file_path, "r", encoding="utf-8") as f:
     raw_data = json.load(f)
