@@ -17,11 +17,11 @@ class Settings:
     ]
 
     THRESHOLDS = {
-        "ORDER_CREATION": 0.52,
-        "POST_SALE_CHANGE": 0.64,
-        "PRE_SALE": 0.72,
-        "PAYMENT": 0.37,
-        "ORDER_STATUS": 0.22,
+        "ORDER_CREATION": 0.24,
+        "POST_SALE_CHANGE": 0.34,
+        "PRE_SALE": 0.75,
+        "PAYMENT": 0.45,
+        "ORDER_STATUS": 0.32,
     }
 
     NER_LABELS = [
