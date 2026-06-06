@@ -99,11 +99,11 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                     else if (CustomerNotReplied(convo))
                     {
-                       if (convo.LastCustomerMessageAt == null) continue;
+                       if (convo.LastStaffMessageAt == null) continue;
 
-                        var hoursSinceCustomerLeft = (now - convo.LastCustomerMessageAt.Value).TotalHours;
+                        var hoursSinceStaffMessage = (now - convo.LastStaffMessageAt.Value).TotalHours;
 
-                        if (hoursSinceCustomerLeft >= 24 && convo.ReminderSent == true)
+                        if (hoursSinceStaffMessage >= 24 && convo.ReminderSent == true)
                         {
                             _logger.LogInformation("Closing conversation ID: {Id} due to customer inactivity", convo.Id);
                             convo.Status = ConversationStatus.Complete;
@@ -115,7 +115,7 @@ namespace OmniChat.Application.Services.BackgroundJobs
                             await performanceService.CompleteConversationAndTasksAsync(convo);
                         }
  
-                        else if (hoursSinceCustomerLeft >= 22 && convo.ReminderSent != true)
+                        else if (hoursSinceStaffMessage >= 22 && convo.ReminderSent != true)
                         {
                             _logger.LogInformation("Sending reminder to customer for ID: {Id}", convo.Id);
                             using var sendScope = _serviceProvider.CreateScope();

@@ -141,7 +141,7 @@ namespace OmniChat.Application.Services.Implements
             var conversations = await repo.GetQueryable()
                 .Where(sc =>
                     sc.Status != ConversationStatus.Complete &&
-                    sc.LastStaffMessageAt != null
+                    sc.LastCustomerMessageAt != null
                   ).Include(sc => sc.Staff)
                   .Include(sc => sc.Providers)
                 .ToListAsync();
