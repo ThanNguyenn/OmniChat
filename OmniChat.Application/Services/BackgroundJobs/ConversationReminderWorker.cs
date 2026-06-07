@@ -66,9 +66,9 @@ namespace OmniChat.Application.Services.BackgroundJobs
                         if (convo.LastCustomerMessageAt == null) continue;
                         var staffDelay = now - convo.LastCustomerMessageAt.Value;
 
-                        if (staffDelay.TotalHours >= 24 && convo.IsWarningSent != true)
+                        if (staffDelay.TotalHours >= 22 && convo.IsWarningSent != true)
                         {
-                            _logger.LogWarning("[WARNING] Staff {StaffId} delayed > 24h for Convo {Id}", convo.ActiveStaffId, convo.Id);
+                            _logger.LogWarning("[WARNING] Staff {StaffId} delayed > 22h for Convo {Id}", convo.ActiveStaffId, convo.Id);
 
                             using var warningScope = _serviceProvider.CreateScope();
 
