@@ -103,7 +103,10 @@ namespace OmniChat.Application.Services.BackgroundJobs
 
                         var hoursSinceStaffMessage = (now - convo.LastStaffMessageAt.Value).TotalHours;
 
-                        if (hoursSinceStaffMessage >= 24 && convo.ReminderSent == true)
+                        if (convo.LastCustomerMessageAt == null) continue; 
+                        var hoursSinceCustomer = (now - convo.LastCustomerMessageAt.Value).TotalHours;
+
+                        if (hoursSinceCustomer >= 24 && convo.ReminderSent == true)
                         {
                             _logger.LogInformation("Closing conversation ID: {Id} due to customer inactivity", convo.Id);
                             convo.Status = ConversationStatus.Complete;
