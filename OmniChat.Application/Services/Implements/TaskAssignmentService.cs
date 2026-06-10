@@ -159,16 +159,17 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
         var conversationRepo = _unitOfWork.GetRepository<SupportConversation>();
 
         var tasks = await taskRepo.GetListAsync(
-             predicate: t => t.SupportConversationId == conversationId,
-             include: q => q.Include(t => t.IntentType)
+             predicate: t => t.SupportConversationId == conversationId
          );
+        var intentTypes = tasks.Select(t => t.IntentType).ToList();
 
         if (!tasks.Any()) return false;
 
         var highestIntent = tasks
+            .Where(t => t.IntentType != null)
             .OrderByDescending(t => t.IntentType.IntentTypePiority)
-            .First()
-            .IntentTypeId;
+            .Select(t => t.IntentTypeId)
+            .First();
 
         var candidates = await staffIntentRepo.GetListAsync(
             predicate: s =>
@@ -223,12 +224,10 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            _unitOfWork.Context.ChangeTracker.Clear();
             foreach (var task in tasks)
             {
                 task.CurrentAssignedStaffId = selectedStaff.Id;
                 task.Status = SupportTaskStatus.InProgress;
-                task.SupportConversation = null;
                 taskRepo.Update(task);
             }
 
