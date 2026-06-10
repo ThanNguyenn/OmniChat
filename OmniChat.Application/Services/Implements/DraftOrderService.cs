@@ -113,7 +113,10 @@ public class DraftOrderService : BaseService<DraftOrderService>, IDraftOrderServ
             "cu vay di",
             "nhu the di",
             "chot",
-            "dong y"
+            "dong y",
+            "oke",
+            "okee",
+            "okkk"
         };
 
         foreach (var msg in lastFive)

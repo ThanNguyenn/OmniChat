@@ -57,9 +57,10 @@ namespace OmniChat.Application.Services.Implements
 
             var repo = _unitOfWork.GetRepository<CustomerProfile>();
             var searchTerm = customerName?.Trim().ToUpper();
+            var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
             var pagingData = await repo.GetPagingListAsync(
-                selector: x => new GetCustomerProfileResponse
+                selector:  x => new GetCustomerProfileResponse
                 {
                     Id = x.Id,
                     CustomerName = x.CustomerName,
@@ -72,23 +73,35 @@ namespace OmniChat.Application.Services.Implements
                     CustomerDate = x.CreateDate,
                     TotalOrder = x.Orders.Count,
 
-                    TotalPayment =
-    (x.Wallet.Transactions
-        .Where(t => t.TransactionType == TransactionType.Deposit)
-        .Sum(t => t.Amount)
-    -
-    x.Wallet.Transactions
-        .Where(t => t.TransactionType == TransactionType.Refund)
-        .Sum(t => t.Amount))
-                },
-                predicate: string.IsNullOrWhiteSpace(searchTerm)
+                    TotalPayment = (double?)x.Invoices
+            .Where(i => i.CompletedDate.HasValue &&
+                       (i.InvoiceStatus == InvoiceStatus.Completed || i.InvoiceStatus == InvoiceStatus.PartialPaid))
+            .Sum(i => i.PaidAmount) ?? 0
+                },predicate: string.IsNullOrWhiteSpace(searchTerm)
                     ? null
                     : x => x.CustomerName.ToUpper().Contains(searchTerm),
                 orderBy: q => q.OrderByDescending(x => x.CustomerName),
-                include: cp => cp.Include(o => o.Orders).Include(p => p.Invoices).Include(s => s.Wallet).ThenInclude(cc => cc.Transactions),
                 page: pageNumber,
-                size: pageSize
-            );
+        size: pageSize
+                );
+
+
+            //(x.Wallet.Transactions
+            //    .Where(t => t.TransactionType == TransactionType.Deposit)
+            //    .Sum(t => t.Amount)
+            //-
+            //x.Wallet.Transactions
+            //    .Where(t => t.TransactionType == TransactionType.Refund)
+            //    .Sum(t => t.Amount))
+            //            },
+            //            predicate: string.IsNullOrWhiteSpace(searchTerm)
+            //                ? null
+            //                : x => x.CustomerName.ToUpper().Contains(searchTerm),
+            //            orderBy: q => q.OrderByDescending(x => x.CustomerName),
+            //            include: cp => cp.Include(o => o.Orders).Include(p => p.Invoices).Include(s => s.Wallet).ThenInclude(cc => cc.Transactions),
+            //            page: pageNumber,
+            //            size: pageSize
+            //        );
 
             _unitOfWork.Context.ChangeTracker.Clear();
             foreach (var item in pagingData.Items)
