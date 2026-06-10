@@ -337,7 +337,7 @@ public class StaffService : BaseService<StaffService>, IStaffService
         {
             TotalDoneTask = currentPerformance?.TaskCompleted ?? 0,
             TotalCreateOrder = totalCreateOrder,
-            AfferageResolveTime = currentPerformance?.AvgTaskHandleTime / 60.0 ?? 0,
+            AfferageResolveTime = Math.Round((currentPerformance?.AvgTaskHandleTime ?? 0) / 60.0),
             StaffPerformance = CalculatePerformanceScore(currentPerformance)
         };
     }
