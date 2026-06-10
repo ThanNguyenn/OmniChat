@@ -502,11 +502,11 @@ public class OrderService : BaseService<OrderService>, IOrderService
             .Select(o => new
             {
                 MappedStatus =
-                    o.Status == OrderStatus.Completed ? OrderStatus.Completed :
+                    (o.Status == OrderStatus.Completed || o.Status == OrderStatus.RefundRejected) ? OrderStatus.Completed :
                     o.Status == OrderStatus.Cancelled ? OrderStatus.Cancelled :
                     (o.Status == OrderStatus.PendingReturn ||
                      o.Status == OrderStatus.Returned ||
-                     o.Status == OrderStatus.ReturnedDefective)
+                     o.Status == OrderStatus.ReturnedDefective || o.Status == OrderStatus.ReturnApproved || o.Status == OrderStatus.RefundApproved)
                         ? OrderStatus.Returned
                         : (OrderStatus?)null
             })
