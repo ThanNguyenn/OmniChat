@@ -161,15 +161,14 @@ public class TaskAssignmentService : BaseService<TaskAssignmentService>, ITaskAs
         var tasks = await taskRepo.GetListAsync(
              predicate: t => t.SupportConversationId == conversationId
          );
-        var intentTypes = tasks.Select(t => t.IntentType).ToList();
 
         if (!tasks.Any()) return false;
 
-        var highestIntent = tasks
-            .Where(t => t.IntentType != null)
+        var highestIntent = await taskRepo
+            .GetQueryable(t => t.SupportConversationId == conversationId, asNoTracking: true)
             .OrderByDescending(t => t.IntentType.IntentTypePiority)
             .Select(t => t.IntentTypeId)
-            .First();
+            .FirstOrDefaultAsync();
 
         var candidates = await staffIntentRepo.GetListAsync(
             predicate: s =>
