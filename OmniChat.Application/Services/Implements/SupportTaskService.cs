@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.SupportTask;
 using OmniChat.Infrastructure.Dtos.Requests.TaskAction;
 using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
@@ -22,11 +23,11 @@ namespace OmniChat.Application.Services.Implements
     {
         private readonly IStaffPerformanceService _staffPerformanceService;
         private readonly ITaskActionService _taskActionService;
-     
+
         public SupportTaskService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<SupportTaskService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IStaffPerformanceService staffPerformanceService, ITaskActionService taskActionService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _staffPerformanceService = staffPerformanceService;
-            _taskActionService = taskActionService;   
+            _taskActionService = taskActionService;
         }
 
         public async Task<IEnumerable<SupportTask>> GetDoneSupportTaskByConversationIdAsync(Guid conversationId)
@@ -148,21 +149,21 @@ namespace OmniChat.Application.Services.Implements
                 ? (int)(now - existSupportTask.CreatedAt.Value).TotalSeconds
                 : 0;
 
-            
+
             existSupportTask.Status = SupportTaskStatus.Cancelled;
             existSupportTask.CompleteDate = now;
             repo.Update(existSupportTask);
 
-          
+
             cancelReasonRequest.SupportTaskId = taskId;
             var cancelReasonRepo = _unitOfWork.GetRepository<TaskCancelReason>();
             var cancelReason = _mapper.Map<TaskCancelReason>(cancelReasonRequest);
             await cancelReasonRepo.InsertAsync(cancelReason);
 
-            
+
             await _unitOfWork.CommitAsync();
 
-          
+
             if (existSupportTask.CurrentAssignedStaffId.HasValue)
             {
                 await _staffPerformanceService.UpdatePerformanceOnTaskCancelAsync(
@@ -286,25 +287,25 @@ namespace OmniChat.Application.Services.Implements
         {
             var supportTaskRepo = _unitOfWork.GetRepository<SupportTask>();
 
-           
+
             if (!int.TryParse(input, out int year))
             {
                 throw new BadRequestException("Không đúng định dạng năm");
             }
 
-           
+
             DateTime from = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             DateTime to = from.AddYears(1);
 
-           
+
             var rawData = await supportTaskRepo.GetQueryable(
                     t => t.CreatedAt.HasValue &&
                          t.CreatedAt.Value >= from &&
                          t.CreatedAt.Value < to &&
-                         t.Status == status, 
+                         t.Status == status,
                     asNoTracking: true
                 )
-                .GroupBy(t => t.CreatedAt.Value.Month) 
+                .GroupBy(t => t.CreatedAt.Value.Month)
                 .Select(g => new
                 {
                     Month = g.Key,
@@ -316,7 +317,7 @@ namespace OmniChat.Application.Services.Implements
 
             var result = new List<DashboardMonthResponse>();
 
-          
+
             for (int m = 1; m <= 12; m++)
             {
                 lookup.TryGetValue(m, out var count);
@@ -324,7 +325,7 @@ namespace OmniChat.Application.Services.Implements
                 result.Add(new DashboardMonthResponse
                 {
                     Month = m,
-                    
+
                     Intents = new List<TaskIntentDashboardResponse>
             {
                 new TaskIntentDashboardResponse
@@ -339,5 +340,69 @@ namespace OmniChat.Application.Services.Implements
             return result;
         }
 
+
+        public async Task<bool> DeleteSupportTaskAsync(Guid taskId)
+        {
+            var taskRepo = _unitOfWork.GetRepository<SupportTask>();
+            var taskActionRepo = _unitOfWork.GetRepository<TaskAction>();
+
+            var existSupportTask = await taskRepo.SingleOrDefaultAsync(predicate: t => t.Id == taskId);
+
+            if (existSupportTask == null)
+                throw new NotFoundException("Không tìm thấy yêu cầu hỗ trợ.");
+
+            taskRepo.Delete(existSupportTask);
+
+            var newTaskAction = new TaskAction
+            {
+                SupportTaskId = existSupportTask.Id,
+                Action = TaskActionType.Deleted,
+                Reason = "Task deleted",
+                ActionById = existSupportTask.CurrentAssignedStaffId ?? Guid.Empty
+            };
+
+            await taskActionRepo.InsertAsync(newTaskAction);
+            await _unitOfWork.CommitAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateSupportTaskIntentTypeAsync(Guid taskId, UpdateSupportTaskRequest updateSupportTask)
+        {
+            var taskRepo = _unitOfWork.GetRepository<SupportTask>();
+            var intentTypeRepo = _unitOfWork.GetRepository<IntentType>();
+            var taskActionRepo = _unitOfWork.GetRepository<TaskAction>();
+
+            var existSupportTask = await taskRepo.SingleOrDefaultAsync(predicate: t => t.Id == taskId);
+
+            if(existSupportTask == null)
+            {
+                throw new NotFoundException("Không tìm thấy yêu cầu hỗ trợ.");
+            }
+            
+            var newIntentType = await intentTypeRepo.SingleOrDefaultAsync(predicate: i => i.Id == updateSupportTask.NewIntentTypeId);
+
+            if (newIntentType == null)
+            {
+                throw new NotFoundException("Không tìm thấy loại yêu cầu.");
+            }
+
+            existSupportTask.IntentTypeId = updateSupportTask.NewIntentTypeId;
+
+            taskRepo.Update(existSupportTask);
+
+
+            var newTaskAction = new TaskAction
+            {
+                SupportTaskId = existSupportTask.Id,
+                Action = TaskActionType.Updated,
+                Reason = "Task Updated",
+                ActionById = existSupportTask.CurrentAssignedStaffId ?? Guid.Empty
+            };
+
+            await taskActionRepo.InsertAsync(newTaskAction);
+
+            await _unitOfWork.CommitAsync();
+            return true;
+        }
     }
 }

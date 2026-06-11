@@ -90,6 +90,8 @@ public class ApiEndPointConstant
         public const string GetSupportTaskByConversationId = SupportTask + "/conversation/{conversationId}";
         public const string GetTaskIntentDashboard = SupportTask + "/dashboard";
         public const string GetTaskStatus = SupportTask + "/get-task-status";
+        public const string UpdateSupportTaskIntentType = SupportTask + "/{id}/update-intent-type";
+        public const string DeleteSupportTask = SupportTask + "/{id}/delete";
     }
 
     public static class SupportConversationEndPoint

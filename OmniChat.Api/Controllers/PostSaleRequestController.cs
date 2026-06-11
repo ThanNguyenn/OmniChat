@@ -30,9 +30,9 @@ public class PostSaleRequestController : BaseController<PostSaleRequestControlle
        Summary = "Lấy danh sách post sale request có paging",
        Description = "Lấy danh sách post sale request có paging."
     )]
-    public async Task<IActionResult> GetPostSaleRequests([FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending)
+    public async Task<IActionResult> GetPostSaleRequests([FromQuery] string? search, [FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending)
     {
-        var result = await _postSaleRequestService.GetPostSaleRequestsAsync(pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
+        var result = await _postSaleRequestService.GetPostSaleRequestsAsync(search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách yêu cầu hậu mãi thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }

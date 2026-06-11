@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.SupportTask;
 using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Metadatas;
@@ -92,6 +93,32 @@ namespace OmniChat.Api.Controllers
         {
             var result = await _supportTaskService.GetTaskTotalByStatusDashboardAsync(year, status);
             var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Get Task status Dashboard Successfully", result);
+            return Ok(response);
+        }
+
+        [HttpPatch(ApiEndPointConstant.SupportTaskEndPoint.UpdateSupportTaskIntentType)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+                [SwaggerOperation(
+            Summary = "Update Support Task Intent Type",
+            Description = "Cập nhật Intent Type của Support Task bằng Task Id")]
+        public async Task<IActionResult> UpdateSupportTaskIntentTypeAsync(Guid id, [FromBody] UpdateSupportTaskRequest updateRequest)
+        {
+            var result = await _supportTaskService.UpdateSupportTaskIntentTypeAsync(id, updateRequest);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Update Support Task Intent Type Successfully", result);
+            return Ok(response);
+        }
+
+        [HttpDelete(ApiEndPointConstant.SupportTaskEndPoint.DeleteSupportTask)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [SwaggerOperation(
+            Summary = "Delete Support Task",
+            Description = "Xóa Support Task bằng Task Id")]
+        public async Task<IActionResult> DeleteSupportTaskAsync(Guid id)
+        {
+            var result = await _supportTaskService.DeleteSupportTaskAsync(id);
+            var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Delete Support Task Successfully", result);
             return Ok(response);
         }
     }

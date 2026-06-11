@@ -18,7 +18,7 @@ namespace OmniChat.Application.Services.Implements;
 public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPostSaleRequestService
 {
     private readonly IOrderService _orderService;
-    public PostSaleRequestService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<PostSaleRequestService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOrderService orderService ) : base(unitOfWork, logger, mapper, httpContextAccessor)
+    public PostSaleRequestService(IUnitOfWork<OmniChatDbContext> unitOfWork, ILogger<PostSaleRequestService> logger, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOrderService orderService) : base(unitOfWork, logger, mapper, httpContextAccessor)
     {
         _orderService = orderService;
     }
@@ -50,9 +50,9 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
                     await _orderService.ReturnOrderUnpaidAsync(postSaleRequest.OrderId, postSaleRequest.RefundAmount ?? 0);
                     break;
 
-                //case PostSaleRequestType.Cancel:
-                //    await _orderService.CancelOrderAsync(postSaleRequest.OrderId);
-                //    break;
+                    //case PostSaleRequestType.Cancel:
+                    //    await _orderService.CancelOrderAsync(postSaleRequest.OrderId);
+                    //    break;
             }
             return true;
         });
@@ -62,7 +62,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         var staffRepo = _unitOfWork.GetRepository<Staff>();
-        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.Id == id, include: q =>q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
+        var postSaleRequest = await postSaleRequestRepo.GetQueryable(predicate: q => q.Id == id, include: q => q.Include(x => x.Order)).FirstOrDefaultAsync() ?? throw new NotFoundException($"Không tìm thấy yêu cầu");
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
@@ -86,7 +86,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
 
         return await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var staff = await staffRepo.SingleOrDefaultAsync( predicate:
+            var staff = await staffRepo.SingleOrDefaultAsync(predicate:
                 s => s.AccountId == _httpContextAccessor.HttpContext.User.GetUserId());
 
             if (staff == null)
@@ -118,7 +118,7 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
 
             var orderItemIds = request.PostSaleItems.Select(x => x.OrderItemId).ToList();
 
-            var orderItems = await orderItemRepo.GetListAsync( predicate:
+            var orderItems = await orderItemRepo.GetListAsync(predicate:
                 oi => orderItemIds.Contains(oi.Id));
 
             var orderItemDict = orderItems.ToDictionary(x => x.Id);
@@ -188,15 +188,26 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
     }
 
     public async Task<PagingResponse<GetPostSaleRequestsResponse>> GetPostSaleRequestsAsync(
+        string? search,
         int pageNumber = 1,
         int pageSize = 20,
         string sortBy = "createddate",
         bool descending = true)
     {
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
+        string? searchKeyword = search?.Trim().ToLower();
         var response = await postSaleRequestRepo.GetPagingListAsync<GetPostSaleRequestsResponse>(
+                predicate: q => string.IsNullOrEmpty(searchKeyword) ||
+                q.Customer.CustomerName.ToLower().Contains(searchKeyword) ||
+                q.Order.Code.ToLower().Contains(searchKeyword),
                 orderBy: q => OrderBy(q, sortBy, descending),
-                include: q => q.Include(x => x.Customer).Include(x => x.PresentByStaff).Include(x => x.PostSaleItems).ThenInclude(i => i.OrderItem).ThenInclude(oi => oi.ProductBatch).ThenInclude(pb => pb.Product),
+                include: q => q.Include(x => x.Customer)
+                .Include(x => x.Order)
+                .Include(x => x.PresentByStaff)
+                .Include(x => x.PostSaleItems)
+                .ThenInclude(i => i.OrderItem)
+                .ThenInclude(oi => oi.ProductBatch)
+                .ThenInclude(pb => pb.Product),
                 selector: e => _mapper.Map<GetPostSaleRequestsResponse>(e),
                 page: pageNumber,
                 size: pageSize

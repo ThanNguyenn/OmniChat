@@ -11,7 +11,7 @@ namespace OmniChat.Application.Services.Interface;
 
 public interface IPostSaleRequestService
 {
-    Task<PagingResponse<GetPostSaleRequestsResponse>> GetPostSaleRequestsAsync(int pageNumber = 1, int pageSize = 20, string sortBy = "createdDate", bool descending = true);
+    Task<PagingResponse<GetPostSaleRequestsResponse>> GetPostSaleRequestsAsync(string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "createdDate", bool descending = true);
 
     Task<GetPostSaleRequestByIdResponse> GetPostSaleRequestByIdAsync(Guid id);
 

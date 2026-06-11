@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
+﻿using OmniChat.Infrastructure.Dtos.Requests.SupportTask;
+using OmniChat.Infrastructure.Dtos.Requests.TaskCancelReason;
 using OmniChat.Infrastructure.Dtos.Responses.SupportTask;
 using OmniChat.Infrastructure.Models;
 using System;
@@ -23,6 +24,10 @@ namespace OmniChat.Application.Services.Interface
         public  Task<bool> CancelSupportTaskAsync(Guid taskId, TaskCancelReasonRequest cancelReasonRequest);
 
         public  Task<IEnumerable<DashboardMonthResponse>> GetTaskTotalByStatusDashboardAsync(string input, SupportTaskStatus status);
+
+        public Task<bool> UpdateSupportTaskIntentTypeAsync(Guid taskId, UpdateSupportTaskRequest updateSupportTask);
+
+        public Task<bool> DeleteSupportTaskAsync(Guid taskId);
 
     }
 }
