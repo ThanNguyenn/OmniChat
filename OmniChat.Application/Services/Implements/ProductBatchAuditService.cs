@@ -76,13 +76,19 @@ public class ProductBatchAuditService : BaseService<ProductBatchAuditService>, I
     }
 
 
-    public async Task<PagingResponse<GetAllAuditResponse>> GetAllAuditAsync(Guid? productId, Guid? batchId, Action? action, int pageNumber = 1, int pageSize = 20, string sortBy = "createdate ", bool descending = true)
+    public async Task<PagingResponse<GetAllAuditResponse>> GetAllAuditAsync(Guid? productId, Guid? batchId, Action? action, string? search , int pageNumber = 1, int pageSize = 20, string sortBy = "createdate ", bool descending = true)
     {
         var repo = _unitOfWork.GetRepository<BatchAudit>();
+
+        var searchKeyword = search?.Trim().ToLower();
+
         var response = await repo.GetPagingListAsync<GetAllAuditResponse>(
             predicate: ba => (!productId.HasValue || ba.ProductBatch.ProductId == productId) &&
                         (!batchId.HasValue || ba.ProductBatchId == batchId) &&
-                        (!action.HasValue || ba.Action == action),
+                        (!action.HasValue || ba.Action == action) &&
+                        (string.IsNullOrEmpty(searchKeyword) ||
+                (ba.ProductBatch.Code != null && ba.ProductBatch.Code.ToLower().Contains(searchKeyword)) ||
+                (ba.ProductBatch.Product.Name != null && ba.ProductBatch.Product.Name.ToLower().Contains(searchKeyword))),
             orderBy: query => OrderBy(query, sortBy, descending),
             include: query => query
                 .Include(ba => ba.ActionBy).Include(ba => ba.ProductBatch).ThenInclude(q=> q.Product),

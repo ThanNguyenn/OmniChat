@@ -136,7 +136,9 @@ public class ProductService : BaseService<ProductService>, IProductService
                     && (BrandId == null || p.BrandId == BrandId)
                     && (string.IsNullOrEmpty(search)
                         || p.Name.Contains(search)
-                        || p.Code.Contains(search)),
+                        || p.Code.Contains(search)
+                        || p.ProductBatches.Any(pb => pb.Code != null && pb.Code.Contains(search))
+                        ),
                 orderBy: q => OrderBy(q, sortBy, descending),
                 selector: e => _mapper.Map<GetAllProductsResponse>(e),
                 include: q => q.Include(p => p.Brand),

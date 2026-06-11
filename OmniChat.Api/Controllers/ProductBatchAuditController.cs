@@ -29,9 +29,9 @@ public class ProductBatchAuditController  : BaseController<ProductBatchAuditCont
        Summary = "Xem danh sách batch audit có paging",
        Description = "Xem danh sách batch audit có paging"
     )]
-    public async Task<IActionResult> GetProductBatchAudits([FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending, Guid? productId,Guid? productBatchId, Action? action)
+    public async Task<IActionResult> GetProductBatchAudits([FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending, Guid? productId,Guid? productBatchId, Action? action, string? search)
      {
-         var result = await _productBatchAuditService.GetAllAuditAsync(productId, productBatchId, action,  pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
+         var result = await _productBatchAuditService.GetAllAuditAsync(productId, productBatchId, action, search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
          var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách batch audit thành công", result);
          return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -44,9 +44,9 @@ public class ProductBatchAuditController  : BaseController<ProductBatchAuditCont
        Summary = "Xem danh sách batch audit theo product id",
        Description = "Xem danh sách batch audit theo product id"
     )]
-    public async Task<IActionResult> GetProductBatchAuditsByProductId([FromRoute] Guid productId, [FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending, Action? action)
+    public async Task<IActionResult> GetProductBatchAuditsByProductId([FromRoute] Guid productId, [FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending, Action? action, string? search)
     {
-        var result = await _productBatchAuditService.GetAllAuditAsync(productId, null, action, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
+        var result = await _productBatchAuditService.GetAllAuditAsync(productId, null, action, search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách batch audit theo id sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -59,9 +59,9 @@ public class ProductBatchAuditController  : BaseController<ProductBatchAuditCont
        Summary = "Xem danh sách batch audit theo productBatch id",
        Description = "Xem danh sách batch audit theo productBatch id"
     )]
-    public async Task<IActionResult> GetProductBatchAuditsByBatchId([FromRoute] Guid productBatchId, [FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending, Action? action)
+    public async Task<IActionResult> GetProductBatchAuditsByBatchId([FromRoute] Guid productBatchId, [FromQuery] int? pageNumber, int? pageSize, string? sortBy, bool? descending, Action? action, string? search)
     {
-        var result = await _productBatchAuditService.GetAllAuditAsync(null, productBatchId, action, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
+        var result = await _productBatchAuditService.GetAllAuditAsync(null, productBatchId, action, search, pageNumber ?? 1, pageSize ?? 20, sortBy ?? "createddate", descending ?? true);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách batch audit theo id lô sản phẩm thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }

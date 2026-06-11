@@ -26,12 +26,5 @@ public interface IProductBatchAuditService
 
     Task<GetDetailByBatchIdResponse> GetDetailByBatchIdAsync(Guid productBatchId);
 
-    Task<PagingResponse<GetAllAuditResponse>> GetAllAuditAsync(
-        Guid? productId,
-        Guid? batchId,
-        Action? action,
-        int pageNumber = 1,
-        int pageSize = 20,
-        string sortBy = "createdate ",
-        bool descending = true);
+    Task<PagingResponse<GetAllAuditResponse>> GetAllAuditAsync(Guid? productId, Guid? batchId, Action? action, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "createdate ", bool descending = true);
 }
