@@ -9,6 +9,10 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Wallet
 {
     public class GetCustomerWalletResponse
     {
+        public Guid Id { get; set; }
+
+        public Guid CustomerId { get; set; }
+
         public double Amount { get; set; }
 
         public double TotalDebt { get; set; }

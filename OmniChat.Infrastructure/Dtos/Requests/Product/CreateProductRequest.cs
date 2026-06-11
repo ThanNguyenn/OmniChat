@@ -31,9 +31,9 @@ public class CreateProductRequest : IValidatableObject
     [Range(1d, double.MaxValue, ErrorMessage = "Price phải >= 1")]
     public double? Price { get; set; }
 
-    [Required(ErrorMessage = "LifeSpan là bắt buộc")]
-    [Range(1, int.MaxValue, ErrorMessage = "LifeSpan phải >= 1")]
-    public int? LifeSpan { get; set; }
+    //[Required(ErrorMessage = "LifeSpan là bắt buộc")]
+    //[Range(1, int.MaxValue, ErrorMessage = "LifeSpan phải >= 1")]
+    //public int? LifeSpan { get; set; }
 
     public IFormFile? Image { get; set; }
 

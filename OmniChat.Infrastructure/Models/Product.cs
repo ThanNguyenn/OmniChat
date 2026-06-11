@@ -36,7 +36,7 @@ namespace OmniChat.Infrastructure.Models
 
         public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
-        public int LifeSpan { get; set; }
+        //public int LifeSpan { get; set; }
 
         public virtual ICollection<ProductBatch> ProductBatches { get; set; } = new List<ProductBatch>();
     }

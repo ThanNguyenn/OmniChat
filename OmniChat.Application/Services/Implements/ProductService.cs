@@ -226,11 +226,15 @@ public class ProductService : BaseService<ProductService>, IProductService
 
                 foreach (var batchRequest in request.ProductBatch)
                 {
-                    var (manufactureDate, expiryDate) =
-                        NormalizeDates(batchRequest, product.LifeSpan);
+                    //var (manufactureDate, expiryDate) =
+                    //    NormalizeDates(batchRequest, product.LifeSpan);
+                    if (!batchRequest.ManuFactureDate.HasValue || !batchRequest.ExpiryDate.HasValue)
+                    {
+                        throw new BadRequestException("Phải nhập đầy đủ ngày sản xuất (ManuFactureDate) và ngày hết hạn (ExpiryDate).");
+                    }
 
-                    var manufactureDateTime = DateTime.SpecifyKind(manufactureDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-                    var expiryDateTime = DateTime.SpecifyKind(expiryDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
+                    var manufactureDateTime = DateTime.SpecifyKind(batchRequest.ManuFactureDate.Value.Date, DateTimeKind.Utc);
+                    var expiryDateTime = DateTime.SpecifyKind(batchRequest.ExpiryDate.Value.Date, DateTimeKind.Utc);
 
                     string dateStr = expiryDateTime.ToString("yyyyMMdd");
 
@@ -274,16 +278,9 @@ public class ProductService : BaseService<ProductService>, IProductService
                     var newBatch = new ProductBatch
                     {
                         ProductId = product.Id,
-                        ManuFactureDate = DateTime.SpecifyKind(
-                            manufactureDate.ToDateTime(TimeOnly.MinValue),
-                            DateTimeKind.Utc),
-
-                        ExpiryDate = DateTime.SpecifyKind(
-                            expiryDate.ToDateTime(TimeOnly.MinValue),
-                            DateTimeKind.Utc),
-
+                        ManuFactureDate = manufactureDateTime,
+                        ExpiryDate = expiryDateTime,           
                         Quantity = batchRequest.Quantity,
-
                         Code = generatedCode,
                     };
                     Console.WriteLine($"[DEBUG LOG] Chuỗi CODE nằm trong Entity trước khi Insert: {newBatch.Code}");

@@ -54,8 +54,7 @@ public class ProductBrandService : BaseService<ProductBrandService>, IProductBra
 
        
         var validProducts = exitBrand.Products
-            .Where(p => p.CreateDate.HasValue &&
-                        p.CreateDate.Value.AddDays(p.LifeSpan) > now)
+            .Where(p => p.CreateDate.HasValue && p.IsActive != false)
             .ToList();
 
         var response = new ProductBrandResponse

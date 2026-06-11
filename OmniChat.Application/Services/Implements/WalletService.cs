@@ -201,6 +201,11 @@ public class WalletService : BaseService<WalletService>, IWalletService
         var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: i => i.Id == invoiceId)
             ?? throw new NotFoundException($"Hóa đơn không tồn tại");
 
+        if (invoice.InvoiceStatus == InvoiceStatus.Completed)
+        {
+            throw new BusinessException($"Hóa đơn đã được thanh toán hoàn , vui lòng chọn hóa đơn khác.");
+        }
+
         if (request.deductedAmount > customerWallet.Amount)
         {
             throw new BusinessException($"Số dư trong ví không đủ để chi trả");
@@ -208,9 +213,9 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-           if(customerWallet.Amount >= request.deductedAmount)
+            if (customerWallet.Amount >= request.deductedAmount)
             {
-                
+
                 var paidAmount = invoice.Total - request.deductedAmount;
 
                 // final amount to pay for invoice
@@ -220,7 +225,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
                 customerWallet.Amount -= request.deductedAmount;
 
                 walletRepo.Update(customerWallet);
-                invoiceRepo.Update(invoice);    
+                invoiceRepo.Update(invoice);
             }
         });
         return true;

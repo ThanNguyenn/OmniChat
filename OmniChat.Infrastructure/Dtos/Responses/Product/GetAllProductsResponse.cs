@@ -31,7 +31,7 @@ public class GetAllProductsResponse
 
     public int Quantity { get; set; }
 
-    public int LifeSpan { get; set; }
+    //public int LifeSpan { get; set; }
 
     public DateTime CreateDate { get; set; }
 }

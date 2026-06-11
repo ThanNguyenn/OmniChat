@@ -21,8 +21,22 @@ public class AddProductBatchRequest : IValidatableObject
         if (!ManuFactureDate.HasValue && !ExpiryDate.HasValue)
         {
             yield return new ValidationResult(
-                "Phải nhập ít nhất một trong hai trường: ManuFactureDate hoặc ExpiryDate.",
+                "Phải nhập cả ngày sản xuất (ManuFactureDate) và ngày hết hạn (ExpiryDate).",
                 new[] { nameof(ManuFactureDate), nameof(ExpiryDate) });
+        }
+
+        if (ExpiryDate.HasValue && ExpiryDate.Value.Date < DateTime.Today)
+        {
+            yield return new ValidationResult(
+                "Hạn sử dụng (ExpiryDate) không được là một ngày trong quá khứ.",
+                new[] { nameof(ExpiryDate) });
+        }
+
+        if (ManuFactureDate.HasValue && ExpiryDate.HasValue && ExpiryDate.Value <= ManuFactureDate.Value)
+        {
+            yield return new ValidationResult(
+                "Hạn sử dụng (ExpiryDate) phải lớn hơn Ngày sản xuất (ManuFactureDate).",
+                new[] { nameof(ExpiryDate), nameof(ManuFactureDate) });
         }
     }
 }
