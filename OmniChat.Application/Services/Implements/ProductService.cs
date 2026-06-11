@@ -438,21 +438,26 @@ public class ProductService : BaseService<ProductService>, IProductService
     public async Task UpdateBatchExpiryAsync()
     {
         var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
-        var now = DateTime.UtcNow;
+        var now = DateTime.UtcNow.Date;
+
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var expiredBatches = await batchRepo.GetListAsync(
-            predicate: b =>
-                b.ExpiryDate.HasValue &&
-                b.ExpiryDate <= now &&
-                (b.IsExpired == null || b.IsExpired == false)
-        );
+            var expiredBatches = await batchRepo
+                .GetQueryable(
+                    predicate: b =>
+                        b.ExpiryDate.HasValue &&
+                        b.ExpiryDate.Value.Date <= now &&
+                        (b.IsExpired == null || b.IsExpired == false),
+                    include: q => q.Include(b => b.Product)
+                )
+                .ToListAsync();
 
             foreach (var batch in expiredBatches)
             {
                 batch.IsExpired = true;
                 batch.IsActive = false;
-                batchRepo.Update(batch);
+                batch.Product.Quantity -= batch.Quantity;
+
                 await _productBatchAuditService.RemoveAsync(
                     batch.Id,
                     batch.Quantity,
