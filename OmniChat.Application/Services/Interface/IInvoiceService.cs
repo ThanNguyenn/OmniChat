@@ -22,4 +22,6 @@ public interface IInvoiceService
     Task<PagingResponse<GetInvoicesResponse>> GetInvoicesAsync(Guid? customerId, string? customerName, InvoiceStatus? status, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false);
 
     Task<GetInvoiceResponse> GetInvoiceAsync(Guid invoiceId);
+
+    public  Task<PagingResponse<InvoiceHistoriesResponse>> GetCustomerInvoiceHistoriesAsync(Guid customerId, int pageNumber = 1, int pageSize = 20);
 }

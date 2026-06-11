@@ -47,10 +47,10 @@ public class InvoiceJobRunner
             throw;
         }
 
-        foreach (var customerId in customerIds)
-        {
-            await _invoiceService.AllocateMoneyToInvoices(customerId);
-            await _payOsService.CreatePaymentLinkAsync(customerId);
-        }
+        //foreach (var customerId in customerIds)
+        //{
+            //await _invoiceService.AllocateMoneyToInvoices(customerId);
+            //await _payOsService.CreatePaymentLinkAsync(customerId);
+        //}
     }
 }

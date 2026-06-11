@@ -165,4 +165,27 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
         return totalDebt > 0;
     }
+
+
+    public async Task<GetCustomerWalletResponse> GetCustomerWallet(Guid customerId)
+    {
+        var walletRepo = _unitOfWork.GetRepository<Wallet>();
+
+
+        var customerWallet = await walletRepo.SingleOrDefaultAsync(predicate:
+            w => w.CustomerId == customerId,
+            include: w => 
+                          w.Include(x => x.Transactions.OrderByDescending(t => t.CreateDate))
+                           .Include(w => w.Allocations.OrderByDescending(a => a.CreateDate)).ThenInclude(a => a.Invoice)
+            );
+
+        var response = _mapper.Map<GetCustomerWalletResponse>(customerWallet);
+
+        var invoiceCaculate = await CalculateWallet(customerId);
+
+        response.TotalDebt = invoiceCaculate.TotalDebt;
+
+        return response;
+    }
+
 }

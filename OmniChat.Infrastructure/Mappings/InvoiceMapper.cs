@@ -23,5 +23,7 @@ public class InvoiceMapper : Profile
                  opt => opt.MapFrom(src => src.CustomerProfile.PhoneNumber)).ForMember(dest => dest.CustomerEmail,
                  opt => opt.MapFrom(src => src.CustomerProfile.Email)).ForMember(dest => dest.CustomerAddress,
                  opt => opt.MapFrom(src => src.CustomerProfile.Address));
+
+        CreateMap<Invoice, InvoiceHistoriesResponse>();
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.BackgroundJobs;
 using OmniChat.Application.Services.Interface;
@@ -14,13 +15,15 @@ namespace OmniChat.Api.Controllers;
 public class InvoiceController : BaseController<InvoiceController>
 {
     private readonly IInvoiceService _invoiceService;
+    private readonly IPayOsService _payOsService;
     private readonly InvoiceJobRunner _runner;
     private readonly ISheetExportService _sheetExportService;
     private readonly IWebHostEnvironment _hostingEnvironment;
-    public InvoiceController(ILogger<InvoiceController> logger, IInvoiceService invoiceService, InvoiceJobRunner runner, ISheetExportService sheetExportService, IWebHostEnvironment hostingEnvironment) : base(logger)
+    public InvoiceController(ILogger<InvoiceController> logger, IInvoiceService invoiceService, IPayOsService payOsService, InvoiceJobRunner runner, ISheetExportService sheetExportService, IWebHostEnvironment hostingEnvironment) : base(logger)
 
     {
         _invoiceService = invoiceService;
+        _payOsService = payOsService;
         _runner = runner;
         _sheetExportService = sheetExportService;
         _hostingEnvironment = hostingEnvironment;
@@ -142,5 +145,31 @@ public class InvoiceController : BaseController<InvoiceController>
         }
 
         return Redirect("https://omni-chat-web.vercel.app/payment?status=fail");
+    }
+
+    [HttpGet(ApiEndPointConstant.Invoice.InvoiceHistories)]
+    [ProducesResponseType(typeof(ApiResponse<PagingResponse<InvoiceHistoriesResponse>>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+        Summary = "Lấy lịch sữ invoice của customer",
+        Description = "Lấy lịch sữ hóa đơn thanh toán của khách hàng có paging"
+    )]
+    public async Task<IActionResult> GetCustomerInvoiceAsync([FromRoute] Guid customerId,int? pageNumber, int? pageSize)
+    {
+        var result = await _invoiceService.GetCustomerInvoiceHistoriesAsync(customerId, pageNumber ?? 1, pageSize ?? 10);
+
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách phiếu thanh toán khách hàng thành công", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpPost(ApiEndPointConstant.Invoice.CreatePaymentLink)]
+    [SwaggerOperation(
+        Summary = "Tạo liên kết thanh toán",
+        Description = "Tạo liên kết thanh toán cho khách hàng."
+    )]
+    public async Task<IActionResult> CreatePaymentLink([FromRoute] Guid customerId)
+    {
+        var result = await _payOsService.CreatePaymentLinkAsync(customerId);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Tạo liên kết thanh toán thành công", result);
+        return StatusCode(StatusCodes.Status200OK, response);
     }
 }

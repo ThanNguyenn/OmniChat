@@ -328,8 +328,8 @@ namespace OmniChat.Application.Services.Implements
 
             var totalItems = await query.CountAsync();
 
-            if (totalItems == 0)
-                throw new NotFoundException("Không tìm thấy yêu cầu khiếu nại cho nhân viên này");
+            //if (totalItems == 0)
+            //    throw new NotFoundException("Không tìm thấy yêu cầu khiếu nại cho nhân viên này");
 
             var items = await query
                 .OrderByDescending(c => c.SubmitDate)

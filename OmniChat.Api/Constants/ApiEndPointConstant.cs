@@ -222,6 +222,7 @@ public class ApiEndPointConstant
         public const string GetPendingByShipper = "shipper/{shipperId}/pending";
         public const string GetHistoryByShipper = "shipper/{shipperId}/history";
         public const string CountDelivered = "delivered/count";
+        public const string GetOrdersInInvoice = "invoice/{invoiceId}";
     }
 
     public static class FacebookOAuthToken
@@ -252,6 +253,7 @@ public class ApiEndPointConstant
         public const string Base = ApiV1 + "/wallets";
         public const string Payment = "payment";
         public const string Get = "{id}";
+        public const string GetCustomerWallet = "wallet/{customerId}";
     }
 
     public static class PostSaleRequest
@@ -293,6 +295,8 @@ public class ApiEndPointConstant
         public const string GetAll = Base + "/get";
         public const string GetById = Base + "/get/{id}";
         public const string ConfirmPayment = Base + "/confirm-payment";
+        public const string InvoiceHistories = Base + "/customer/{customerId}/histories";
+        public const string CreatePaymentLink = Base + "/{customerId}/create-payment-link";
 
     }
 

@@ -7,6 +7,7 @@ using Net.payOS;
 using Net.payOS.Types;
 using OmniChat.Application.Services.Interface;
 using OmniChat.Infrastructure.Dtos.Requests.Mail;
+using OmniChat.Infrastructure.Exceptions;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
@@ -83,17 +84,36 @@ namespace OmniChat.Application.Services.Implements
             // gửi link này về email cho khách hàng qua email address
 
             var customer = await _unitOfWork.GetRepository<CustomerProfile>().SingleOrDefaultAsync(predicate: x => x.Id == customerId);
+            if (customer == null) { 
+            throw new NotFoundException("Customer not found");
+            }
 
+            //var mailContent = new MailContent
+            //{
+            //    To = customer.Email,
+            //    Subject = "Đường dẫn thanh toán",
+            //    Body = $"Vui lòng nhấp vào liên kết sau để hoàn tất thanh toán của bạn: {paymentLink.checkoutUrl}" 
+            //};
 
-            var mailContent = new MailContent
+                //await _mailService.SendEmailAsync(mailContent);
+
+            string pathLink = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "PaymentLinkTemplate.html");
+            if (File.Exists(pathLink))
             {
-                To = customer.Email,
-                Subject = "Đường dẫn thanh toán",
-                Body = $"Vui lòng nhấp vào liên kết sau để hoàn tất thanh toán của bạn: {paymentLink.checkoutUrl}"
-            };
+                string bodyLink = await File.ReadAllTextAsync(pathLink);
 
-            await _mailService.SendEmailAsync(mailContent);
+                bodyLink = bodyLink.Replace("{{CustomerName}}", customer.CustomerName ?? "Quý khách")
+                                   .Replace("{{CheckoutUrl}}", paymentLink.checkoutUrl);
 
+                var mailContent = new MailContent
+                {
+                    To = customer.Email,
+                    Subject = "Đường dẫn thanh toán đơn hàng - BaoHanCompany",
+                    Body = bodyLink
+                };
+
+                await _mailService.SendEmailAsync(mailContent);
+            }
             return paymentLink.checkoutUrl;
         }
 
@@ -143,14 +163,14 @@ namespace OmniChat.Application.Services.Implements
                 if (body.code == "00")
                 {
 
-                    var depositTran = new Transaction
+                    var successfulAllocationTrans = new Transaction
                     {
                         WalletId = wallet.Id,
                         Amount = verifiedData.amount,
-                        TransactionType = TransactionType.Deposit,
+                        TransactionType = TransactionType.AllocateForInvoice,
                     };
 
-                    await transactionRepo.InsertAsync(depositTran);
+                    await transactionRepo.InsertAsync(successfulAllocationTrans);
 
                     wallet.Amount += verifiedData.amount;
 
@@ -180,11 +200,23 @@ namespace OmniChat.Application.Services.Implements
 
                         if (!string.IsNullOrEmpty(customerEmail))
                         {
+                            //await _mailService.SendEmailAsync(new MailContent
+                            //{
+                            //    To = customerEmail,
+                            //    Subject = "Hoàn thành Đơn hàng",
+                            //    Body = $"Đơn hàng của bạn {order.Name} đã được hoàn thành. Cảm ơn bạn! \n"
+                            //});
+
+                            string pathCompleted = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "OrderCompletedTemplate.html");
+                            string bodyCompleted = await File.ReadAllTextAsync(pathCompleted);
+
+                            bodyCompleted = bodyCompleted.Replace("{{OrderName}}", order.Name);
+
                             await _mailService.SendEmailAsync(new MailContent
                             {
                                 To = customerEmail,
-                                Subject = "Hoàn thành Đơn hàng",
-                                Body = $"Đơn hàng của bạn {order.Name} đã được hoàn thành. Cảm ơn bạn!"
+                                Subject = "Hoàn thành Đơn hàng - BaoHanCompany",
+                                Body = bodyCompleted
                             });
                         }
                     }
@@ -196,12 +228,23 @@ namespace OmniChat.Application.Services.Implements
                 }
                 else
                 {
+
                     if (!string.IsNullOrEmpty(customerEmail))
                     {
+                        //await _mailService.SendEmailAsync(new MailContent
+                        //{ To = customerEmail,
+                        //  Subject = "Đơn hàng thất bại",
+                        //  Body = $"Hóa đơn của bạn đã thất bại trong việc thanh toán. Vui lòng thử lại sau."
+                        //});
+
+                        string pathFailed = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "PaymentFailedTemplate.html");
+                        string bodyFailed = await File.ReadAllTextAsync(pathFailed);
+
                         await _mailService.SendEmailAsync(new MailContent
-                        { To = customerEmail,
-                          Subject = "Đơn hàng thất bại",
-                          Body = $"Hóa đơn của bạn đã thất bại trong việc thanh toán. Vui lòng thử lại sau."
+                        {
+                            To = customerEmail,
+                            Subject = "Đơn hàng thất bại - Thanh toán không thành công",
+                            Body = bodyFailed
                         });
                     }
                     return true;

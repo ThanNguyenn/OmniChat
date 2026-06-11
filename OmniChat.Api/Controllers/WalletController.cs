@@ -49,5 +49,17 @@ public class WalletController : BaseController<WalletController>
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
+    [HttpGet(ApiEndPointConstant.Wallet.GetCustomerWallet)]
+    [ProducesResponseType(typeof(ApiResponse<GetCustomerWalletResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Lấy ví theo customer Id có chứa lịch sữ thanh toán",
+        Description = "Lấy ví tiền có chứa lịch sữ thanh toán ")]
+    public async Task<IActionResult> GetCustomerWalletAsync([FromRoute] Guid customerId)
+    {
+        var result = await _walletService.GetCustomerWallet(customerId);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem ví thành công", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
 
 }

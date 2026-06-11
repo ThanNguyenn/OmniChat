@@ -340,5 +340,16 @@ public class OrderController : BaseController<OrderController>
         return Ok(result);
     }
 
-
+    [HttpGet(ApiEndPointConstant.Order.GetOrdersInInvoice)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<InvoiceOrderResponse>>), StatusCodes.Status200OK)]
+    [SwaggerOperation(
+     Summary = "Get Orders in Invoice",
+     Description = "Lấy danh sách đơn hàng trong một hóa đơn cụ thể."
+    )]
+    public async Task<IActionResult> GetOrdersInInvoice([FromRoute] Guid invoiceId)
+    {
+        var result = await _orderService.GetOrdersINvoiceAsync(invoiceId);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem danh sách đơn hàng trong hóa đơn thành công", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
 }

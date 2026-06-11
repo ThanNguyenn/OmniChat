@@ -96,6 +96,21 @@ public class OrderMapper : Profile
             .ForMember(dest => dest.CustomerPhoneNumber, opt => opt.MapFrom(src => src.CustomerProfile.PhoneNumber))
             .ForMember(dest => dest.CustomerAddress, opt => opt.MapFrom(src => src.CustomerProfile.Address))
             .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.OrderItems));
-      ;
+
+        CreateMap<Order, InvoiceOrderResponse>()
+            .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src =>
+                src.OrderItems.Sum(oi =>
+                    oi.ProductBatch.Product.Price *
+                    (
+                        oi.Quantity -
+                        oi.PostSaleItem
+                            .Where(ps =>
+                                ps.PostSaleRequest.Type == PostSaleRequestType.Return &&
+                                ps.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
+                            .Sum(ps => ps.Quantity)
+                    )
+                )
+            ));
+        ;
     }
 }

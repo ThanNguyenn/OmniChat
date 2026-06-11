@@ -19,4 +19,6 @@ public interface IWalletService
     Task<bool> AddCreditToWallet(Guid customerId, int amount);
     Task<GetWalletResponse> CalculateWallet(Guid customerId);
     Task<bool> HasDebt(Guid customerId);
+
+    public  Task<GetCustomerWalletResponse> GetCustomerWallet(Guid customerId);
 }

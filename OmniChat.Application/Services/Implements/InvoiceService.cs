@@ -75,7 +75,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     invoice.InvoiceStatus = InvoiceStatus.Completed;
                     invoice.CompletedDate = DateTime.UtcNow;
 
-            
+
                     foreach (var order in invoice.Orders)
                     {
                         _logger.LogInformation("Updating order {orderId} status to Completed", order.Id);
@@ -85,12 +85,27 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     invoiceRepo.Update(invoice);
                     _unitOfWork.Commit();
                     _unitOfWork.Context.ChangeTracker.Clear();
+
+                    //var mailContent = new MailContent
+                    //{
+                    //    To = invoice.CustomerProfile.Email,
+                    //    Subject = "Thông báo thanh toán hóa đơn",
+                    //    Body = $"Hóa đơn của bạn :{invoice.InvoiceCode} đã được thành toán bằng ví"
+                    //};
+                    //await _mailService.SendEmailAsync(mailContent);
+                    string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "InvoiceEmailTemplate.html");
+                    string htmlBody = await File.ReadAllTextAsync(templatePath);
+                    htmlBody = htmlBody.Replace("{{CustomerName}}", invoice.CustomerProfile?.CustomerName ?? "Quý khách")
+                   .Replace("{{InvoiceCode}}", invoice.InvoiceCode.ToString())
+                   .Replace("{{TotalAmount}}", paidAmount.ToString("N0"));
+                    
                     var mailContent = new MailContent
                     {
-                        To = invoice.CustomerProfile.Email,
-                        Subject = "Thông báo thanh toán hóa đơn",
-                        Body = $"Hóa đơn của bạn :{invoice.InvoiceCode} đã được thành toán bằng ví"
+                        To = invoice.CustomerProfile?.Email,
+                        Subject = "Thông báo thanh toán hóa đơn thành công - BaoHanCompany",
+                        Body = htmlBody 
                     };
+
                     await _mailService.SendEmailAsync(mailContent);
                     continue;
                 }
@@ -113,7 +128,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 {
                     invoice.InvoiceStatus = InvoiceStatus.Completed;
                     invoice.CompletedDate = DateTime.UtcNow;
-                    
+
                     foreach (var order in invoice.Orders.ToList())
                     {
                         _logger.LogInformation("Updating order {orderId} status to Completed", order.Id);
@@ -142,7 +157,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
 
         var invoicesToInsert = new List<Invoice>();
-
+        var emailListToRequest = new List<(string Email, string CustomerName, Guid CustomerId)>();
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
             var orders = await orderRepo.GetListAsync(predicate: o =>
@@ -152,7 +167,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 o.InvoiceId == null &&
                 !(o.IsDeleted ?? false)
                 , include: o => o.Include(x => x.CreditNotes.Where(cn =>
-            cn.CreditNoteType == CreditNoteType.Adjustment))
+            cn.CreditNoteType == CreditNoteType.Adjustment)).Include(x => x.CustomerProfile)
             );
             _logger.LogInformation("Orders found: {count}", orders.Count);
             if (!orders.Any())
@@ -188,6 +203,17 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                 //    continue;
 
                 var customerOrders = group.ToList();
+
+                var firstOrder = customerOrders.FirstOrDefault();
+                if (firstOrder?.CustomerProfile != null)
+                {
+                    emailListToRequest.Add((
+                        Email: firstOrder.CustomerProfile.Email,
+                        CustomerName: firstOrder.CustomerProfile.CustomerName ?? "Quý khách",
+                        CustomerId: customerId
+                    ));
+                }
+
                 var orderTotal = customerOrders.Sum(o =>
                 {
                     var adjustment = 0d;
@@ -209,7 +235,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
 
                 var walletBalance = wallet?.Amount ?? 0;
 
-                var deduction = Math.Min(orderTotal, walletBalance);
+                //var deduction = Math.Min(orderTotal, walletBalance);
 
                 invoicesToInsert.Add(new Invoice
                 {
@@ -217,12 +243,15 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     StartedDate = from,
                     EndedDate = to,
                     Total = orderTotal,
-                    DeductedAmount = deduction,
+                    //DeductedAmount = deduction,
+                    DeductedAmount = 0,
                     InvoiceStatus = InvoiceStatus.Pending,
                     CreateAt = DateTime.UtcNow
                 });
 
-                _logger.LogInformation("Prepared invoice for CustomerId: {customerId}, Total: {total}, DeductedAmount: {deductedAmount}", customerId, orderTotal, deduction);
+
+
+                //_logger.LogInformation("Prepared invoice for CustomerId: {customerId}, Total: {total}, DeductedAmount: {deductedAmount}", customerId, orderTotal, deduction);
             }
 
             if (!invoicesToInsert.Any())
@@ -251,6 +280,40 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
             }
         });
         _unitOfWork.Context.ChangeTracker.Clear();
+
+        if (invoicesToInsert.Any())
+        {
+            string pathHistory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "PaymentHistoryLinkTemplate.html");
+
+            if (File.Exists(pathHistory))
+            {
+                string baseTemplate = await File.ReadAllTextAsync(pathHistory);
+
+                foreach (var customerMailInfo in emailListToRequest)
+                {
+                    try
+                    {
+                        string historyUrl = $"https://omni-chat-web.vercel.app/pay-check/{customerMailInfo.CustomerId}";
+                        string bodyHistory = baseTemplate.Replace("{{CustomerName}}", customerMailInfo.CustomerName)
+                                                         .Replace("{{HistoryUrl}}", historyUrl);
+
+                        var mailContent = new MailContent
+                        {
+                            To = customerMailInfo.Email,
+                            Subject = "Liên kết truy cập lịch sử thanh toán đơn hàng - BaoHanCompany",
+                            Body = bodyHistory
+                        };
+
+                        await _mailService.SendEmailAsync(mailContent);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Lỗi gửi mail lịch sử thanh toán cho CustomerId: {id}", customerMailInfo.CustomerId);
+                    }
+                }
+            }
+        }
+
         return invoicesToInsert
             .Select(i => i.CustomerId)
             .Distinct()
@@ -419,5 +482,18 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
         return _mapper.Map<GetInvoiceResponse>(invoice);
     }
 
+    public async Task<PagingResponse<InvoiceHistoriesResponse>> GetCustomerInvoiceHistoriesAsync(Guid customerId, int pageNumber = 1, int pageSize = 20)
+    {
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
+        var pagedInvoices = await invoiceRepo.GetPagingListAsync(
+            predicate: p => p.CustomerId == customerId && p.IsDeleted == false,
+            orderBy: q => q.OrderByDescending(s => s.CreateAt),
+            selector: e => _mapper.Map<InvoiceHistoriesResponse>(e),
+            page: pageNumber,
+            size: pageSize
+        );
+
+       return pagedInvoices;
+    }
 }

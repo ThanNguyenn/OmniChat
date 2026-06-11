@@ -23,8 +23,9 @@ namespace OmniChat.Infrastructure.Models
 
     public enum TransactionType
     {
-        Credit = 0,
-        Deposit = 1,
-        Refund = 2,
+        Credit = 0, //  hoan tien
+        Deposit = 1, // nap tien vao vi
+        Refund = 2,  
+        AllocateForInvoice = 3, // chi tra hoa don
     }
 }

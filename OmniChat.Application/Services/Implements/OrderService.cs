@@ -372,13 +372,30 @@ public class OrderService : BaseService<OrderService>, IOrderService
             order.DeliveriedDate = DateTime.UtcNow;
             orderRepo.Update(order);
 
+            //var mailContent = new MailContent
+            //{
+            //    To = order.CustomerProfile.Email,
+            //    Subject = $"Đơn hàng {order.Code} đã được giao",
+            //    Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được giao thành công vào ngày {order.DeliveriedDate.Value.ToString("dd/MM/yyyy")}.\n\nCảm ơn bạn đã mua sắm tại cửa hàng chúng tôi!"
+            //};
+
+            //await mailService.SendEmailAsync(mailContent);
+
+            string pathDelivered = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "OrderDeliveredTemplate.html");
+            string bodyDelivered = await File.ReadAllTextAsync(pathDelivered);
+
+            string dateStr = order.DeliveriedDate.HasValue ? order.DeliveriedDate.Value.ToString("dd/MM/yyyy HH:mm") : DateTime.Now.ToString("dd/MM/yyyy");
+
+            bodyDelivered = bodyDelivered.Replace("{{CustomerName}}", order.CustomerProfile?.CustomerName ?? "Quý khách")
+                                         .Replace("{{OrderCode}}", order.Code)
+                                         .Replace("{{DeliveryDate}}", dateStr);
+
             var mailContent = new MailContent
             {
                 To = order.CustomerProfile.Email,
-                Subject = $"Đơn hàng {order.Code} đã được giao",
-                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được giao thành công vào ngày {order.DeliveriedDate.Value.ToString("dd/MM/yyyy")}.\n\nCảm ơn bạn đã mua sắm tại cửa hàng chúng tôi!"
+                Subject = $"Đơn hàng {order.Code} đã được giao thành công",
+                Body = bodyDelivered
             };
-
             await mailService.SendEmailAsync(mailContent);
 
             return true;
@@ -405,13 +422,29 @@ public class OrderService : BaseService<OrderService>, IOrderService
             await creditNoteService.CreateCreditNoteRefundAsync(orderId, amount);
 
 
+            //var mailContent = new MailContent
+            //{
+            //    To = order.CustomerProfile.Email,
+            //    Subject = $"Đơn hàng {order.Code} đã được hoàn trả",
+            //    Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được hoàn trả thành công, số tiền được hoàn trả là {amount}"
+            //};
+            //await mailService.SendEmailAsync(mailContent);
+
+            string pathRefunded = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "OrderRefundedTemplate.html");
+            string bodyRefunded = await File.ReadAllTextAsync(pathRefunded);
+
+            bodyRefunded = bodyRefunded.Replace("{{CustomerName}}", order.CustomerProfile?.CustomerName ?? "Quý khách")
+                                         .Replace("{{OrderCode}}", order.Code)
+                                         .Replace("{{RefundAmount}}", amount.ToString("N0")); // Định dạng số tiền VD
+
             var mailContent = new MailContent
             {
                 To = order.CustomerProfile.Email,
-                Subject = $"Đơn hàng {order.Code} đã được hoàn trả",
-                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được hoàn trả thành công, số tiền được hoàn trả là {amount}"
+                Subject = $"Đơn hàng {order.Code} đã được hoàn trả & hoàn tiền",
+                Body = bodyRefunded
             };
             await mailService.SendEmailAsync(mailContent);
+
             return true;
         });
     }
@@ -433,14 +466,29 @@ public class OrderService : BaseService<OrderService>, IOrderService
             orderRepo.Update(order);
             await creditNoteService.CreateCreditNoteAdjustmentAsync(orderId, amount);
 
+            //var mailContent = new MailContent
+            //{
+            //    To = order.CustomerProfile.Email,
+            //    Subject = $"Đơn hàng {order.Code} đã được trả hàng ",
+            //    Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được trả hàng thành công"
+
+            //};
+            //await mailService.SendEmailAsync(mailContent);
+
+            string pathReturned = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MailTemplate", "OrderReturnedTemplate.html");
+            string bodyReturned = await File.ReadAllTextAsync(pathReturned);
+
+            bodyReturned = bodyReturned.Replace("{{CustomerName}}", order.CustomerProfile?.CustomerName ?? "Quý khách")
+                                         .Replace("{{OrderCode}}", order.Code);
+
             var mailContent = new MailContent
             {
                 To = order.CustomerProfile.Email,
-                Subject = $"Đơn hàng {order.Code} đã được trả hàng ",
-                Body = $"Kính gửi {order.CustomerProfile.CustomerName},\n\nĐơn hàng của bạn với mã {order.Code} đã được trả hàng thành công"
-
+                Subject = $"Đơn hàng {order.Code} đã được trả hàng thành công",
+                Body = bodyReturned
             };
             await mailService.SendEmailAsync(mailContent);
+
             return true;
         });
     }
@@ -841,5 +889,25 @@ public class OrderService : BaseService<OrderService>, IOrderService
         });
 
         return true;
+    }
+
+    public async Task<IEnumerable<InvoiceOrderResponse>> GetOrdersINvoiceAsync(Guid invoiceId)
+    {
+        var orderRepo = _unitOfWork.GetRepository<Order>();
+
+        var orders = await orderRepo.GetListAsync(
+        predicate: o => o.InvoiceId == invoiceId,
+        include: query => query
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductBatch)
+                    .ThenInclude(pb => pb.Product)
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.PostSaleItem)
+                    .ThenInclude(ps => ps.PostSaleRequest)
+        );
+
+        var response = _mapper.Map<IEnumerable<InvoiceOrderResponse>>(orders);
+
+        return response;
     }
 }

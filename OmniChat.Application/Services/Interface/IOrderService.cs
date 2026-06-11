@@ -44,4 +44,6 @@ public interface IOrderService
 
     public  Task<ShipperDeliveredReportResponse> GetDeliveredReportAsync(Guid shipperId, DateTime? fromDate, DateTime? toDate, int pageNumber = 1, int pageSize = 20);
 
+    public  Task<IEnumerable<InvoiceOrderResponse>> GetOrdersINvoiceAsync(Guid invoiceId);
+
 }

@@ -29,4 +29,10 @@
 		<ProjectReference Include="..\OmniChat.Infrastructure\OmniChat.Infrastructure.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="MailTemplate\InvoiceEmailTemplate.html">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>
