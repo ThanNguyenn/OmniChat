@@ -173,12 +173,15 @@ public class WalletService : BaseService<WalletService>, IWalletService
         var walletRepo = _unitOfWork.GetRepository<Wallet>();
 
 
-        var customerWallet = await walletRepo.SingleOrDefaultAsync(predicate:
-            w => w.CustomerId == customerId,
-            include: w =>
-                          w.Include(x => x.Transactions.OrderByDescending(t => t.CreateDate))
-                           .Include(w => w.Allocations.OrderByDescending(a => a.CreateDate)).ThenInclude(a => a.Invoice)
-            );
+        var customerWallet = await walletRepo.SingleOrDefaultAsync(
+        predicate: w => w.CustomerId == customerId,
+        include: w => w
+            .Include(x => x.Transactions.OrderByDescending(t => t.CreateDate))
+                .ThenInclude(t => t.Allocation)
+                    .ThenInclude(a => a.Invoice)
+            .Include(x => x.Allocations.OrderByDescending(a => a.CreateDate))
+                .ThenInclude(a => a.Invoice)
+         );
 
         var response = _mapper.Map<GetCustomerWalletResponse>(customerWallet);
 

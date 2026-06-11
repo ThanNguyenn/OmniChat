@@ -19,6 +19,8 @@ namespace OmniChat.Infrastructure.Models
         public DateTime? CreateDate { get; set; } = DateTime.UtcNow;
 
         public TransactionType TransactionType { get; set; }
+
+        public virtual Allocation Allocation { get; set; }
     }
 
     public enum TransactionType

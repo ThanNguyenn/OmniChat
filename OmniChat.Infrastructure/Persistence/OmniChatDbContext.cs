@@ -698,6 +698,13 @@ namespace OmniChat.Infrastructure.Persistence
                 .HasIndex(a => a.Id); // index scan allocation by id faster
 
 
+            // ==== Allocation - Transaction (one to one)
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Allocation)
+                .WithOne(a => a.Transaction)
+                .HasForeignKey<Allocation>(a => a.TransactionId)
+                .IsRequired(false) 
+                .OnDelete(DeleteBehavior.Restrict);
             // ==== Invoice - Allocation ( one to Many ) ====
             modelBuilder.Entity<Allocation>()
                 .HasOne(a => a.Invoice)

@@ -18,6 +18,10 @@ namespace OmniChat.Infrastructure.Models
 
         public virtual Invoice Invoice { get; set; }
 
+        public Guid? TransactionId { get; set; }
+
+        public virtual Transaction Transaction { get; set; }
+
         public double Amount { get; set; }
 
         public AllocationType AllocationType { get; set; }

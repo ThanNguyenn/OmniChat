@@ -56,22 +56,23 @@ namespace OmniChat.Application.Services.Implements
 
             if (invoice == null) throw new Exception("Invoice not found");
 
-            var total = invoice.Total;
+            //var total = invoice.Total;
             var paid = invoice.PaidAmount;
-            var remainingAmount = total - paid;
+            //var remainingAmount = total - paid;
 
             long payOsOrderCode = invoice.InvoiceCode;
 
             var items = invoice.Orders.Select(order => new ItemData(
                 name: order.Name,
                 quantity: 1,
-                price: (int)order.TotalAmount
+                price: (int)paid
             )).ToList();
 
 
             var paymentData = new PaymentData(
               orderCode: payOsOrderCode,
-                amount: (int)remainingAmount,
+                //amount: (int)remainingAmount,
+                 amount: (int)paid,
                  description: $"Payment for {invoice.CreateAt:dd-MM}",
                      cancelUrl: "https://omnichat.click/api/v1/invoices/confirm-payment",
                          returnUrl: "https://omnichat.click/api/v1/invoices/confirm-payment",
@@ -169,9 +170,7 @@ namespace OmniChat.Application.Services.Implements
                         Amount = verifiedData.amount,
                         TransactionType = TransactionType.AllocateForInvoice,
                     };
-
-                    await transactionRepo.InsertAsync(successfulAllocationTrans);
-
+                        
                     wallet.Amount += verifiedData.amount;
 
 
@@ -181,7 +180,10 @@ namespace OmniChat.Application.Services.Implements
                         InvoiceId = invoice.Id,
                         Amount = verifiedData.amount,
                         AllocationType = AllocationType.Payment,
+                       Transaction = successfulAllocationTrans
                     };
+
+                    await transactionRepo.InsertAsync(successfulAllocationTrans);
 
                     await allocationRepo.InsertAsync(allocation);
 

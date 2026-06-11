@@ -21,36 +21,48 @@ public class WalletMapper : Profile
 
         CreateMap<Transaction, GetTransactionResponse>();
 
-        CreateMap<Wallet, GetCustomerWalletResponse>()
-               .ForMember(dest => dest.CustomerTransactions, opt => opt.MapFrom(src => src.Transactions))
-               .ForMember(dest => dest.TotalDebt, opt => opt.Ignore())
-               .AfterMap((src, dest) =>
-               {
-                   if (dest.CustomerTransactions == null) return;
+            CreateMap<Wallet, GetCustomerWalletResponse>()
+         .ForMember(dest => dest.CustomerTransactions, opt => opt.MapFrom(src => src.Transactions))
+         .ForMember(dest => dest.TotalDebt, opt => opt.Ignore())
+         .AfterMap((src, dest) =>
+         {
+             if (dest.CustomerTransactions == null) return;
 
-                   var allocations = src.Allocations.ToList();
-                   foreach (GetCustomerTransactionResponse resTrans in dest.CustomerTransactions)
-                   {
+             var leftoverAllocations = src.Allocations.ToList();
 
-                       if (resTrans.TransactionType == TransactionType.AllocateForInvoice)
-                       {
-                          
-                           var allocation = allocations.FirstOrDefault(a => a.Id == resTrans.Id);
-                            
-                           if(allocation != null)
-                           {
-                               resTrans.InvoiceId = allocation.InvoiceId;
-                               resTrans.PaymentStatus = allocation.Invoice.InvoiceStatus;
-                           }
-                       }
-                   }
-               })
-               ;
+             foreach (GetCustomerTransactionResponse resTrans in dest.CustomerTransactions)
+             {
+                 if (resTrans.TransactionType == TransactionType.AllocateForInvoice)
+                 {
+                     Allocation allocation = null;
 
-     
 
-        CreateMap<Transaction, GetCustomerTransactionResponse>()
-            .ForMember(dest => dest.PaymentStatus, opt => opt.Ignore())
-            .ForMember(dest => dest.InvoiceId, opt => opt.Ignore());
+                     var originalTrans = src.Transactions.FirstOrDefault(t => t.Id == resTrans.Id);
+                     if (originalTrans?.Allocation != null)
+                     {
+                         allocation = originalTrans.Allocation;
+                     }
+
+                     if (allocation == null)
+                     {
+                         allocation = leftoverAllocations.FirstOrDefault(a =>
+                             a.TransactionId == null &&
+                             a.Amount == resTrans.Amount);
+                     }
+
+                     if (allocation != null)
+                     {
+                         resTrans.InvoiceId = allocation.InvoiceId;
+                         resTrans.PaymentStatus = allocation.Invoice?.InvoiceStatus;
+
+                         leftoverAllocations.Remove(allocation);
+                     }
+                 }
+             }
+         });
+
+            CreateMap<Transaction, GetCustomerTransactionResponse>()
+                .ForMember(dest => dest.PaymentStatus, opt => opt.Ignore())
+                .ForMember(dest => dest.InvoiceId, opt => opt.Ignore());
     }
 }
