@@ -127,6 +127,7 @@ public class ProductService : BaseService<ProductService>, IProductService
     public async Task<PagingResponse<GetAllProductsResponse>> GetProductsAsync(PackagingType? PackagingType, ProductKind? ProductKind, double? VolumeMl, Guid? BrandId, string? search, int pageNumber = 1, int pageSize = 20, string sortBy = "id", bool descending = false)
     {
         var productRepo = _unitOfWork.GetRepository<Product>();
+        var searchKeyword = search?.Trim().ToLower();
         var response = await productRepo.GetPagingListAsync<GetAllProductsResponse>(
                 predicate: p =>
                     p.IsActive != false
@@ -134,10 +135,10 @@ public class ProductService : BaseService<ProductService>, IProductService
                     && (ProductKind == null || p.ProductKind == ProductKind)
                     && (VolumeMl == null || p.VolumeMl == VolumeMl)
                     && (BrandId == null || p.BrandId == BrandId)
-                    && (string.IsNullOrEmpty(search)
-                        || p.Name.Contains(search)
-                        || p.Code.Contains(search)
-                        || p.ProductBatches.Any(pb => pb.Code != null && pb.Code.Contains(search))
+                    && (string.IsNullOrEmpty(searchKeyword)
+                        || p.Name.ToLower().Contains(searchKeyword)
+                        || p.Code.ToLower().Contains(searchKeyword)
+                        || p.ProductBatches.Any(pb => pb.Code != null && pb.Code.ToLower().Contains(searchKeyword))
                         ),
                 orderBy: q => OrderBy(q, sortBy, descending),
                 selector: e => _mapper.Map<GetAllProductsResponse>(e),

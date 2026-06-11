@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿ using AutoMapper;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Requests.Product;
 using OmniChat.Infrastructure.Dtos.Responses.Invoice;
@@ -112,16 +112,25 @@ public class OrderMapper : Profile
                     )
                 )
             ))
-            .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(
-                src => src.OrderItems.Select(oi => new InvoiceItemResponse
-                {
-                    ProductName = oi.ProductBatch.Product.Name,
-                    ImageUrl = oi.ProductBatch.Product.ImageUrl,
-                    SinglePrice = oi.ProductBatch.Product.Price,
-                    Quantity = oi.Quantity,
+          .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src =>
+        src.OrderItems.Select(oi => new InvoiceItemResponse
+        {
+            ProductName = oi.ProductBatch.Product.Name,
+            ImageUrl = oi.ProductBatch.Product.ImageUrl,
+            SinglePrice = oi.ProductBatch.Product.Price,
 
-                    TotalPrice = oi.Quantity * oi.ProductBatch.Product.Price
-                }).ToList()
+            Quantity = oi.Quantity - oi.PostSaleItem
+                .Where(ps =>
+                    ps.PostSaleRequest.Type == PostSaleRequestType.Return &&
+                    ps.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
+                .Sum(ps => ps.Quantity),
+
+            TotalPrice = (oi.Quantity - oi.PostSaleItem
+                .Where(ps =>
+                    ps.PostSaleRequest.Type == PostSaleRequestType.Return &&
+                    ps.PostSaleRequest.Status == PostSaleRequestStatus.Approved)
+                .Sum(ps => ps.Quantity)) * oi.ProductBatch.Product.Price
+        }).Where(item => item.Quantity > 0).ToList()
                 ));
         ;
     }

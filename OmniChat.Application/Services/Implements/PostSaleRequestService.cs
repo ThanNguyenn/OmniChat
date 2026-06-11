@@ -197,9 +197,10 @@ public class PostSaleRequestService : BaseService<PostSaleRequestService>, IPost
         var postSaleRequestRepo = _unitOfWork.GetRepository<PostSaleRequest>();
         string? searchKeyword = search?.Trim().ToLower();
         var response = await postSaleRequestRepo.GetPagingListAsync<GetPostSaleRequestsResponse>(
-                predicate: q => string.IsNullOrEmpty(searchKeyword) ||
-                q.Customer.CustomerName.ToLower().Contains(searchKeyword) ||
-                q.Order.Code.ToLower().Contains(searchKeyword),
+                predicate: q =>
+               string.IsNullOrEmpty(searchKeyword) ||
+                            q.Customer.CustomerName.ToLower().Contains(searchKeyword) ||
+                            q.Order.Code.ToLower().Contains(searchKeyword),
                 orderBy: q => OrderBy(q, sortBy, descending),
                 include: q => q.Include(x => x.Customer)
                 .Include(x => x.Order)
