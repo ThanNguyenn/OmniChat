@@ -254,6 +254,7 @@ public class ApiEndPointConstant
         public const string Payment = "payment";
         public const string Get = "{id}";
         public const string GetCustomerWallet = "wallet/{customerId}";
+        public const string AllocateToInvoice = "allocate-to-invoice/{invoiceId}";
     }
 
     public static class PostSaleRequest

@@ -1,4 +1,5 @@
 ﻿using Amazon.S3.Model;
+using OmniChat.Infrastructure.Dtos.Requests.Allocation;
 using OmniChat.Infrastructure.Dtos.Requests.Wallet;
 using OmniChat.Infrastructure.Dtos.Responses.Wallet;
 using OmniChat.Infrastructure.Models;
@@ -21,4 +22,6 @@ public interface IWalletService
     Task<bool> HasDebt(Guid customerId);
 
     public  Task<GetCustomerWalletResponse> GetCustomerWallet(Guid customerId);
+
+    public  Task<bool> AllocationMoneyToInvoice(Guid invoiceId, AllocationWalletMoneyRequest request);
 }

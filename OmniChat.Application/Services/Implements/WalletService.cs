@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Allocation;
 using OmniChat.Infrastructure.Dtos.Requests.Wallet;
 using OmniChat.Infrastructure.Dtos.Responses.Wallet;
 using OmniChat.Infrastructure.Exceptions;
@@ -109,7 +110,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
                 TransactionType = TransactionType.Credit,
             });
             wallet.Amount += amount;
-            walletRepo.Update(wallet);  
+            walletRepo.Update(wallet);
         });
         _unitOfWork.Context.ChangeTracker.Clear();
         await _invoiceService.AllocateMoneyToInvoices(customerId);
@@ -174,7 +175,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
         var customerWallet = await walletRepo.SingleOrDefaultAsync(predicate:
             w => w.CustomerId == customerId,
-            include: w => 
+            include: w =>
                           w.Include(x => x.Transactions.OrderByDescending(t => t.CreateDate))
                            .Include(w => w.Allocations.OrderByDescending(a => a.CreateDate)).ThenInclude(a => a.Invoice)
             );
@@ -186,6 +187,43 @@ public class WalletService : BaseService<WalletService>, IWalletService
         response.TotalDebt = invoiceCaculate.TotalDebt;
 
         return response;
+    }
+
+    public async Task<bool> AllocationMoneyToInvoice(Guid invoiceId, AllocationWalletMoneyRequest request)
+    {
+        var walletRepo = _unitOfWork.GetRepository<Wallet>();
+
+        var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
+
+        var customerWallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.Id == request.WalletId)
+            ?? throw new NotFoundException($"Ví không tồn tại");
+
+        var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: i => i.Id == invoiceId)
+            ?? throw new NotFoundException($"Hóa đơn không tồn tại");
+
+        if (request.deductedAmount > customerWallet.Amount)
+        {
+            throw new BusinessException($"Số dư trong ví không đủ để chi trả");
+        }
+
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+           if(customerWallet.Amount >= request.deductedAmount)
+            {
+                
+                var paidAmount = invoice.Total - request.deductedAmount;
+
+                // final amount to pay for invoice
+                invoice.PaidAmount = paidAmount;
+
+                // deduct money from wallet
+                customerWallet.Amount -= request.deductedAmount;
+
+                walletRepo.Update(customerWallet);
+                invoiceRepo.Update(invoice);    
+            }
+        });
+        return true;
     }
 
 }

@@ -230,10 +230,10 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
 
                     return o.TotalAmount - adjustment;
                 });
-                var wallet = await walletRepo.SingleOrDefaultAsync(predicate:
-                w => w.CustomerId == customerId);
+                //var wallet = await walletRepo.SingleOrDefaultAsync(predicate:
+                //w => w.CustomerId == customerId);
 
-                var walletBalance = wallet?.Amount ?? 0;
+                //var walletBalance = wallet?.Amount ?? 0;
 
                 //var deduction = Math.Min(orderTotal, walletBalance);
 
@@ -243,6 +243,7 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
                     StartedDate = from,
                     EndedDate = to,
                     Total = orderTotal,
+                    PaidAmount = orderTotal,
                     //DeductedAmount = deduction,
                     DeductedAmount = 0,
                     InvoiceStatus = InvoiceStatus.Pending,

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using OmniChat.Infrastructure.Dtos.Requests.Order;
 using OmniChat.Infrastructure.Dtos.Requests.Product;
+using OmniChat.Infrastructure.Dtos.Responses.Invoice;
 using OmniChat.Infrastructure.Dtos.Responses.Order;
 using OmniChat.Infrastructure.Dtos.Responses.Product;
 using OmniChat.Infrastructure.Models;
@@ -110,7 +111,18 @@ public class OrderMapper : Profile
                             .Sum(ps => ps.Quantity)
                     )
                 )
-            ));
+            ))
+            .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(
+                src => src.OrderItems.Select(oi => new InvoiceItemResponse
+                {
+                    ProductName = oi.ProductBatch.Product.Name,
+                    ImageUrl = oi.ProductBatch.Product.ImageUrl,
+                    SinglePrice = oi.ProductBatch.Product.Price,
+                    Quantity = oi.Quantity,
+
+                    TotalPrice = oi.Quantity * oi.ProductBatch.Product.Price
+                }).ToList()
+                ));
         ;
     }
 }

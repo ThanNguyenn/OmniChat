@@ -1,4 +1,5 @@
-﻿using OmniChat.Infrastructure.Models;
+﻿using OmniChat.Infrastructure.Dtos.Responses.Invoice;
+using OmniChat.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,5 +32,6 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Order
 
         public DateTime? DeliveriedDate { get; set; }
 
+        public List<InvoiceItemResponse> OrderItems { get; set; }
     }
 }

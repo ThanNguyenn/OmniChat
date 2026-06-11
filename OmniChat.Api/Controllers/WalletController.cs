@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OmniChat.Api.Constants;
 using OmniChat.Application.Services.Interface;
+using OmniChat.Infrastructure.Dtos.Requests.Allocation;
 using OmniChat.Infrastructure.Dtos.Requests.Wallet;
 using OmniChat.Infrastructure.Dtos.Responses.Wallet;
 using OmniChat.Infrastructure.Metadatas;
@@ -29,7 +30,7 @@ public class WalletController : BaseController<WalletController>
         Description = "Dùng cho Manager hoặc Driver xác nhận khách hàng trả tiền mặt")]
     public async Task<IActionResult> PaymentAsync([FromBody] WalletPaymentRequest walletPaymentRequest)
     {
-        var result = await _walletService.DepositToWallet( walletPaymentRequest);
+        var result = await _walletService.DepositToWallet(walletPaymentRequest);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Thanh toán thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
@@ -59,6 +60,20 @@ public class WalletController : BaseController<WalletController>
     {
         var result = await _walletService.GetCustomerWallet(customerId);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Xem ví thành công", result);
+        return StatusCode(StatusCodes.Status200OK, response);
+    }
+
+    [HttpPost(ApiEndPointConstant.Wallet.AllocateToInvoice)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        Summary = "Sử dụng tiền chi trả hóa đơn",
+        Description = "Chọn hóa đơn để áp dụng ví tiền vào chi trả")]
+    public async Task<IActionResult> AllocationMoneyToInvoiceAsync([FromRoute] Guid invoiceId, [FromBody] AllocationWalletMoneyRequest request)
+    {
+        var result = await _walletService.AllocationMoneyToInvoice(invoiceId, request);
+        var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Áp dụng ví tiền vào hóa đơn thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }
 
