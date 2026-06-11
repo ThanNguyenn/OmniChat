@@ -80,7 +80,7 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
                 TransactionType = TransactionType.Credit
             });
             wallet.Amount += amount;
-            existingOrder.Invoice.InvoiceStatus = InvoiceStatus.Refunded;
+            existingOrder.Invoice.InvoiceStatus = InvoiceStatus.Completed;
 
             orderRepo.Update(existingOrder);
             await _unitOfWork.CommitAsync();
