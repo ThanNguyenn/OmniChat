@@ -198,13 +198,15 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
         var invoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
+        var tranSacRepo = _unitOfWork.GetRepository<Transaction>();
+
         var customerWallet = await walletRepo.SingleOrDefaultAsync(predicate: w => w.Id == request.WalletId)
             ?? throw new NotFoundException($"Ví không tồn tại");
 
         var invoice = await invoiceRepo.SingleOrDefaultAsync(predicate: i => i.Id == invoiceId)
             ?? throw new NotFoundException($"Hóa đơn không tồn tại");
 
-        if (invoice.InvoiceStatus == InvoiceStatus.Completed)
+        if (invoice.InvoiceStatus == InvoiceStatus.Completed || invoice.InvoiceStatus == InvoiceStatus.Refunded)
         {
             throw new BusinessException($"Hóa đơn đã được thanh toán hoàn , vui lòng chọn hóa đơn khác.");
         }
@@ -214,24 +216,48 @@ public class WalletService : BaseService<WalletService>, IWalletService
             throw new BusinessException($"Số dư trong ví không đủ để chi trả");
         }
 
-        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        var actualDeducted = Math.Min(request.deductedAmount, invoice.Total);
+
+        var excessAmount = request.deductedAmount - actualDeducted;
+
+        customerWallet.Amount -= actualDeducted;
+
+        var transaction = new Transaction
         {
-            if (customerWallet.Amount >= request.deductedAmount)
-            {
+            Amount = actualDeducted,
+            TransactionType = TransactionType.AllocateForInvoice,
+            WalletId = customerWallet.Id,
+            CreateDate = DateTime.UtcNow
+        };
 
-                var paidAmount = invoice.Total - request.deductedAmount;
+        var allocation = new Allocation
+        {
+            WalletId = customerWallet.Id,
+            InvoiceId = invoice.Id,
+            Transaction = transaction,
+            Amount = actualDeducted,
+            AllocationType = AllocationType.Payment,
+            CreateDate = DateTime.UtcNow
+        };
 
-                // final amount to pay for invoice
-                invoice.PaidAmount = paidAmount;
+        customerWallet.Transactions.Add(transaction);
+        customerWallet.Allocations.Add(allocation);
 
-                // deduct money from wallet
-                customerWallet.Amount -= request.deductedAmount;
+        invoice.Total -= actualDeducted;        
+        invoice.PaidAmount += actualDeducted;  
 
-                walletRepo.Update(customerWallet);
-                invoiceRepo.Update(invoice);
-            }
-        });
+        // Nếu đã trả đủ → hoàn thành đơn
+        if (invoice.Total == 0)
+        {
+            invoice.InvoiceStatus = InvoiceStatus.Completed;
+            invoice.CompletedDate = DateTime.UtcNow;
+        }
+
+        walletRepo.Update(customerWallet);
+        invoiceRepo.Update(invoice);
+        await _unitOfWork.CommitAsync();
         return true;
+
     }
 
 }

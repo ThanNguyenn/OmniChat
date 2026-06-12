@@ -73,10 +73,9 @@ namespace OmniChat.Application.Services.Implements
                     CustomerDate = x.CreateDate,
                     TotalOrder = x.Orders.Count,
 
-                    TotalPayment = (double?)x.Invoices
-            .Where(i => i.CompletedDate.HasValue &&
-                       (i.InvoiceStatus == InvoiceStatus.Completed || i.InvoiceStatus == InvoiceStatus.PartialPaid))
-            .Sum(i => i.PaidAmount) ?? 0
+                    TotalPayment = (double?)x.Wallet.Transactions
+                .Where(t => t.TransactionType == TransactionType.AllocateForInvoice)
+                .Sum(t => t.Amount) ?? 0
                 },predicate: string.IsNullOrWhiteSpace(searchTerm)
                     ? null
                     : x => x.CustomerName.ToUpper().Contains(searchTerm),

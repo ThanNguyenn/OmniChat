@@ -299,7 +299,7 @@ public class ApiEndPointConstant
         public const string GetById = Base + "/get/{id}";
         public const string ConfirmPayment = Base + "/confirm-payment";
         public const string InvoiceHistories = Base + "/customer/{customerId}/histories";
-        public const string CreatePaymentLink = Base + "/{customerId}/create-payment-link";
+        public const string CreatePaymentLink = Base + "/{id}/create-payment-link";
 
     }
 

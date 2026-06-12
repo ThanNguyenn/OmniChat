@@ -166,9 +166,9 @@ public class InvoiceController : BaseController<InvoiceController>
         Summary = "Tạo liên kết thanh toán",
         Description = "Tạo liên kết thanh toán cho khách hàng."
     )]
-    public async Task<IActionResult> CreatePaymentLink([FromRoute] Guid customerId)
+    public async Task<IActionResult> CreatePaymentLink([FromRoute] Guid id)
     {
-        var result = await _payOsService.CreatePaymentLinkAsync(customerId);
+        var result = await _payOsService.CreatePaymentLinkAsync(id);
         var response = ApiResponseBuilder.BuildResponse(StatusCodes.Status200OK, "Tạo liên kết thanh toán thành công", result);
         return StatusCode(StatusCodes.Status200OK, response);
     }

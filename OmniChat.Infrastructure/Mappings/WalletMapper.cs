@@ -32,7 +32,9 @@ public class WalletMapper : Profile
 
              foreach (GetCustomerTransactionResponse resTrans in dest.CustomerTransactions)
              {
-                 if (resTrans.TransactionType == TransactionType.AllocateForInvoice)
+                 if (resTrans.TransactionType == TransactionType.AllocateForInvoice ||
+                     resTrans.TransactionType == TransactionType.Credit
+                 )
                  {
                      Allocation allocation = null;
 

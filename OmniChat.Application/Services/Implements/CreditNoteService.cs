@@ -61,7 +61,7 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
                .FirstOrDefaultAsync();
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-           
+
             var creditNote = new CreditNote
             {
                 Id = Guid.NewGuid(),
@@ -73,12 +73,36 @@ public class CreditNoteService : BaseService<CreditNoteService>, ICreditNoteServ
             await creditNoteRepo.InsertAsync(creditNote);
 
             var wallet = existingOrder!.CustomerProfile!.Wallet!;
-            wallet.Transactions.Add(new Transaction
+
+            var invoice = existingOrder.Invoice;
+            //wallet.Transactions.Add(new Transaction
+            //{
+            //    WalletId = wallet.Id,
+            //    Amount = amount,
+            //    TransactionType = TransactionType.Credit
+            //});
+
+            var transaction = new Transaction
             {
                 WalletId = wallet.Id,
                 Amount = amount,
-                TransactionType = TransactionType.Credit
-            });
+                TransactionType = TransactionType.Deposit
+            };
+
+            var creditAllocation = new Allocation
+            {
+                WalletId = wallet.Id,
+                InvoiceId = invoice.Id,
+                TransactionId = transaction.Id,
+                Amount = amount,
+                AllocationType = AllocationType.Deduction,
+            };
+
+            transaction.Allocation = creditAllocation;
+
+            wallet.Transactions.Add(transaction);
+            wallet.Allocations.Add(creditAllocation);
+
             wallet.Amount += amount;
             existingOrder.Invoice.InvoiceStatus = InvoiceStatus.Completed;
 

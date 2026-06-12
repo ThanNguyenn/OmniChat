@@ -9,7 +9,7 @@ namespace OmniChat.Application.Services.Interface
 {
     public interface IPayOsService
     {
-        Task<string> CreatePaymentLinkAsync(Guid customerId);
+        Task<string> CreatePaymentLinkAsync(Guid id);
         Task<bool> HandleWebhookAsync(WebhookType body);
     }
 }

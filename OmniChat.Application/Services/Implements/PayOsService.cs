@@ -43,15 +43,15 @@ namespace OmniChat.Application.Services.Implements
             _walletService = walletService;
         }
 
-        public async Task<string> CreatePaymentLinkAsync(Guid customerId)
+        public async Task<string> CreatePaymentLinkAsync(Guid id)
         {
             var InvoiceRepo = _unitOfWork.GetRepository<Invoice>();
 
 
             var invoice = await InvoiceRepo.SingleOrDefaultAsync(
-                predicate: x => x.CustomerId == customerId &&
+                predicate: x => x.Id == id &&
                 (x.InvoiceStatus == InvoiceStatus.Pending || x.InvoiceStatus == InvoiceStatus.PartialPaid),
-                include: x => x.Include(x => x.Orders)
+                include: x => x.Include(x => x.Orders).Include(x => x.CustomerProfile)
             );
 
             if (invoice == null) throw new Exception("Invoice not found");
@@ -84,7 +84,7 @@ namespace OmniChat.Application.Services.Implements
 
             // gửi link này về email cho khách hàng qua email address
 
-            var customer = await _unitOfWork.GetRepository<CustomerProfile>().SingleOrDefaultAsync(predicate: x => x.Id == customerId);
+            var customer = await _unitOfWork.GetRepository<CustomerProfile>().SingleOrDefaultAsync(predicate: x => x.Id == invoice.CustomerId);
             if (customer == null) { 
             throw new NotFoundException("Customer not found");
             }
