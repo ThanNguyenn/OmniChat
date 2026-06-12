@@ -30,7 +30,7 @@ public class UpdateOrderItemAsyncTest
     private readonly Mock<IHttpContextAccessor> _httpMock = new();
     private readonly Mock<ICreditNoteService> _creditNoteMock = new();
     private readonly Mock<IMailService> _mailServiceMock = new();
-    private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
+    private readonly Mock<IProductBatchAuditService> _auditServiceMock = new(); private readonly Mock<IWalletService> _walletServiceMock = new();
     private string _userId = Guid.NewGuid().ToString();
     private OrderService CreateService()
     {
@@ -41,7 +41,8 @@ public class UpdateOrderItemAsyncTest
             _httpMock.Object,
             _creditNoteMock.Object,
             _mailServiceMock.Object,
-            _auditServiceMock.Object
+            _auditServiceMock.Object,
+            _walletServiceMock.Object
         );
     }
     private Mock<IGenericRepository<Staff>> SetupStaffRepo()

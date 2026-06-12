@@ -31,7 +31,8 @@ namespace OmniChat.Test.ClaimServiceTest
         private readonly Mock<ITaskActionService> _mockTaskAction;
         private readonly Mock<IHubContext<SupportConversationHub>> _mockHub;
         private readonly Mock<IGenericRepository<Claim>> _mockClaimRepo;
-
+        private readonly Mock<ISupportConversationService> _mockConversationService;
+        private readonly Mock<IMailService> _mockMailService;
         private readonly ClaimService _service;
 
         public UpdateClaimTest() {
@@ -42,7 +43,8 @@ namespace OmniChat.Test.ClaimServiceTest
             _mockTaskAction = new Mock<ITaskActionService>();
             _mockHub = new Mock<IHubContext<SupportConversationHub>>();
             _mockClaimRepo = new Mock<IGenericRepository<Claim>>();
-
+            _mockConversationService = new Mock<ISupportConversationService>();
+            _mockMailService = new Mock<IMailService>();
             _mockUow.Setup(u => u.GetRepository<Claim>()).Returns(_mockClaimRepo.Object);
 
          
@@ -54,7 +56,8 @@ namespace OmniChat.Test.ClaimServiceTest
                 _mockLogger.Object,
                 _mockMapper.Object,
                 _mockAccessor.Object,
-                _mockTaskAction.Object,
+                _mockTaskAction.Object, _mockMailService.Object,
+_mockConversationService.Object,
                 _mockHub.Object);
         }
 
@@ -65,7 +68,7 @@ namespace OmniChat.Test.ClaimServiceTest
             var claimId = Guid.NewGuid();
             var request = new UpdateClaimRequest
             {
-                ClaimTypeId = Guid.NewGuid(),
+                //ClaimTypeId = Guid.NewGuid(),
                 Description = "Mô tả mới hợp lệ",
                 Reason = "Lý do thay đổi"
             };
@@ -112,7 +115,9 @@ namespace OmniChat.Test.ClaimServiceTest
         {
             // Arrange
             var claimId = Guid.NewGuid();
-            var request = new UpdateClaimRequest { ClaimTypeId = Guid.NewGuid() };
+            var request = new UpdateClaimRequest { 
+                //ClaimTypeId = Guid.NewGuid() 
+            };
 
             _mockUow.Setup(u => u.ProcessInTransactionAsync(It.IsAny<Func<Task<bool>>>()))
                     .Returns((Func<Task<bool>> func) => func());

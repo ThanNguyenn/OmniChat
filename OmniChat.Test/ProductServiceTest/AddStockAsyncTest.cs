@@ -102,8 +102,7 @@ public class AddStockAsyncTest
         var product = new Product
         {
             Id = productId,
-            Quantity = 10,
-            LifeSpan = 30
+            Quantity = 10
         };
 
         productRepo.Setup(r => r.GetListAsync(
@@ -165,8 +164,7 @@ public class AddStockAsyncTest
         {
         new Product
         {
-            Id = productId,
-            LifeSpan = 30
+            Id = productId
         }
         });
 

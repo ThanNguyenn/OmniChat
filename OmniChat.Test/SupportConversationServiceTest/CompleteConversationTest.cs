@@ -24,6 +24,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
         private readonly Mock<IGenericRepository<SupportConversation>> _repoMock;
         private readonly Mock<ISupportTaskService> _supportTaskServiceMock;
         private readonly SupportConversationService _service;
+        private readonly Mock<ITaskAssignmentService> _taskAssignmentServiceMock;
 
         public CompleteConversationTest()
         {
@@ -37,7 +38,8 @@ namespace OmniChat.Test.SupportConversationServiceTest
                 new Mock<ICustomerProfileService>().Object,
                 new Mock<IHubContext<SidebarHub>>().Object,
                 _supportTaskServiceMock.Object,
-                new Mock<INotificationService>().Object
+                new Mock<INotificationService>().Object,
+                new Mock<ITaskAssignmentService>().Object
             );
         }
 

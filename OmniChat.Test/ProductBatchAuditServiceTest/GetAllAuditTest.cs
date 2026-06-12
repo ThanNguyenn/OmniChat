@@ -108,7 +108,7 @@ public class GetAllAuditTest
          })
      .ReturnsAsync(new PagingResponse<GetAllAuditResponse>());
 
-        await service.GetAllAuditAsync(productId, null, null);
+        await service.GetAllAuditAsync(null,productId, null, null);
 
         var compiled = capturedPredicate!.Compile();
 
@@ -146,7 +146,7 @@ public class GetAllAuditTest
          })
      .ReturnsAsync(new PagingResponse<GetAllAuditResponse>());
 
-        await service.GetAllAuditAsync(null, batchId, null);
+        await service.GetAllAuditAsync( null, batchId,null, null);
 
         var compiled = capturedPredicate!.Compile();
 
@@ -184,7 +184,7 @@ public class GetAllAuditTest
         })
     .ReturnsAsync(new PagingResponse<GetAllAuditResponse>());
 
-        await service.GetAllAuditAsync(null, null, action);
+        await service.GetAllAuditAsync(null, null, action,null);
 
         var compiled = capturedPredicate!.Compile();
 

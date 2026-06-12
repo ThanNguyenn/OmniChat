@@ -47,12 +47,12 @@ namespace OmniChat.Test.ProductBrandServiceTest
                 Products = new List<Product>
                 {
 
-                    new Product { ProductKind = ProductKind.Sugar, VolumeMl = 180, Quantity = 10, CreateDate = now, LifeSpan = 30 },
-                    new Product { ProductKind = ProductKind.Sugar, VolumeMl = 180, Quantity = 20, CreateDate = now, LifeSpan = 30 },
+                    new Product { ProductKind = ProductKind.Sugar, VolumeMl = 180, Quantity = 10, CreateDate = now},
+                    new Product { ProductKind = ProductKind.Sugar, VolumeMl = 180, Quantity = 20, CreateDate = now},
 
-                    new Product { ProductKind = ProductKind.Sugar, VolumeMl = 110, Quantity = 50, CreateDate = now.AddDays(-10), LifeSpan = 1 },
+                    new Product { ProductKind = ProductKind.Sugar, VolumeMl = 110, Quantity = 50, CreateDate = now.AddDays(-10)},
 
-                    new Product { ProductKind = ProductKind.Yogurt, VolumeMl = 100, Quantity = 15, CreateDate = now, LifeSpan = 30 }
+                    new Product { ProductKind = ProductKind.Yogurt, VolumeMl = 100, Quantity = 15, CreateDate = now }
                 }
             };
 
@@ -107,7 +107,7 @@ namespace OmniChat.Test.ProductBrandServiceTest
                 Products = new List<Product>
                 {
                   
-                    new Product { Quantity = 100, CreateDate = DateTime.UtcNow.AddDays(-100), LifeSpan = 10 }
+                    new Product { Quantity = 100, CreateDate = DateTime.UtcNow.AddDays(-100) }
                 }
             };
 

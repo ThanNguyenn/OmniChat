@@ -26,7 +26,8 @@ namespace OmniChat.Test.ClaimServiceTest
         private readonly Mock<IMapper> _mockMapper;
         private readonly Mock<ILogger<ClaimService>> _mockLogger;
         private readonly Mock<IGenericRepository<Claim>> _mockClaimRepo;
-
+        private readonly Mock<ISupportConversationService> _mockConversationService;
+        private readonly Mock<IMailService> _mockMailService;
         private readonly ClaimService _service;
 
         public GetPendingChangTaskTest()
@@ -35,7 +36,8 @@ namespace OmniChat.Test.ClaimServiceTest
             _mockMapper = new Mock<IMapper>();
             _mockLogger = new Mock<ILogger<ClaimService>>();
             _mockClaimRepo = new Mock<IGenericRepository<Claim>>();
-
+            _mockConversationService = new Mock<ISupportConversationService>();
+            _mockMailService = new Mock<IMailService>();
             _mockUow.Setup(u => u.GetRepository<Claim>()).Returns(_mockClaimRepo.Object);
 
             _service = new ClaimService(
@@ -43,7 +45,8 @@ namespace OmniChat.Test.ClaimServiceTest
                 _mockLogger.Object,
                 _mockMapper.Object,
                 new Mock<IHttpContextAccessor>().Object,
-                new Mock<ITaskActionService>().Object,
+                new Mock<ITaskActionService>().Object, _mockMailService.Object,
+_mockConversationService.Object,
                 new Mock<IHubContext<SupportConversationHub>>().Object);
         }
 

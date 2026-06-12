@@ -27,14 +27,15 @@ namespace OmniChat.Test.SupportConversationServiceTest
         {
             _unitOfWorkMock = new Mock<IUnitOfWork<OmniChatDbContext>>();
             _repoMock = new Mock<IGenericRepository<SupportConversation>>();
-
+            var taskAssignment = new Mock<ITaskAssignmentService>();
             _service = new SupportConversationService(
                 _unitOfWorkMock.Object,
                 null, null, null,
                 new Mock<ICustomerProfileService>().Object,
                 new Mock<IHubContext<SidebarHub>>().Object,
                 new Mock<ISupportTaskService>().Object,
-                new Mock<INotificationService>().Object
+                new Mock<INotificationService>().Object,
+                taskAssignment.Object
             );
         }
 

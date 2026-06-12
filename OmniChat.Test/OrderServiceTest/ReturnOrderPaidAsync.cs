@@ -22,7 +22,7 @@ public class ReturnOrderPaidAsync
     protected readonly Mock<IMailService> _mailServiceMock = new();
     protected readonly Mock<IInvoiceService> _invoiceServiceMock = new();
     private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
-
+    private readonly Mock<IWalletService> _walletServiceMock = new();
     private OrderService CreateService()
     {
         return new OrderService(
@@ -32,7 +32,8 @@ public class ReturnOrderPaidAsync
             _httpMock.Object,
             _creditNoteMock.Object,
             _mailServiceMock.Object,
-            _auditServiceMock.Object
+            _auditServiceMock.Object,
+            _walletServiceMock.Object
         );
     }
 

@@ -33,6 +33,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
             var hubContextMock = new Mock<IHubContext<SidebarHub>>();
             var notificationMock = new Mock<INotificationService>();
             var supportTaskMock = new Mock<ISupportTaskService>();
+            var taskAssignment = new Mock<ITaskAssignmentService>();
 
             _service = new SupportConversationService(
                 _unitOfWorkMock.Object,
@@ -42,7 +43,8 @@ namespace OmniChat.Test.SupportConversationServiceTest
                 customerProfileMock.Object,
                 hubContextMock.Object,
                 supportTaskMock.Object,
-                notificationMock.Object
+                notificationMock.Object,
+                taskAssignment.Object
             );
         }
 

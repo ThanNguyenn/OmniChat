@@ -28,7 +28,8 @@ namespace OmniChat.Test.ClaimServiceTest
         private readonly Mock<IHubContext<SupportConversationHub>> _mockHub;
         private readonly Mock<ITaskActionService> _mockTaskAction;
         private readonly Mock<ILogger<ClaimService>> _mockLogger;
-
+        private readonly Mock<ISupportConversationService> _mockConversationService;
+        private readonly Mock<IMailService> _mockMailService;
         private readonly ClaimService _service;
 
         public RejectReassignClaimTest()
@@ -40,8 +41,9 @@ namespace OmniChat.Test.ClaimServiceTest
             _mockHub = new Mock<IHubContext<SupportConversationHub>>();
             _mockTaskAction = new Mock<ITaskActionService>();
             _mockLogger = new Mock<ILogger<ClaimService>>();
+            _mockConversationService = new Mock<ISupportConversationService>();
+            _mockMailService = new Mock<IMailService>();
 
-           
             _mockUow.Setup(u => u.GetRepository<Claim>()).Returns(_mockClaimRepo.Object);
             _mockUow.Setup(u => u.GetRepository<SupportConversation>()).Returns(_mockConverRepo.Object);
             _mockUow.Setup(u => u.GetRepository<SupportTask>()).Returns(_mockTaskRepo.Object);
@@ -61,7 +63,8 @@ namespace OmniChat.Test.ClaimServiceTest
                 _mockLogger.Object,
                 new Mock<AutoMapper.IMapper>().Object,
                 new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>().Object,
-                _mockTaskAction.Object,
+                _mockTaskAction.Object, _mockMailService.Object,
+_mockConversationService.Object,
                 _mockHub.Object);
         }
 

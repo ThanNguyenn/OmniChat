@@ -28,7 +28,7 @@ public class GetAllOrdersAsyncTest
     protected readonly Mock<ICreditNoteService> _creditNoteMock = new();
     protected readonly Mock<IMailService> _mailServiceMock = new();
     private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
-
+    private readonly Mock<IWalletService> _walletServiceMock = new();
     private OrderService CreateService()
     {
         return new OrderService(
@@ -38,7 +38,8 @@ public class GetAllOrdersAsyncTest
             _httpMock.Object,
             _creditNoteMock.Object,
             _mailServiceMock.Object,
-            _auditServiceMock.Object
+            _auditServiceMock.Object,
+            _walletServiceMock.Object
         );
     }
 

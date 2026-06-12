@@ -34,7 +34,7 @@ namespace OmniChat.Test.SupportConversationServiceTest
             _notificationServiceMock = new Mock<INotificationService>();
             _hubContextMock = new Mock<IHubContext<SidebarHub>>();
             _repoMock = new Mock<IGenericRepository<SupportConversation>>();
-
+            var taskAssignment = new Mock<ITaskAssignmentService>();
             var mockClients = new Mock<IHubClients>();
             var mockClientProxy = new Mock<IClientProxy>();
             _hubContextMock.Setup(h => h.Clients).Returns(mockClients.Object);
@@ -48,7 +48,8 @@ namespace OmniChat.Test.SupportConversationServiceTest
                 _customerProfileServiceMock.Object,
                 _hubContextMock.Object,
                 null, 
-                _notificationServiceMock.Object
+                _notificationServiceMock.Object,
+                taskAssignment.Object
             );
         }
 

@@ -28,7 +28,8 @@ namespace OmniChat.Test.ClaimServiceTest
         private readonly Mock<IGenericRepository<StaffPerformance>> _mockPerfRepo;
         private readonly Mock<IHubContext<SupportConversationHub>> _mockHub;
         private readonly Mock<ITaskActionService> _mockTaskAction;
-
+        private readonly Mock<ISupportConversationService> _mockConversationService;
+        private readonly Mock<IMailService> _mockMailService;
         private readonly ClaimService _service;
 
         public ReAssignStaffTest()
@@ -39,7 +40,8 @@ namespace OmniChat.Test.ClaimServiceTest
             _mockStaffRepo = new Mock<IGenericRepository<Staff>>();
             _mockTaskRepo = new Mock<IGenericRepository<SupportTask>>();
             _mockPerfRepo = new Mock<IGenericRepository<StaffPerformance>>();
-            _mockHub = new Mock<IHubContext<SupportConversationHub>>();
+            _mockHub = new Mock<IHubContext<SupportConversationHub>>(); _mockConversationService = new Mock<ISupportConversationService>();
+            _mockMailService = new Mock<IMailService>();
             _mockTaskAction = new Mock<ITaskActionService>();
 
           
@@ -60,7 +62,8 @@ namespace OmniChat.Test.ClaimServiceTest
                 new Mock<Microsoft.Extensions.Logging.ILogger<ClaimService>>().Object,
                 new Mock<AutoMapper.IMapper>().Object,
                 new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>().Object,
-                _mockTaskAction.Object,
+                _mockTaskAction.Object, _mockMailService.Object,
+_mockConversationService.Object,
                 _mockHub.Object);
         }
 

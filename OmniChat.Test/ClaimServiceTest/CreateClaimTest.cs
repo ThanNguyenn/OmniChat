@@ -35,6 +35,8 @@ namespace OmniChat.Test.ClaimServiceTest
         private readonly Mock<IGenericRepository<SupportTask>> _mockTaskRepo;
         private readonly Mock<IGenericRepository<SupportConversation>> _mockConvRepo;
         private readonly ClaimService _service;
+        private readonly Mock<ISupportConversationService> _mockConversationService;
+        private readonly Mock<IMailService> _mockMailService;
 
         public CreateClaimTest()
         {
@@ -44,6 +46,9 @@ namespace OmniChat.Test.ClaimServiceTest
             _mockAccessor = new Mock<IHttpContextAccessor>();
             _mockTaskAction = new Mock<ITaskActionService>();
             _mockHub = new Mock<IHubContext<SupportConversationHub>>();
+
+            _mockConversationService = new Mock<ISupportConversationService>();
+            _mockMailService = new Mock<IMailService>();
 
             _mockClaimRepo = new Mock<IGenericRepository<Claim>>();
             _mockClaimTypeRepo = new Mock<IGenericRepository<ClaimType>>();
@@ -64,6 +69,8 @@ namespace OmniChat.Test.ClaimServiceTest
                 _mockMapper.Object,
                 _mockAccessor.Object,
                 _mockTaskAction.Object,
+                _mockMailService.Object,
+                _mockConversationService.Object,
                 _mockHub.Object);
         }
 

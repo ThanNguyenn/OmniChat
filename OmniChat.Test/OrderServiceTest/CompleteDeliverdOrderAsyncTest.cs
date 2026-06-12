@@ -26,7 +26,7 @@ public class CompleteDeliverdOrderAsyncTest
     private readonly Mock<IHttpContextAccessor> _http = new();
     private readonly Mock<ICreditNoteService> _credit = new();
     private readonly Mock<IMailService> _mail = new();
-    private readonly Mock<IProductBatchAuditService> _auditServiceMock = new();
+    private readonly Mock<IProductBatchAuditService> _auditServiceMock = new(); private readonly Mock<IWalletService> _walletServiceMock = new();
     private OrderService CreateService()
         => new OrderService(
             _uow.Object,
@@ -35,7 +35,8 @@ public class CompleteDeliverdOrderAsyncTest
             _http.Object,
             _credit.Object,
             _mail.Object,
-            _auditServiceMock .Object
+            _auditServiceMock .Object,
+            _walletServiceMock.Object
         );
 
     private Mock<IGenericRepository<Order>> SetupRepo()

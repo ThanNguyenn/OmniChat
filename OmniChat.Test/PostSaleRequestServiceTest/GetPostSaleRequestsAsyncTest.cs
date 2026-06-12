@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ using OmniChat.Infrastructure.Metadatas;
 using OmniChat.Infrastructure.Models;
 using OmniChat.Infrastructure.Persistence;
 using OmniChat.Infrastructure.Repositories.Interfaces;
+using System.Globalization;
 using System.Linq.Expressions;
 
 namespace OmniChat.Test.PostSaleRequestServiceTest;
@@ -79,7 +81,11 @@ public class GetPostSaleRequestsAsyncTest
 
         var service = CreateService();
 
-        var result = await service.GetPostSaleRequestsAsync();
+        var result = await service.GetPostSaleRequestsAsync(null,
+        1,
+        20,
+        "createddate",
+        true);
 
         Assert.NotNull(result);
         Assert.Single(result.Items);
@@ -126,8 +132,11 @@ public class GetPostSaleRequestsAsyncTest
         var service = CreateService();
 
         var result = await service.GetPostSaleRequestsAsync(
-            pageNumber: 2,
-            pageSize: 5);
+            null,
+        2,
+        5,
+        "createddate",
+        true);
 
         Assert.Equal(2, result.Meta.CurrentPage);
         Assert.Equal(5, result.Meta.PageSize);
@@ -157,7 +166,9 @@ public class GetPostSaleRequestsAsyncTest
 
         var service = CreateService();
 
-        var result = await service.GetPostSaleRequestsAsync(
+        var result = await service.GetPostSaleRequestsAsync(null,
+        1,
+        20,
             sortBy: "status",
             descending: false);
 
