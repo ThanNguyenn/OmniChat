@@ -464,5 +464,33 @@ public class ProductService : BaseService<ProductService>, IProductService
                 );
             }
         });
+
+        await SyncProductAndBatchQuantity();
     }
+
+    private async Task SyncProductAndBatchQuantity()
+    {
+        var productRepo = _unitOfWork.GetRepository<Product>();
+        var batchRepo = _unitOfWork.GetRepository<ProductBatch>();
+        await _unitOfWork.ProcessInTransactionAsync(async () =>
+        {
+            var products = await productRepo.GetListAsync(
+                predicate: p => p.IsActive != false,
+                include: q => q.Include(p => p.ProductBatches)
+            );
+            foreach (var product in products)
+            {
+                var totalBatchQuantity = product.ProductBatches
+                    .Where(b => b.IsActive != false && b.IsExpired != true)
+                    .Sum(b => b.Quantity);
+                if (product.Quantity != totalBatchQuantity)
+                {
+                    product.Quantity = totalBatchQuantity;
+                    productRepo.Update(product);
+                }
+            }
+        });
+    }
+
+
 }

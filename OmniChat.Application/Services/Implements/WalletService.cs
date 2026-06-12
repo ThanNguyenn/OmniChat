@@ -136,7 +136,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
         var totalDebt = invoices.Sum(i =>
         {
-            var remaining = i.Total - i.PaidAmount;
+            var remaining = i.PaidAmount;
             return Math.Max(0, remaining);
         });
 
