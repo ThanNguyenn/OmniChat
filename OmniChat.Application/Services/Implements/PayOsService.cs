@@ -201,7 +201,7 @@ namespace OmniChat.Application.Services.Implements
 
                     invoice.InvoiceMethod = InvoiceMethod.BankTransfer;
                     invoice.InvoiceStatus = InvoiceStatus.Completed;
-                    invoice.PaidAmount += verifiedData.amount;
+                    invoice.PaidAmount = verifiedData.amount;
                     invoice.CompletedDate = DateTime.UtcNow;
 
                     foreach (var order in invoice.Orders)
