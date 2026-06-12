@@ -79,8 +79,16 @@ namespace OmniChat.Application.Services.Implements
                             items: items
              );
             _logger.LogInformation($"[PayOsService]: {paymentData}");
+            CreatePaymentResult paymentLink = null!;
+            try
+            {
+                paymentLink = await _payOS.createPaymentLink(paymentData);
+            }
+            catch (Exception ex) when (ex.GetType().Name == "PayOSError")
+            {
 
-            var paymentLink = await _payOS.createPaymentLink(paymentData);
+                throw new BadRequestException("Hóa đơn đã được gửi đến email, vui lòng kiểm tra mail");
+            }
 
             // gửi link này về email cho khách hàng qua email address
 
