@@ -247,7 +247,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
 
             customerWallet.Transactions.Add(transaction);
             customerWallet.Allocations.Add(allocation);
-
+            invoice.DeductedAmount = invoice.PaidAmount;
             invoice.PaidAmount = 0;
 
         }
@@ -277,6 +277,7 @@ public class WalletService : BaseService<WalletService>, IWalletService
             customerWallet.Allocations.Add(allocation);
 
             invoice.PaidAmount -= request.deductedAmount;
+            invoice.DeductedAmount = request.deductedAmount;
         }
         if (invoice.PaidAmount == 0)
         {
