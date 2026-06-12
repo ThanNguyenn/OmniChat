@@ -160,15 +160,18 @@ public class InvoiceService : BaseService<InvoiceService>, IInvoiceService
         var emailListToRequest = new List<(string Email, string CustomerName, Guid CustomerId)>();
         await _unitOfWork.ProcessInTransactionAsync(async () =>
         {
-            var orders = await orderRepo.GetListAsync(predicate: o =>
-                o.OrderDate >= from &&
-                o.OrderDate <= to &&
-                o.DeliveryStatus == DeliveryStatus.Completed &&
-                o.InvoiceId == null &&
-                !(o.IsDeleted ?? false)
-                , include: o => o.Include(x => x.CreditNotes.Where(cn =>
-            cn.CreditNoteType == CreditNoteType.Adjustment)).Include(x => x.CustomerProfile)
-            );
+            var orders = await orderRepo.GetQueryable(
+                predicate: o =>
+                    o.OrderDate >= from &&
+                    o.OrderDate <= to &&
+                    o.DeliveryStatus == DeliveryStatus.Completed &&
+                    o.InvoiceId == null &&
+                    !(o.IsDeleted ?? false),
+                include: q => q
+                    .Include(x => x.CreditNotes.Where(cn =>
+                        cn.CreditNoteType == CreditNoteType.Adjustment))
+                    .Include(x => x.CustomerProfile)
+            ).ToListAsync();
             _logger.LogInformation("Orders found: {count}", orders.Count);
             if (!orders.Any())
             {
