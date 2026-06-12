@@ -31,7 +31,7 @@ namespace OmniChat.Infrastructure.Dtos.Responses.Invoice
 
         public double PaidAmount { get; set; }
 
-        //public double DeductedAmount { get; set; }
+        public double DeductedAmount  => Total - PaidAmount;
 
         public long InvoiceCode { get; set; }
     }
