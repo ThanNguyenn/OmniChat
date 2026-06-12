@@ -76,12 +76,7 @@ namespace OmniChat.Application.Services.Implements
 
             var supportTasks = await repo.GetListAsync(
                 predicate: x => x.SupportConversationId == conversationId
-                );
-
-            if (!supportTasks.Any())
-            {
-                throw new NotFoundException("No SupportTask Found");
-            }
+                );                                              
             return supportTasks;
         }
 

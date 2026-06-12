@@ -110,11 +110,13 @@ namespace OmniChat.Application.Services.Implements
             var conversationTasks = await _supportTaskService
                 .GetSupportTaskByConversationIdAsync(conversationId);
 
-            var allDone = conversationTasks.All(x => x.Status == SupportTaskStatus.Done);
-
-            if (!allDone)
+            if (conversationTasks.Any())
             {
-                throw new BadRequestException("Chưa hoàn thành hết yêu cầu hỗ trợ");
+                var allDone = conversationTasks.All(x => x.Status == SupportTaskStatus.Done);
+                if (!allDone)
+                {
+                    throw new BadRequestException("Chưa hoàn thành hết yêu cầu hỗ trợ");
+                }
             }
 
             conversation.Status = ConversationStatus.Complete;
