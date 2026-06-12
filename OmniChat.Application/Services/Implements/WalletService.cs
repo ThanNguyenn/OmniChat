@@ -243,9 +243,8 @@ public class WalletService : BaseService<WalletService>, IWalletService
         customerWallet.Transactions.Add(transaction);
         customerWallet.Allocations.Add(allocation);
 
-        invoice.Total -= actualDeducted;        
-        invoice.PaidAmount += actualDeducted;  
-
+        invoice.Total -= actualDeducted;
+        invoice.PaidAmount = invoice.Total;
         // Nếu đã trả đủ → hoàn thành đơn
         if (invoice.Total == 0)
         {
